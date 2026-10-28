@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}我的笔记本 · CMaster{% endblock %}
+
+{% block content %}
+<div class="notebook-head">
+  <div class="page-head">
+    <span class="notebook-eyebrow">MY LEARNING NOTES</span>
+    <h1>把理解，留给下一次的自己</h1>
+    <p>收藏值得重温的内容，记下真正想通的那一刻。</p>
+  </div>
+  <div class="notebook-exports" aria-label="导出学习资料">
+    <a class="btn btn-sm" href="{{ url_for('export_notebook') }}" download>导出笔记 .md</a>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('export_progress') }}" download>导出学习记录 .json</a>
+  </div>
+</div>
+
+<div class="notebook-overview" aria-label="笔记本概况">
+  <a href="{{ url_for('notebook_page') }}"><b>{{ total }}</b><span>条学习资料</span></a>
+  <a href="{{ url_for('notebook_page', view='bookmarks') }}"><b>{{ counts.bookmarks }}</b><span>个收藏</span></a>
+  <a href="{{ url_for('notebook_page', view='notes') }}"><b>{{ counts.notes }}</b><span>篇私人笔记</span></a>
+</div>
+
+<form class="notebook-filters" method="get" role="search" aria-label="筛选我的笔记">
+  <label class="notebook-query" for="notebook-query">搜索笔记
+    <input type="search" id="notebook-query" name="q" value="{{ query }}" maxlength="200" placeholder="搜索标题、章节或笔记内容">
+  </label>
+  <label for="notebook-view">查看
+    <select id="notebook-view" name="view">
+      <option value="all" {{ 'selected' if view == 'all' }}>全部资料</option>
+      <option value="bookmarks" {{ 'selected' if view == 'bookmarks' }}>仅收藏</option>
+      <option value="notes" {{ 'selected' if view == 'notes' }}>仅笔记</option>
+    </select>
+  </label>
+  <label for="notebook-kind">类型
+    <select id="notebook-kind" name="kind">
+      <option value="all" {{ 'selected' if kind == 'all' }}>全部类型</option>
+      <option value="lesson" {{ 'selected' if kind == 'lesson' }}>知识点</option>
+      <option value="problem" {{ 'selected' if kind == 'problem' }}>练习题</option>
+    </select>
+  </label>
+  <label for="notebook-chapter">章节
+    <select id="notebook-chapter" name="chapter">
+      <option value="">全部章节</option>
+      {% for cid, chapter in chapters.items() %}
+      <option value="{{ cid }}" {{ 'selected' if selected_chapter == cid }}>第 {{ cid }} 章 · {{ chapter.title }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button class="btn btn-primary btn-sm" type="submit">筛选</button>
+</form>
+
+<div class="notebook-result-head">
+  <p role="status">找到 {{ items|length }} 条<span> · 最近更新在前</span></p>
+  {% if query or view != 'all' or kind != 'all' or selected_chapter %}
+  <a href="{{ url_for('notebook_page') }}">清除筛选</a>
+  {% endif %}
+</div>
+
+{% if items %}
+<div class="notebook-grid">
+  {% for item in items %}
+  <article class="notebook-card" data-notebook-ref="{{ item.ref }}">
+    <div class="notebook-card-top"><span class="notebook-kind {{ item.kind }}">{{ item.kind_label }}</span>{% if item.bookmarked %}<span class="notebook-star" aria-label="已收藏">★</span>{% endif %}</div>
+    <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
+    <p class="notebook-chapter">第 {{ item.cid }} 章 · {{ item.chapter }}</p>
+    {% if item.note.strip() %}
+    <p class="notebook-excerpt">{{ item.note[:240] }}{{ '…' if item.note|length > 240 else '' }}</p>
+    {% else %}
+    <p class="notebook-excerpt notebook-no-note">已收藏。下次回来时，写一点自己的理解。</p>
+    {% endif %}
+    <div class="notebook-card-actions"><a href="{{ item.url }}">{{ '继续阅读' if item.kind == 'lesson' else '打开题目' }} <span aria-hidden="true">↗</span></a><a href="{{ item.url }}#my-study-notes">{{ '编辑笔记' if item.note.strip() else '添加笔记' }}</a></div>
+  </article>
+  {% endfor %}
+</div>
+{% elif total %}
+<div class="notebook-empty"><span aria-hidden="true">⌕</span><h2>没有找到符合条件的资料</h2><p>换一个关键词，或清除筛选查看全部收藏与笔记。</p><a class="btn btn-sm" href="{{ url_for('notebook_page') }}">查看全部资料</a></div>
+{% else %}
+<div class="notebook-empty"><span aria-hidden="true">✎</span><h2>从一个值得记住的知识点开始</h2><p>在课程或题目里点击“收藏”，也可以直接写下私人笔记。<br>保存后的内容会出现在这里。</p><a class="btn btn-primary" href="{{ url_for('chapter_page', cid=1) }}">去课程里记第一笔</a></div>
+{% endif %}
+{% endblock %}

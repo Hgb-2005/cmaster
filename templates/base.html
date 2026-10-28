@@ -7,6 +7,7 @@
   <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/motion.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/notebook.css') }}">
   {% block head %}{% endblock %}
 </head>
 <body data-logged-in="{{ '1' if current_user else '0' }}" data-storage-id="{{ user_storage_id }}">
@@ -27,6 +28,7 @@
     <a href="{{ url_for('playground_page') }}" class="{{ 'on' if request.endpoint == 'playground_page' }}">游乐场</a>
     {% if current_user %}
       <a href="{{ url_for('wrongbook_page') }}" class="{{ 'on' if request.endpoint == 'wrongbook_page' }}">错题本</a>
+      <a href="{{ url_for('notebook_page') }}" class="{{ 'on' if request.endpoint == 'notebook_page' }}">笔记</a>
       <a href="{{ url_for('analytics_page') }}" class="{{ 'on' if request.endpoint == 'analytics_page' }}">分析</a>
       <a href="{{ url_for('map_page') }}" class="{{ 'on' if request.endpoint == 'map_page' }}">图谱</a>
       {# 「内存」放在图谱后面：它也是「看得见的理解」这一类，
@@ -94,6 +96,9 @@
 <script src="{{ url_for('static', filename='js/editor.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ux.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% if study_ref is defined and current_user %}
+<script src="{{ url_for('static', filename='js/notebook.js') }}"></script>
+{% endif %}
 {% block scripts %}{% endblock %}
 </body>
 </html>

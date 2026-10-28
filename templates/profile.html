@@ -61,6 +61,10 @@
 <div class="page-head">
   <h1>{{ current_user }} 的学习进度</h1>
   <p>知识点打开即记为已读；题目通过后从错题本移出。</p>
+  <div class="hero-actions">
+    <a class="btn btn-sm" href="{{ url_for('notebook_page') }}">我的收藏与笔记</a>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('export_progress') }}" download>导出学习记录</a>
+  </div>
 </div>
 
 {# ---- 连击条 ---- #}

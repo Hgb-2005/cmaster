@@ -52,6 +52,8 @@
 
     <div class="md">{{ kp.html|safe }}</div>
 
+    {% include "study_tools.html" %}
+
     <nav class="kp-nav">
       {% if kid > 1 %}
         <a href="{{ url_for('chapter_kp', cid=chapter.id, kid=kid-1) }}">

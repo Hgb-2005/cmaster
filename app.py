@@ -324,6 +324,49 @@ def save_progress(data, username=None):
         _atomic_json(_progress_path(username), data)
 
 
+# ---------------------------------------------------------------- 收藏与笔记
+
+NOTE_LIMIT = 8000
+
+
+def study_resource(ref):
+    """收藏只引用现有课程和题目，地址与标题始终从内容层取得。"""
+    match = re.fullmatch(r"lesson:(\d{1,2}):(\d{1,2})", ref)
+    if match:
+        cid, kid = map(int, match.groups())
+        chapter = CHAPTERS.get(cid)
+        if (ref != "lesson:%d:%d" % (cid, kid) or not chapter or
+                not 1 <= kid <= len(chapter["knowledge_points"])):
+            return None
+        return {"ref": ref, "kind": "lesson", "kind_label": "知识点", "cid": cid,
+                "title": chapter["knowledge_points"][kid - 1]["title"],
+                "chapter": chapter["title"], "url": url_for("chapter_kp", cid=cid, kid=kid)}
+    if ref.startswith("problem:"):
+        question = QMAP.get(ref[len("problem:"):])
+        if question:
+            return {"ref": ref, "kind": "problem", "kind_label": "练习题",
+                    "cid": question["chapter"], "title": question["title"],
+                    "chapter": CHAPTERS[question["chapter"]]["title"],
+                    "url": url_for("problem_page", qid=question["id"])}
+    return None
+
+
+def notebook_record(data, ref):
+    record = data.get("notebook", {}).get(ref, {})
+    return {"bookmarked": record.get("bookmarked", False), "note": record.get("note", ""),
+            "version": record.get("version", 0), "updated": record.get("updated", 0)}
+
+
+def notebook_items(data):
+    items = []
+    for ref in data.get("notebook", {}):
+        resource = study_resource(ref)
+        record = notebook_record(data, ref)
+        if resource and (record["bookmarked"] or record["note"].strip()):
+            items.append(dict(resource, **record))
+    return sorted(items, key=lambda item: (-item["updated"], item["ref"]))
+
+
 def _touch_day(data):
     """记录「今天有学习行为」。
 
@@ -757,6 +800,8 @@ def chapter_kp(cid, kid):
     next_ch = CHAPTERS.get(cid + 1)
     return render_template("chapter.html",
                            chapter=ch, kp=kps[kid - 1], kid=kid,
+                           study_ref="lesson:%d:%d" % (cid, kid),
+                           study_record=notebook_record(data, "lesson:%d:%d" % (cid, kid)),
                            key=key, read=read,
                            prev_ch=prev_ch, next_ch=next_ch,
                            questions=QS_BY_CHAPTER.get(cid, []),
@@ -784,6 +829,8 @@ def problem_page(qid):
     allow_legacy_draft = (not users and not current_user()) or list(users) == [current_user()]
     return render_template("problem.html",
                            q=q, chapter=CHAPTERS.get(q["chapter"]),
+                           study_ref="problem:" + qid,
+                           study_record=notebook_record(data, "problem:" + qid),
                            solved=data.get("solved", {}).get(qid),
                            last_code=solution.get("latest", {}).get("code")
                                or (data.get("wrong", {}).get(qid) or {}).get("code")
@@ -838,6 +885,115 @@ def profile_page():
                            heat=heat,
                            heat_days=heat_days,
                            chapters=CHAPTERS)
+
+
+@app.route("/notebook")
+@login_required
+def notebook_page():
+    items = notebook_items(load_progress())
+    total = len(items)
+    counts = {"bookmarks": sum(item["bookmarked"] for item in items),
+              "notes": sum(bool(item["note"].strip()) for item in items)}
+    query = (request.args.get("q") or "").strip()[:200]
+    kind = request.args.get("kind", "all")
+    view = request.args.get("view", "all")
+    cid = request.args.get("chapter", type=int)
+    if kind not in ("all", "lesson", "problem"):
+        kind = "all"
+    if view not in ("all", "bookmarks", "notes"):
+        view = "all"
+    if cid not in CHAPTERS:
+        cid = None
+    filtered = [item for item in items
+                if (kind == "all" or item["kind"] == kind)
+                and (view != "bookmarks" or item["bookmarked"])
+                and (view != "notes" or item["note"].strip())
+                and (cid is None or item["cid"] == cid)
+                and (not query or query.casefold() in
+                     (item["title"] + " " + item["chapter"] + " " + item["note"]).casefold())]
+    response = app.make_response(render_template("notebook.html", items=filtered, total=total,
+                                 counts=counts, query=query, kind=kind, view=view, selected_chapter=cid))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/api/notebook/<path:ref>", methods=["GET", "POST"])
+@login_required
+def api_notebook(ref):
+    expected = request.headers.get("X-CMaster-Account")
+    if ((request.method == "POST" or expected) and
+            expected != user_storage_id(current_user())):
+        return jsonify({"ok": False, "error": "账号已切换，请刷新页面。你的笔记草稿仍保留在原账号中。"}), 409
+    if not study_resource(ref):
+        return jsonify({"ok": False, "error": "没有这个知识点或题目"}), 404
+    if request.method == "GET":
+        response = jsonify({"ok": True, "record": notebook_record(load_progress(), ref)})
+        response.headers["Cache-Control"] = "no-store"
+        return response
+    if request.content_length and request.content_length > 65536:
+        return jsonify({"ok": False, "error": "笔记内容过长"}), 413
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"ok": False, "error": "需要 JSON 格式的笔记"}), 400
+    version = payload.get("version")
+    if type(version) is not int or version < 0:
+        return jsonify({"ok": False, "error": "请先刷新笔记版本"}), 400
+    if not any(key in payload for key in ("note", "bookmarked")):
+        return jsonify({"ok": False, "error": "没有需要保存的内容"}), 400
+    if "note" in payload and (not isinstance(payload["note"], str) or len(payload["note"]) > NOTE_LIMIT):
+        return jsonify({"ok": False, "error": "笔记需要是 %d 字以内的文本" % NOTE_LIMIT}), 400
+    if "bookmarked" in payload and type(payload["bookmarked"]) is not bool:
+        return jsonify({"ok": False, "error": "收藏状态格式不正确"}), 400
+    with _progress_lock:
+        data = load_progress()
+        record = notebook_record(data, ref)
+        if version != record["version"]:
+            return jsonify({"ok": False, "conflict": True, "record": record,
+                            "error": "另一页面已保存新版本。请查看后再决定保留哪一份，当前草稿不会被覆盖。"}), 409
+        updated = dict(record)
+        for key in ("note", "bookmarked"):
+            if key in payload:
+                updated[key] = payload[key]
+        if updated != record:
+            updated.update(version=version + 1, updated=int(time.time()))
+            # 即使取消收藏并清空笔记也保留版本号，过期标签页不能重新覆盖。
+            data.setdefault("notebook", {})[ref] = updated
+            save_progress(data)
+    response = jsonify({"ok": True, "record": updated})
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+def study_download(text, filename, content_type):
+    return app.response_class(text, content_type=content_type, headers={
+        "Content-Disposition": 'attachment; filename="%s"' % filename,
+        "Cache-Control": "no-store"})
+
+
+@app.route("/api/notebook/export")
+@login_required
+def export_notebook():
+    lines = ["# 我的 CMaster 学习笔记", "", "导出日期：" + date.today().isoformat(), ""]
+    items = notebook_items(load_progress())
+    if not items:
+        lines.extend(["还没有收藏或笔记。", ""])
+    for item in items:
+        lines.extend(["## " + item["title"], "",
+                      "第 %d 章 · %s · %s%s" % (item["cid"], item["chapter"], item["kind_label"],
+                                                  " · 已收藏" if item["bookmarked"] else ""),
+                      "", item["note"] if item["note"].strip() else "（尚未记录笔记）", ""])
+    return study_download("\n".join(lines), "cmaster-notes-%s.md" % date.today().isoformat(),
+                          "text/markdown; charset=utf-8")
+
+
+@app.route("/api/progress/export")
+@login_required
+def export_progress():
+    document = {"schema": "cmaster.progress", "version": 1, "username": current_user(),
+                "exported_at": int(time.time()), "progress": load_progress()}
+    return study_download(json.dumps(document, ensure_ascii=False, indent=2),
+                          "cmaster-progress-%s.json" % date.today().isoformat(),
+                          "application/json; charset=utf-8")
 
 
 @app.route("/analytics")

@@ -208,8 +208,126 @@ class LearningFlowTests(unittest.TestCase):
         response = self.client.get("/api/submissions/c001", headers={"X-CMaster-Account": "another"})
         self.assertEqual(response.status_code, 409)
 
+    def note(self, ref="lesson:1:1", **payload):
+        return self.client.post("/api/notebook/" + ref, json=payload,
+                                headers={"X-CMaster-Account": cm.user_storage_id("learner")})
+
+    def test_notebook_requires_login_and_real_resource(self):
+        guest = cm.app.test_client()
+        self.assertEqual(guest.get("/notebook").status_code, 302)
+        for path in ("/api/notebook/lesson:1:1", "/api/notebook/export", "/api/progress/export"):
+            self.assertEqual(guest.get(path).status_code, 401)
+        for ref in ("lesson:99:1", "lesson:1:99", "lesson:01:1", "problem:missing", "../users"):
+            self.assertEqual(self.note(ref, note="text", version=0).status_code, 404)
+        self.assertEqual(self.client.get("/api/notebook/lesson:1:1").get_json()["record"]["note"], "")
+
+    def test_bookmark_and_note_update_independently(self):
+        first = self.note(bookmarked=True, version=0).get_json()["record"]
+        self.assertEqual(first["version"], 1)
+        second = self.note(note="先编译，再链接。", version=1).get_json()["record"]
+        self.assertTrue(second["bookmarked"])
+        third = self.note(bookmarked=False, version=2).get_json()["record"]
+        self.assertEqual(third["note"], "先编译，再链接。")
+        self.assertFalse(third["bookmarked"])
+        self.assertEqual(cm.load_progress("learner")["attempts"], {})
+
+    def test_stale_note_save_preserves_newer_server_version(self):
+        self.note(note="新版思路", version=0)
+        response = self.note(note="过期标签页", version=0)
+        self.assertEqual(response.status_code, 409)
+        self.assertTrue(response.get_json()["conflict"])
+        self.assertEqual(response.get_json()["record"]["note"], "新版思路")
+        self.assertEqual(cm.load_progress("learner")["notebook"]["lesson:1:1"]["note"], "新版思路")
+
+    def test_empty_note_keeps_revision_against_stale_tabs(self):
+        self.note(note="需要删除的笔记", bookmarked=True, version=0)
+        response = self.note(note="", bookmarked=False, version=1)
+        self.assertEqual(response.get_json()["record"]["version"], 2)
+        self.assertNotIn('data-notebook-ref=', self.client.get("/notebook").get_data(as_text=True))
+        self.assertEqual(self.note(note="旧版本复活", version=0).status_code, 409)
+
+    def test_notebook_is_private_and_stale_account_is_rejected(self):
+        self.note(note="learner private notebook", bookmarked=True, version=0)
+        other = self.register("another-note-user")
+        other_record = other.get("/api/notebook/lesson:1:1").get_json()["record"]
+        self.assertEqual(other_record["note"], "")
+        self.assertNotIn("learner private notebook", other.get("/notebook").get_data(as_text=True))
+        response = other.post("/api/notebook/lesson:1:1", json={"note": "wrong account", "version": 0},
+                              headers={"X-CMaster-Account": cm.user_storage_id("learner")})
+        self.assertEqual(response.status_code, 409)
+        self.assertNotIn("notebook", cm.load_progress("another-note-user"))
+        self.assertEqual(self.client.post("/api/notebook/lesson:1:1", json={"version": 1, "note": "x"}).status_code, 409)
+
+    def test_notebook_validates_payload_and_length(self):
+        bad = [{"version": 0}, {"version": True, "note": "x"}, {"version": -1, "note": "x"},
+               {"version": 0, "note": 123}, {"version": 0, "note": "长" * 8001},
+               {"version": 0, "bookmarked": "true"}]
+        for payload in bad:
+            with self.subTest(payload_type=list(payload)):
+                self.assertEqual(self.note(**payload).status_code, 400)
+        self.assertEqual(self.client.post("/api/notebook/lesson:1:1", json=[],
+                         headers={"X-CMaster-Account": cm.user_storage_id("learner")}).status_code, 400)
+        self.assertEqual(self.note(note="边界" * 4000, version=0).status_code, 200)
+
+    def test_notebook_plain_text_is_escaped_in_pages(self):
+        text = '</textarea><script id="unsafe-note">alert(1)</script>\n指针 & 数组'
+        self.note(note=text, version=0)
+        for path in ("/notebook", "/chapter/1/1"):
+            page = self.client.get(path).get_data(as_text=True)
+            self.assertNotIn('<script id="unsafe-note">', page)
+            self.assertIn("&lt;/textarea&gt;", page)
+        self.assertEqual(self.client.get("/api/notebook/lesson:1:1").get_json()["record"]["note"], text)
+
+    def test_notebook_filters_saved_content(self):
+        self.note(note="编译管线 memory", version=0)
+        self.note("lesson:7:1", bookmarked=True, version=0)
+        self.note("problem:c001", note="Hello 的解题思路", bookmarked=True, version=0)
+        self.assertIn('data-notebook-ref="lesson:1:1"', self.client.get("/notebook?q=memory&view=notes&chapter=1").get_data(as_text=True))
+        filtered = self.client.get("/notebook?view=bookmarks&kind=problem").get_data(as_text=True)
+        self.assertIn('data-notebook-ref="problem:c001"', filtered)
+        self.assertNotIn('data-notebook-ref="lesson:', filtered)
+        self.assertIn("没有找到符合条件", self.client.get("/notebook?q=missing-query").get_data(as_text=True))
+        self.assertEqual(self.client.get("/notebook?view=invalid&kind=invalid&chapter=999").status_code, 200)
+
+    def test_notebook_exports_only_current_accounts_learning_data(self):
+        self.note(note="只属于 learner 的笔记", version=0)
+        self.submit("AC", "/* own accepted code */")
+        other = self.register("export-other")
+        other.post("/api/notebook/problem:c001", json={"note": "OTHER_PRIVATE", "version": 0},
+                   headers={"X-CMaster-Account": cm.user_storage_id("export-other")})
+        markdown = self.client.get("/api/notebook/export")
+        self.assertEqual(markdown.mimetype, "text/markdown")
+        self.assertIn("只属于 learner 的笔记", markdown.get_data(as_text=True))
+        exported = self.client.get("/api/progress/export")
+        self.assertIn("attachment", exported.headers["Content-Disposition"])
+        self.assertEqual(exported.headers["Cache-Control"], "no-store")
+        data = exported.get_json()
+        self.assertEqual(data["schema"], "cmaster.progress")
+        self.assertEqual(data["username"], "learner")
+        self.assertEqual(data["progress"]["solutions"]["c001"]["accepted"]["code"], "/* own accepted code */")
+        self.assertNotIn("OTHER_PRIVATE", exported.get_data(as_text=True))
+        for private_field in ("users", "salt", "hash", "secret"):
+            self.assertNotIn(private_field, data)
+
+    def test_noop_note_save_keeps_revision(self):
+        self.assertEqual(self.note(note="", version=0).get_json()["record"]["version"], 0)
+        self.note(note="保持原样", version=0)
+        self.assertEqual(self.note(note="保持原样", version=1).get_json()["record"]["version"], 1)
+
+    def test_parallel_notebook_updates_keep_each_resource(self):
+        def save(kid):
+            client = cm.app.test_client()
+            with client.session_transaction() as session:
+                session["user"] = "learner"
+            return client.post("/api/notebook/lesson:1:%d" % kid,
+                               json={"version": 0, "note": "小节 %d" % kid},
+                               headers={"X-CMaster-Account": cm.user_storage_id("learner")}).status_code
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+            self.assertEqual(list(pool.map(save, range(1, 5))), [200] * 4)
+        self.assertEqual(len(cm.load_progress("learner")["notebook"]), 4)
+
     def test_all_course_problem_and_learning_pages_render(self):
-        paths = ["/", "/training", "/wrongbook", "/profile", "/analytics", "/map", "/memory", "/playground"]
+        paths = ["/", "/notebook", "/training", "/wrongbook", "/profile", "/analytics", "/map", "/memory", "/playground"]
         paths += ["/chapter/%d/%d" % (cid, kid) for cid, ch in cm.CHAPTERS.items()
                   for kid in range(1, len(ch["knowledge_points"]) + 1)]
         paths += ["/problem/" + qid for qid in cm.QMAP]

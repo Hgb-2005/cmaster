@@ -100,6 +100,10 @@
 - **继续学习**：首页返回上次阅读的小节，推荐同章未通过练习和最近待复习错题。
 - **账号与进度**：本地账号（PBKDF2-SHA256），进度、通过记录、错题本
 - **自己的解法**：草稿按账号隔离；每题保留最近 10 次提交和最近通过代码，支持恢复与撤销恢复。
+- **收藏与私人笔记**：知识点和练习题都能收藏、写笔记；`/notebook` 按章节、类型和关键词筛选。
+  草稿立即保存在当前浏览器，点击保存后写入账号存档；多标签页编辑有版本冲突提示和撤销载入。
+- **导出学习资料**：笔记本可下载 Markdown 笔记和 JSON 学习记录（含进度、提交代码、收藏与笔记），
+  只导出当前登录账号，不包含密码或会话密钥。
 - **故障不扣学习记录**：系统错误保留提交代码供重试，不增加尝试次数、不进入错题本。
 - **错题本**：只收未通过的题，做对一次自动移出
 - **连续学习天数**：今天还没学时从昨天起算，不会一早打开就看到归零
@@ -156,6 +160,7 @@ c-master/
 ├── templates/              Jinja 模板（15 个页面，含 admin.html）
 ├── static/
 │   ├── css/style.css       站点样式
+│   ├── css/notebook.css    收藏、私人笔记与笔记本布局
 │   ├── css/motion.css      动效层（缓动变量 / 渐入 / 阅读条 / 判题反馈 / 徽章入场）
 │   ├── css/chart.css       Canvas 图表的图例 / tooltip / 容器
 │   ├── css/analytics.css   学习分析页版式（指标卡 / 图表网格 / 薄弱点表）
@@ -165,6 +170,7 @@ c-master/
 │   ├── css/ops.css         状态页版式（指标卡 / 图表网格 / 表格）
 │   ├── css/admin.css       管理台版式（沙箱卡 / 配额网格 / 计数 / 直方图）
 │   ├── js/editor.js        编辑器封装 + 判题结果渲染
+│   ├── js/notebook.js      笔记草稿、版本冲突处理和收藏
 │   ├── js/ux.js            搜索 / 快捷键 / 代码块壳 / 复制 / 渐入 / 阅读进度条
 │   ├── js/app.js           启动时检测编译器状态
 │   ├── js/lib/tween.js     补间动画引擎（单一 rAF / Timeline / stagger / 弹簧）
@@ -277,7 +283,7 @@ python tools/build_training.py --check
 真实编译执行仍使用下方的 `tools/gate.py` 验证。
 
 浏览器回归先启动 `python tests/browser_fixture.py`，再运行
-`node tests/learning-flow.cjs`（需本地 Playwright，默认使用 Edge，可设置
+`node tests/learning-flow.cjs` 与 `node tests/notebook.cjs`（需本地 Playwright，默认使用 Edge，可设置
 `CMASTER_BROWSER=chromium`）。该服务仅供测试，使用临时账号和模拟裁决。
 
 改完任何一处都跑这几道闸门。下面每行都**能被机器判对错**，不靠眼睛看：

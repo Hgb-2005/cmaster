@@ -1,0 +1,33 @@
+<section class="study-tools" aria-label="收藏与私人笔记">
+  {% if current_user %}
+  <div class="study-tool-bar">
+    <button class="btn btn-sm" id="study-bookmark" type="button" aria-pressed="{{ 'true' if study_record.bookmarked else 'false' }}">{{ '★ 已收藏' if study_record.bookmarked else '☆ 收藏' }}</button>
+    <a href="{{ url_for('notebook_page') }}">我的笔记本 <span aria-hidden="true">↗</span></a>
+  </div>
+  <details class="study-note" id="my-study-notes">
+    <summary>我的笔记<span id="study-note-indicator">{{ ' · 已记录' if study_record.note else '' }}</span></summary>
+    <form id="study-note-form">
+      <label for="study-note-text">留下自己的理解、易错点或解题思路</label>
+      <textarea id="study-note-text" rows="6" maxlength="8000" placeholder="例如：这里为什么要传指针？这道题第一次写错在哪里？">{{ study_record.note }}</textarea>
+      <div class="study-note-actions">
+        <button class="btn btn-primary btn-sm" id="study-note-save" type="submit">保存笔记</button>
+        <button class="btn btn-ghost btn-sm" id="study-note-undo" type="button" hidden>撤销载入</button>
+        <span id="study-note-count">{{ study_record.note|length }} / 8000</span>
+      </div>
+      <p class="study-note-status" id="study-note-status" role="status">{{ '已保存到账号' if study_record.note else '草稿暂存在此浏览器，保存后可在其他浏览器登录查看。' }}</p>
+    </form>
+    <div class="note-conflict" id="study-note-conflict" hidden>
+      <strong>另一页面已保存新版本，当前草稿仍保留。</strong>
+      <p>已保存的版本：</p>
+      <pre id="study-note-server"></pre>
+      <div class="study-note-actions">
+        <button class="btn btn-sm" id="study-note-load" type="button">载入已保存版本</button>
+        <button class="btn btn-ghost btn-sm" id="study-note-overwrite" type="button">用当前草稿覆盖保存</button>
+      </div>
+    </div>
+  </details>
+  <script type="application/json" id="study-note-data">{{ {"ref": study_ref, "record": study_record, "storageId": user_storage_id} | tojson }}</script>
+  {% else %}
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('login_page', next=request.path) }}">登录后收藏和记笔记</a>
+  {% endif %}
+</section>

@@ -6,6 +6,8 @@
 > 学习流程升级：训练卡片随仓库发布并支持缺失重建；完整用户名计算独立进度文件标识，
 > 旧文件仅在归属唯一时复制迁移；系统错误保存代码但不扣学习记录；首页有继续学习路线；
 > 做题页的草稿与历史恢复逻辑位于 `static/js/problem.js`。
+> 第二轮：课程/题目收藏与私人笔记，`/notebook` 支持组合筛选；Markdown 笔记与 JSON 学习记录导出。
+> 笔记写入必须携带账号标识和版本号；冲突返回 409，页面保留草稿供作者选择。
 > 新回归命令：`python -m unittest discover -s tests -v`。
 
 ## 一、这是什么
@@ -178,6 +180,13 @@ python tools/build_content.py --gate-only  # 只跑门禁（验证用）
 - `createEditor()` 在 CodeMirror 没加载时会**降级成原生 textarea**。宁可丑，不能让人写不了字。
 - 代码草稿进 `localStorage`（key `cmaster:code:v2:<账号标识>:<qid>`），AC 后保留。
   通过代码与最近 10 次提交保存在进度文件的 `solutions` 中，支持新浏览器恢复。
+- 收藏与笔记保存在进度文件 `notebook["lesson:<cid>:<kid>" | "problem:<qid>"]`。
+  `static/js/notebook.js` 同时在 `sessionStorage` 中保留每个标签页的草稿，在 `localStorage`
+  中保留最近草稿；保存请求携带 `X-CMaster-Account` 和 `version`，服务器在进度锁内比较版本。
+  取消收藏且清空笔记后仍保留版本号，避免过期页面覆盖。笔记按纯文本渲染，最多 8000 字。
+  `/api/notebook/export` 下载 Markdown，`/api/progress/export` 下载当前账号的学习数据 JSON；
+  两者都要求登录且返回 `Cache-Control: no-store`。这些下载链接带 `download`，跳过页面离场动画。
+  浏览器回归：`node tests/notebook.cjs`（先启动 `python tests/browser_fixture.py`）。
 - 判题页用 `{% block layout %}` 覆盖成宽布局（左题面右编辑器），其它页用默认窄栏。
 - 未标注语言的围栏代码块**不按 C 高亮**——内容里大量 ASCII 示意图混着中文，
   强行高亮会把箭头和中文标识符搞乱。
