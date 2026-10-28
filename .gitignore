@@ -4,7 +4,7 @@ runtime/w64devkit/
 runtime/*.7z.exe
 
 # 用户数据：账号、进度、session 密钥
-# users.json 里是**明文口令**，.secret 是 session 签名密钥。
+# users.json 里是口令哈希，.secret 是 session 签名密钥。
 # 这两条一旦进仓库就是永久泄漏——GitHub 上删了 commit 也还在历史里，
 # 只能改写历史 + 换密钥。改这个文件时别手滑。
 data/users.json
@@ -15,8 +15,7 @@ data/.readyz
 # 运行时打点：跑一次 e2e 就攒一堆样本，删掉会由 metrics.py 重建
 data/metrics.json
 
-# 训练数据也是运行产物（169KB，每次打点都可能变），跟着 metrics.json 走
-data/training.json
+# training.json 是可复现的课程内容，随仓库发布，不包含学习记录。
 
 # 沙箱宿主是编译出来的二进制，不是源码。
 # 这里必须排除：谁把 sandbox/runner_linux 提交进去，下一个在别的机器上

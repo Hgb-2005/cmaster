@@ -17,7 +17,6 @@
 data/users.json
 data/progress/
 data/metrics.json
-data/training.json
 data/.secret
 data/.readyz
 data/*.tmp
@@ -53,6 +52,6 @@ __pycache__/
 *.log
 
 # 说明：data/courses.json、data/question_bank.json、data/answers.json、
-# data/memory_demos.json **不能**排除——它们是运行时输入，缺了就是
+# data/memory_demos.json、data/training.json **不能**排除——它们是运行时输入，缺了就是
 # 一个没有任何课程和题目的空站。上面那份排除清单是逐条列的，
 # 没有用 data/* 这种通配，就是为了避免「顺手把课程也排掉」。

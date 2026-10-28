@@ -36,10 +36,11 @@ import re
 import secrets
 import shutil
 import sys
+import tempfile
 import threading
 import time
 from datetime import date, timedelta
-from hashlib import pbkdf2_hmac
+from hashlib import pbkdf2_hmac, sha256
 from functools import wraps
 
 from flask import (Flask, abort, jsonify, redirect, render_template, request,
@@ -51,7 +52,8 @@ import sandbox
 import verdicts
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
+CONTENT_DIR = os.path.join(BASE_DIR, "data")
+DATA_DIR = os.path.abspath(os.environ.get("CMASTER_DATA") or CONTENT_DIR)
 PROGRESS_DIR = os.path.join(DATA_DIR, "progress")
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
 
@@ -91,7 +93,7 @@ metrics.init(os.path.join(DATA_DIR, "metrics.json"))
 # 不挂这个的话，最后 5 秒的判题记录会随进程一起消失。
 atexit.register(metrics.flush, True)
 _users_lock = threading.Lock()
-_progress_lock = threading.Lock()
+_progress_lock = threading.RLock()
 
 
 # ---------------------------------------------------------------- 启动期加载
@@ -130,14 +132,39 @@ def _load_json(name, default):
         return json.load(f)
 
 
-COURSES = _load_json("courses.json", {"stages": [], "chapters": []})
-QUESTIONS = _load_json("question_bank.json", [])
-ANSWERS = _load_json("answers.json", {})
+def _atomic_json(path, data):
+    """独立临时文件再替换，读者不会看到半份 JSON。"""
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    pending = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", delete=False,
+                                         dir=os.path.dirname(path), suffix=".tmp") as f:
+            pending = f.name
+            json.dump(data, f, ensure_ascii=False, indent=1)
+        os.replace(pending, path)
+    finally:
+        if pending and os.path.exists(pending):
+            os.unlink(pending)
+
+
+def _load_content(name, default):
+    # 数据目录可独立挂载；空目录也可以读取随仓库发布的课程。
+    for directory in dict.fromkeys((DATA_DIR, CONTENT_DIR)):
+        path = os.path.join(directory, name)
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as f:
+                return json.load(f)
+    return default
+
+
+COURSES = _load_content("courses.json", {"stages": [], "chapters": []})
+QUESTIONS = _load_content("question_bank.json", [])
+ANSWERS = _load_content("answers.json", {})
 
 # 内存演示的布局数据由 tools/build_demos.py 生成（偏移、填充、字节全在那边算完）。
 # 这里只负责整份读进来：71KB，一次读完常驻，不为每次请求再解一遍 JSON。
 # 页面不做任何二次推算——前端只要自己算一遍地址，就一定会和这里生成的对不上。
-MEMORY_DEMOS = _load_json("memory_demos.json", {"scenarios": []})
+MEMORY_DEMOS = _load_content("memory_demos.json", {"scenarios": []})
 
 CHAPTERS = {c["id"]: c for c in COURSES["chapters"]}
 QMAP = {q["id"]: q for q in QUESTIONS}
@@ -160,7 +187,28 @@ MEMORY_STEPS = sum(len(s.get("steps", [])) for s in MEMORY_DEMOS.get("scenarios"
 # trace/cloze 是同一段参考代码，flash 是同一个知识点的正文。
 # 前端只按卡片字段画，不做任何「从代码里推断答案」的事——那等于把
 # 构建期的规则在前端重写一遍，两份规则早晚会漂移。
-TRAINING = _load_json("training.json", {"modes": [], "cards": {}})
+def _load_training():
+    try:
+        doc = _load_content("training.json", None)
+        if (isinstance(doc, dict) and doc.get("modes") and
+                all(doc.get("cards", {}).get(m["id"]) for m in doc["modes"])):
+            return doc
+    except (OSError, ValueError, KeyError, TypeError):
+        app.logger.warning("训练内容不可读，尝试从课程重新生成")
+    try:
+        from tools.build_training import build_document
+        doc = build_document()
+        try:
+            _atomic_json(os.path.join(DATA_DIR, "training.json"), doc)
+        except OSError:
+            app.logger.warning("训练内容已生成，本次仅保存在内存中")
+        return doc
+    except (OSError, ValueError, KeyError, TypeError):
+        app.logger.exception("训练内容暂不可用")
+        return {"modes": [], "cards": {}}
+
+
+TRAINING = _load_training()
 TRAINING_MODES = TRAINING.get("modes", [])
 TRAINING_CARDS = TRAINING.get("cards", {})
 TRAINING_COUNT = {m["id"]: len(TRAINING_CARDS.get(m["id"], []))
@@ -192,7 +240,7 @@ def _write_users(users):
 
 
 def _safe_user(name):
-    """用户名要落成文件名，必须过滤掉路径字符。"""
+    """仅用于定位旧版进度，新版不再把显示名称用作文件名。"""
     return re.sub(r"[^A-Za-z0-9_\-\u4e00-\u9fa5]", "_", name)[:40]
 
 
@@ -213,34 +261,67 @@ def login_required(fn):
 
 # ---------------------------------------------------------------- 进度
 
+def user_storage_id(username):
+    # 完整用户名参与计算，避免特殊字符、截断和大小写文件系统导致串号。
+    return "u_" + sha256(username.encode("utf-8")).hexdigest()
+
+
 def _progress_path(username):
-    return os.path.join(PROGRESS_DIR, _safe_user(username) + ".json")
+    return os.path.join(PROGRESS_DIR, user_storage_id(username) + ".json")
+
+
+def _legacy_progress(username):
+    legacy_name = _safe_user(username)
+    legacy_path = os.path.join(PROGRESS_DIR, legacy_name + ".json")
+    if not os.path.isfile(legacy_path):
+        return {}
+    # 旧文件本身没有归属信息。碰撞时保留原件，不能猜给哪一个账号。
+    owners = [name for name in _read_users()
+              if _safe_user(name).casefold() == legacy_name.casefold()]
+    if owners != [username]:
+        return {"migration_notice": "检测到旧版多个账号共用的进度。原始文件已保留，"
+                "当前账号已使用独立存档；旧记录需要确认归属后恢复。"}
+    with open(legacy_path, encoding="utf-8") as f:
+        data = json.load(f)
+    _atomic_json(_progress_path(username), data)
+    return data
 
 
 def load_progress(username=None):
     username = username or current_user()
     if not username:
         return {"read": [], "solved": {}, "attempts": {}, "wrong": {}}
-    data = _load_json(os.path.join("progress", _safe_user(username) + ".json"), None)
-    if data is None:
-        data = {}
-    data.setdefault("read", [])
-    data.setdefault("solved", {})
-    data.setdefault("attempts", {})
-    data.setdefault("wrong", {})
-    return data
+    with _progress_lock:
+        path = _progress_path(username)
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+        else:
+            data = _legacy_progress(username)
+        data.setdefault("read", [])
+        data.setdefault("solved", {})
+        data.setdefault("attempts", {})
+        data.setdefault("wrong", {})
+        dirty = False
+        for qid, rec in list(data["wrong"].items()):
+            if verdicts.owner(rec.get("status")) != "system":
+                continue
+            if rec.get("code") is not None:
+                data.setdefault("solutions", {}).setdefault(qid, {}).setdefault("latest", {
+                    "code": rec["code"], "status": "SE", "ts": rec.get("ts", 0)})
+            del data["wrong"][qid]
+            dirty = True
+        if dirty:
+            _atomic_json(path, data)
+        return data
 
 
 def save_progress(data, username=None):
     username = username or current_user()
     if not username:
         return
-    os.makedirs(PROGRESS_DIR, exist_ok=True)
-    path = _progress_path(username)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=1)
-    os.replace(tmp, path)
+    with _progress_lock:
+        _atomic_json(_progress_path(username), data)
 
 
 def _touch_day(data):
@@ -594,7 +675,54 @@ def index():
                            total_kp=TOTAL_KP,
                            read_kp=read_kp,
                            overall=overall,
+                           study_plan=study_plan(data) if current_user() else [],
+                           migration_notice=data.get("migration_notice"),
                            streak=learning_streak(data) if data else 0)
+
+
+def study_plan(data):
+    """继续阅读、配套练习、错题复习，共用真实学习记录。"""
+    lessons = [(cid, kid, kp) for cid, ch in sorted(CHAPTERS.items())
+               for kid, kp in enumerate(ch["knowledge_points"], 1)]
+    last = data.get("last_lesson") or {}
+    lesson = next((item for item in lessons
+                   if item[0] == last.get("cid") and item[1] == last.get("kid")), None)
+    resumed = lesson is not None
+    if lesson is None:
+        lesson = next((item for item in lessons
+                       if _kp_key(item[0], item[2]) not in data.get("read", [])), None)
+    if lesson:
+        cid, kid, kp = lesson
+        learn = {"kind": "learn", "label": "继续阅读" if resumed else "开始学习",
+                 "title": kp["title"], "description": "第 %d 章 · %s" % (cid, CHAPTERS[cid]["title"]),
+                 "url": url_for("chapter_kp", cid=cid, kid=kid),
+                 "action": "回到上次小节" if resumed else "打开小节"}
+    else:
+        cid = None
+        learn = {"kind": "learn", "label": "巩固所学", "title": "课程已通读，来一轮训练",
+                 "description": "用读代码、填空和概念快答检查理解。",
+                 "url": url_for("training_page"), "action": "开始训练"}
+
+    solved = data.get("solved", {})
+    pending = [q for q in QUESTIONS if solved.get(q["id"], {}).get("status") != "AC"]
+    question = next((q for q in pending if q["chapter"] == cid), pending[0] if pending else None)
+    practice = {"kind": "practice", "label": "配套练习",
+                "title": question["title"] if question else "全部练习已通过",
+                "description": "第 %d 章 · 用代码验证刚学的内容。" % question["chapter"] if question
+                               else "去游乐场自由写一段自己的程序。",
+                "url": url_for("problem_page", qid=question["id"]) if question else url_for("playground_page"),
+                "action": "动手写一题" if question else "自由编程"}
+    wrong = [(qid, rec) for qid, rec in data.get("wrong", {}).items()
+             if qid in QMAP and verdicts.owner(rec.get("status")) == "user"
+             and solved.get(qid, {}).get("status") != "AC"]
+    wrong.sort(key=lambda item: item[1].get("ts", 0), reverse=True)
+    review = {"kind": "review", "label": "错题复习",
+              "title": QMAP[wrong[0][0]]["title"] if wrong else "暂时没有待复习的错题",
+              "description": "还有 %d 道待攻克，先从最近的一道开始。" % len(wrong) if wrong
+                             else "做错的题会留在这里，通过后自动移出。",
+              "url": url_for("problem_page", qid=wrong[0][0]) if wrong else url_for("training_page"),
+              "action": "再试一次" if wrong else "做一轮巩固"}
+    return [learn, practice, review]
 
 
 @app.route("/chapter/<int:cid>")
@@ -614,22 +742,16 @@ def chapter_kp(cid, kid):
     if not 1 <= kid <= len(kps):
         abort(404)
 
-    data = load_progress() if current_user() else {}
-    read = set(data.get("read", []))
     key = "%d.%s" % (cid, kps[kid - 1]["title"].split(" ")[0])
-
-    # 打开即记为已读——低摩擦，学习类产品不该逼用户点「标记完成」
-    if current_user():
-        dirty = False
-        if key not in read:
+    with _progress_lock:
+        data = load_progress() if current_user() else {}
+        read = set(data.get("read", []))
+        if current_user():
             data["read"] = sorted(read | {key})
-            dirty = True
-        days_before = len(data.get("days") or [])
-        _touch_day(data)
-        if len(data.get("days") or []) != days_before:
-            dirty = True
-        if dirty:
+            data["last_lesson"] = {"cid": cid, "kid": kid, "ts": int(time.time())}
+            _touch_day(data)
             save_progress(data)
+            read.add(key)
 
     prev_ch = CHAPTERS.get(cid - 1)
     next_ch = CHAPTERS.get(cid + 1)
@@ -657,16 +779,24 @@ def problem_page(qid):
     if not q:
         abort(404)
     data = load_progress() if current_user() else {}
+    solution = data.get("solutions", {}).get(qid, {})
+    users = _read_users()
+    allow_legacy_draft = (not users and not current_user()) or list(users) == [current_user()]
     return render_template("problem.html",
                            q=q, chapter=CHAPTERS.get(q["chapter"]),
                            solved=data.get("solved", {}).get(qid),
-                           last_code=(data.get("wrong", {}).get(qid) or {}).get("code", ""),
+                           last_code=solution.get("latest", {}).get("code")
+                               or (data.get("wrong", {}).get(qid) or {}).get("code")
+                               or (data.get("solved", {}).get(qid) or {}).get("code"),
+                           solution=solution, allow_legacy_draft=allow_legacy_draft,
                            chapters=CHAPTERS)
 
 
 @app.route("/playground")
 def playground_page():
-    return render_template("playground.html", chapters=CHAPTERS)
+    users = _read_users()
+    return render_template("playground.html", chapters=CHAPTERS,
+                           allow_legacy_draft=(not users and not current_user()) or list(users) == [current_user()])
 
 
 @app.route("/wrongbook")
@@ -1327,6 +1457,8 @@ def api_training_cards():
     「再来一轮」要立刻换一批，抽牌在服务端做的话每轮都要等一个往返。
     整套给到前端，抽牌和去重都在内存里做，切换是零延迟。
     """
+    if not TRAINING_MODES:
+        return jsonify({"ok": False, "error": "训练内容暂不可用，请先阅读课程或练习题库。"}), 503
     mode = (request.args.get("mode") or "").strip()
     if mode not in TRAINING_CARDS:
         return jsonify({"ok": False, "error": "没有这个训练模式"}), 404
@@ -1567,10 +1699,12 @@ def api_run():
     不要求登录——让人先试试手感，再决定要不要注册。
     """
     payload = request.get_json(silent=True)
-    if payload is None:
+    if not isinstance(payload, dict):
         return jsonify({"ok": False, "error": "请求格式不对，需要 JSON"}), 400
-    code = payload.get("code") or ""
-    stdin_data = payload.get("stdin") or ""
+    code = payload.get("code", "")
+    stdin_data = payload.get("stdin", "")
+    if not isinstance(code, str) or not isinstance(stdin_data, str):
+        return jsonify({"ok": False, "error": "代码和标准输入需要是文本"}), 400
     if not code.strip():
         return jsonify({"ok": False, "error": "代码是空的"}), 400
     if len(code) > 100_000:
@@ -1608,10 +1742,14 @@ def api_run():
 @login_required
 def api_submit():
     payload = request.get_json(silent=True)
-    if payload is None:
+    if not isinstance(payload, dict):
         return jsonify({"ok": False, "error": "请求格式不对，需要 JSON"}), 400
-    qid = payload.get("qid") or ""
-    code = payload.get("code") or ""
+    if payload.get("accountId") and payload["accountId"] != user_storage_id(current_user()):
+        return jsonify({"ok": False, "error": "账号已在其他页面切换，请刷新后再提交。代码仍保存在原账号草稿中。"}), 409
+    qid = payload.get("qid", "")
+    code = payload.get("code", "")
+    if not isinstance(qid, str) or not isinstance(code, str):
+        return jsonify({"ok": False, "error": "题号和代码需要是文本"}), 400
     q = QMAP.get(qid)
     if not q:
         return jsonify({"ok": False, "error": "题目不存在"}), 404
@@ -1648,7 +1786,7 @@ def api_submit():
 
     _record_attempt(q, code, result)
     return jsonify({"ok": True, "result": result,
-                    "answer": ANSWERS.get(qid) if result["status"] != "AC" else None})
+                    "progress_recorded": verdicts.owner(result.get("status")) != "system"})
 
 
 def _record_attempt(q, code, result):
@@ -1658,12 +1796,25 @@ def _record_attempt(q, code, result):
         qid = q["id"]
         now = int(time.time())
 
+        solution = data.setdefault("solutions", {}).setdefault(qid, {})
+        entry = {"id": secrets.token_hex(8), "code": code,
+                 "status": result.get("status") or "SE", "ts": now}
+        solution["latest"] = entry
+        solution["history"] = (solution.get("history", []) + [entry])[-10:]
+        if entry["status"] == "AC":
+            solution["accepted"] = entry
+        if verdicts.owner(entry["status"]) == "system":
+            # 保存代码方便重试，但故障不计学生尝试、错题和学习统计。
+            save_progress(data)
+            return
+
         data["attempts"][qid] = data["attempts"].get(qid, 0) + 1
 
         if result["status"] == "AC":
             first = qid not in data["solved"]
-            data["solved"][qid] = {"status": "AC", "ts": now,
-                                   "attempts": data["attempts"][qid]}
+            previous = data["solved"].get(qid, {})
+            data["solved"][qid] = {"status": "AC", "ts": previous.get("ts", now),
+                                   "attempts": previous.get("attempts", data["attempts"][qid])}
             # 做对了就从错题本移走——错题本的意义是「还没弄懂的」
             data["wrong"].pop(qid, None)
             if first:
@@ -1682,6 +1833,17 @@ def _record_attempt(q, code, result):
                 }
         _touch_day(data)
         save_progress(data)
+
+
+@app.route("/api/submissions/<qid>")
+@login_required
+def api_submissions(qid):
+    expected = request.headers.get("X-CMaster-Account")
+    if expected and expected != user_storage_id(current_user()):
+        return jsonify({"ok": False, "error": "账号已切换，请刷新页面。"}), 409
+    if qid not in QMAP:
+        abort(404)
+    return jsonify({"ok": True, "solution": load_progress().get("solutions", {}).get(qid, {})})
 
 
 @app.route("/api/answer/<qid>")
@@ -1718,6 +1880,7 @@ def server_error(_e):
 @app.context_processor
 def inject_globals():
     return {"current_user": current_user(),
+            "user_storage_id": user_storage_id(current_user()) if current_user() else "guest",
             "site_name": "CMaster",
             "chapters": CHAPTERS,
             "stages": COURSES["stages"],

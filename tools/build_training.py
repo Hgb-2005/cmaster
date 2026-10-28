@@ -463,7 +463,8 @@ def validate(doc):
 
 # ---------------------------------------------------------------- 入口
 
-def main():
+def build_document():
+    """返回经过校验的卡片内容，供构建和首次启动共用。"""
     questions = load("question_bank.json")
     answers = load("answers.json")
     courses = load("courses.json")
@@ -489,10 +490,18 @@ def main():
 
     problems = validate(doc)
     if problems:
-        print("校验失败，共 %d 处：" % len(problems))
-        for p in problems[:24]:
-            print("  -", p)
+        raise ValueError("训练卡片校验失败：" + "; ".join(problems[:24]))
+    return doc
+
+
+def main():
+    try:
+        doc = build_document()
+    except ValueError as exc:
+        print(str(exc))
         return 1
+
+    trace, cloze, flash = (doc["cards"][mode] for mode in ("trace", "cloze", "flash"))
 
     stat = "--stat" in sys.argv
     if stat:

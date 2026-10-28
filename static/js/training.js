@@ -56,7 +56,7 @@
   var ADVANCE_OK_MS = 720; // 答对后自动翻页的停留时间（够看完「对」的反馈）
 
   var OPT_KEY = "cm.train.opt";
-  var BEST_KEY = "cm.train.best";
+  var BEST_KEY = "cm.train.best:v2:" + document.body.dataset.storageId;
 
   var REDUCE = window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;

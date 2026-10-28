@@ -9,6 +9,14 @@
 {% block wrap_class %}wrap-wide{% endblock %}
 
 {% block content %}
+{% if not modes %}
+<div class="page-head">
+  <h1>训练内容正在准备</h1>
+  <p>暂时无法加载训练卡片。你的学习记录仍会保留，可以先阅读课程或完成练习。</p>
+  <a class="btn btn-primary" href="{{ url_for('problems_page') }}">去题库练习</a>
+  <a class="btn" href="{{ url_for('index') }}">返回课程</a>
+</div>
+{% else %}
 <div class="tr-page">
 
   <header class="tr-head">
@@ -155,6 +163,7 @@
   "sizes": sizes,
   "stats": stats or {}
 } | tojson }}</script>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}

@@ -1,7 +1,12 @@
 # 接手指南（当前状态速查）
 
 > 本文只写「接手继续干活需要知道的事」。想改内容看第四节，想改判题看第五节。
-> 最后更新：2026-10-27
+> 最后更新：2026-10-28
+>
+> 学习流程升级：训练卡片随仓库发布并支持缺失重建；完整用户名计算独立进度文件标识，
+> 旧文件仅在归属唯一时复制迁移；系统错误保存代码但不扣学习记录；首页有继续学习路线；
+> 做题页的草稿与历史恢复逻辑位于 `static/js/problem.js`。
+> 新回归命令：`python -m unittest discover -s tests -v`。
 
 ## 一、这是什么
 
@@ -171,7 +176,8 @@ python tools/build_content.py --gate-only  # 只跑门禁（验证用）
   别在子模板里覆盖 `{% block layout %}`——里面再定义一次 `{% block content %}` 会撞
   `block 'content' defined twice`。
 - `createEditor()` 在 CodeMirror 没加载时会**降级成原生 textarea**。宁可丑，不能让人写不了字。
-- 代码草稿进 `localStorage`（key `cmaster:code:<qid>`），AC 后清除。
+- 代码草稿进 `localStorage`（key `cmaster:code:v2:<账号标识>:<qid>`），AC 后保留。
+  通过代码与最近 10 次提交保存在进度文件的 `solutions` 中，支持新浏览器恢复。
 - 判题页用 `{% block layout %}` 覆盖成宽布局（左题面右编辑器），其它页用默认窄栏。
 - 未标注语言的围栏代码块**不按 C 高亮**——内容里大量 ASCII 示意图混着中文，
   强行高亮会把箭头和中文标识符搞乱。
@@ -216,7 +222,7 @@ python tools/build_content.py --gate-only  # 只跑门禁（验证用）
 
 ## 六之二、个人中心的数据模型
 
-`data/progress/<user>.json` 里与学习轨迹相关的四个键：
+`data/progress/u_<完整用户名SHA256>.json` 里与学习轨迹相关的四个键：
 
 | 键 | 结构 | 谁写 |
 | --- | --- | --- |
@@ -988,6 +994,6 @@ WA、CE（`Assertion failed: 1==2, file main.c, line 2` —— 临时目录前�
   仓库里的 `gate.py` / `crawl.py` 不需要账号，随时可跑。
 - `data/metrics.json` 是 `/ops` 的数据源，跑过 e2e 之后里面会有一堆压测留下的样本。
   它是运行产物，删掉无害（`metrics.py` 会重建），但别当成固定输入去断言具体数值。
-- `/training` 的成绩写进 `data/progress/<user>.json` 的 `training` 字段，不另开文件——
+- `/training` 的成绩写进账号独立进度文件的 `training` 字段，不另开文件——
   训练也要算「今天学了」，streak、热力图、成就都读同一份进度。
   落盘的 `training.cards` 是「累计错次」表，只增不清（超过 600 条才头部裁剪）。

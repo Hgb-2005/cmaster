@@ -332,6 +332,11 @@ def _judge_impl(question, code):
                 "message": "这道题没有配置测试用例。", "cases": [],
                 "compile_ms": 0, "judge_ms": 0}
 
+    if not find_compiler():
+        return {"status": "SE", "passed": 0, "total": len(cases), "cases": [],
+                "message": "判题服务尚未配置 C 编译器，请稍后重试。你的代码已保留。",
+                "compile_ms": 0, "judge_ms": 0}
+
     # 编译耗时单列出来给 /ops 用。它经常占整个判题时间的一半以上，
     # 但用户在页面上只看到一个总数——「慢」到底慢在编译还是慢在跑，
     # 是两件完全不同的事（前者该优化调用方式，后者该查题目算法）。

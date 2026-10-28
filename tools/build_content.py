@@ -192,6 +192,8 @@ def main():
             {k: v for k, v in q.items() if k != "answer"} for q in questions
         ])
         write_json("answers.json", {q["id"]: q["answer"] for q in questions})
+        from build_training import build_document
+        write_json("training.json", build_document())
 
     if args.no_gate:
         print("跳过门禁（--no-gate）")

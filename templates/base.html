@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/motion.css') }}">
   {% block head %}{% endblock %}
 </head>
-<body data-logged-in="{{ '1' if current_user else '0' }}">
+<body data-logged-in="{{ '1' if current_user else '0' }}" data-storage-id="{{ user_storage_id }}">
 <header class="topbar">
   <a class="brand" href="{{ url_for('index') }}">
     <span class="brand-mark">C</span>

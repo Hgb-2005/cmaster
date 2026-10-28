@@ -1,0 +1,6120 @@
+{
+ "modes": [
+  {
+   "id": "trace",
+   "name": "顺藤摸瓜",
+   "short": "读代码说输出",
+   "desc": "给一段能跑的代码和它的输入，把输出写出来。能算对，说明你真的在脑子里跑起来了。"
+  },
+  {
+   "id": "cloze",
+   "name": "填空补洞",
+   "short": "补关键 token",
+   "desc": "参考代码挖掉了几处关键写法，从词库里挑回来。挖的都是最容易写错的地方：箭头、格式符、比较、sizeof。"
+  },
+  {
+   "id": "flash",
+   "name": "概念快答",
+   "short": "翻卡自评",
+   "desc": "正面是知识点标题，背面是正文提炼的要点。翻完老实说一句「记得 / 模糊 / 忘了」，忘了的会再回来。"
+  }
+ ],
+ "cards": {
+  "trace": [
+   {
+    "id": "trace-c001",
+    "qid": "c001",
+    "title": "Hello, C",
+    "chapter": 1,
+    "difficulty": "easy",
+    "tags": [
+     "输出"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    printf(\"Hello, C\\n\");\n    return 0;\n}",
+    "stdin": "",
+    "expect": "Hello, C",
+    "case_index": 0,
+    "hint": "printf 里别忘了 \\n，它表示换行。"
+   },
+   {
+    "id": "trace-c002",
+    "qid": "c002",
+    "title": "三行自我介绍",
+    "chapter": 1,
+    "difficulty": "easy",
+    "tags": [
+     "输出"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    printf(\"name: cmaster\\n\");\n    printf(\"lang: C\\n\");\n    printf(\"level: 1\\n\");\n    return 0;\n}",
+    "stdin": "",
+    "expect": "name: cmaster\nlang: C\nlevel: 1",
+    "case_index": 0,
+    "hint": "三次 printf，或者一次 printf 里放三个 \\n。"
+   },
+   {
+    "id": "trace-c003",
+    "qid": "c003",
+    "title": "星号三角形",
+    "chapter": 1,
+    "difficulty": "easy",
+    "tags": [
+     "输出",
+     "循环"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 1; i <= n; i++) {\n        for (int j = 0; j < i; j++) putchar('*');\n        putchar('\\n');\n    }\n    return 0;\n}",
+    "stdin": "1\n",
+    "expect": "*",
+    "case_index": 1,
+    "hint": "外层循环控制行，内层循环控制每行的星号数量。"
+   },
+   {
+    "id": "trace-c004",
+    "qid": "c004",
+    "title": "A + B",
+    "chapter": 2,
+    "difficulty": "easy",
+    "tags": [
+     "输入输出",
+     "整数"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}",
+    "stdin": "1 2\n",
+    "expect": "3",
+    "case_index": 0,
+    "hint": "`scanf(\"%d %d\", &a, &b)` 一次读两个。"
+   },
+   {
+    "id": "trace-c005",
+    "qid": "c005",
+    "title": "摄氏转华氏",
+    "chapter": 2,
+    "difficulty": "easy",
+    "tags": [
+     "浮点",
+     "格式化"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    double c;\n    scanf(\"%lf\", &c);\n    printf(\"%.2f\\n\", c * 9.0 / 5.0 + 32.0);\n    return 0;\n}",
+    "stdin": "0\n",
+    "expect": "32.00",
+    "case_index": 1,
+    "hint": "注意 `9 / 5` 是整数除法得 1，要写成 `9.0 / 5` 或 `c * 9 / 5.0`。"
+   },
+   {
+    "id": "trace-c006",
+    "qid": "c006",
+    "title": "圆的面积与周长",
+    "chapter": 2,
+    "difficulty": "easy",
+    "tags": [
+     "浮点",
+     "常量"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    const double PI = 3.1415926;\n    double r;\n    scanf(\"%lf\", &r);\n    printf(\"%.3f %.3f\\n\", PI * r * r, 2 * PI * r);\n    return 0;\n}",
+    "stdin": "1\n",
+    "expect": "3.142 6.283",
+    "case_index": 0,
+    "hint": "别用 `scanf(\"%f\")` 读 double。"
+   },
+   {
+    "id": "trace-c007",
+    "qid": "c007",
+    "title": "交换两个整数",
+    "chapter": 2,
+    "difficulty": "easy",
+    "tags": [
+     "变量",
+     "交换"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int a, b, t;\n    scanf(\"%d %d\", &a, &b);\n    t = a; a = b; b = t;\n    printf(\"%d %d\\n\", a, b);\n    return 0;\n}",
+    "stdin": "3 5\n",
+    "expect": "5 3",
+    "case_index": 0,
+    "hint": "`int t = a; a = b; b = t;`"
+   },
+   {
+    "id": "trace-c008",
+    "qid": "c008",
+    "title": "整数与浮点除法",
+    "chapter": 2,
+    "difficulty": "medium",
+    "tags": [
+     "整数除法",
+     "陷阱"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a / b);\n    printf(\"%d\\n\", a % b);\n    printf(\"%.4f\\n\", (double)a / b);\n    return 0;\n}",
+    "stdin": "7 2\n",
+    "expect": "3\n1\n3.5000",
+    "case_index": 0,
+    "hint": "第三行要先把 a 或 b 转成 double，否则会先做整数除法。"
+   },
+   {
+    "id": "trace-c009",
+    "qid": "c009",
+    "title": "各位数字之和",
+    "chapter": 2,
+    "difficulty": "medium",
+    "tags": [
+     "取模",
+     "数字拆分"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long n;\n    scanf(\"%lld\", &n);\n    int sum = 0;\n    while (n > 0) {\n        sum += (int)(n % 10);\n        n /= 10;\n    }\n    printf(\"%d\\n\", sum);\n    return 0;\n}",
+    "stdin": "0\n",
+    "expect": "0",
+    "case_index": 1,
+    "hint": "`n % 10` 拿到个位，`n / 10` 去掉个位，循环直到 n 为 0。"
+   },
+   {
+    "id": "trace-c010",
+    "qid": "c010",
+    "title": "闰年判断",
+    "chapter": 3,
+    "difficulty": "medium",
+    "tags": [
+     "逻辑运算",
+     "分支"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int y;\n    scanf(\"%d\", &y);\n    if ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0)\n        printf(\"yes\\n\");\n    else\n        printf(\"no\\n\");\n    return 0;\n}",
+    "stdin": "1900\n",
+    "expect": "no",
+    "case_index": 1,
+    "hint": "`(y % 4 == 0 && y % 100 != 0) || y % 400 == 0`"
+   },
+   {
+    "id": "trace-c011",
+    "qid": "c011",
+    "title": "三个数的最大值",
+    "chapter": 3,
+    "difficulty": "easy",
+    "tags": [
+     "三元运算符"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int a, b, c, m;\n    scanf(\"%d %d %d\", &a, &b, &c);\n    m = a > b ? a : b;\n    m = m > c ? m : c;\n    printf(\"%d\\n\", m);\n    return 0;\n}",
+    "stdin": "3 9 5\n",
+    "expect": "9",
+    "case_index": 0,
+    "hint": "先求前两个的最大值，再和第三个比。"
+   },
+   {
+    "id": "trace-c012",
+    "qid": "c012",
+    "title": "奇偶判断（位运算）",
+    "chapter": 3,
+    "difficulty": "easy",
+    "tags": [
+     "位运算"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", (n & 1) ? \"odd\" : \"even\");\n    return 0;\n}",
+    "stdin": "7\n",
+    "expect": "odd",
+    "case_index": 0,
+    "hint": "任何整数的二进制最低位为 1 就是奇数：`n & 1`。"
+   },
+   {
+    "id": "trace-c013",
+    "qid": "c013",
+    "title": "判断 2 的幂",
+    "chapter": 3,
+    "difficulty": "medium",
+    "tags": [
+     "位运算"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    unsigned int n;\n    scanf(\"%u\", &n);\n    printf(\"%s\\n\", (n > 0 && (n & (n - 1)) == 0) ? \"yes\" : \"no\");\n    return 0;\n}",
+    "stdin": "6\n",
+    "expect": "no",
+    "case_index": 2,
+    "hint": "`n & (n - 1)` 会消掉最低位的 1，结果为 0 就是 2 的幂。别忘了 n > 0。"
+   },
+   {
+    "id": "trace-c014",
+    "qid": "c014",
+    "title": "秒数转时分秒",
+    "chapter": 3,
+    "difficulty": "easy",
+    "tags": [
+     "取模",
+     "换算"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long t;\n    scanf(\"%lld\", &t);\n    long long h = t / 3600;\n    long long m = t % 3600 / 60;\n    long long s = t % 60;\n    printf(\"%lld:%lld:%lld\\n\", h, m, s);\n    return 0;\n}",
+    "stdin": "3661\n",
+    "expect": "1:1:1",
+    "case_index": 0,
+    "hint": "先 `t / 3600` 得小时，再对剩下的取模。"
+   },
+   {
+    "id": "trace-c015",
+    "qid": "c015",
+    "title": "绝对值",
+    "chapter": 3,
+    "difficulty": "easy",
+    "tags": [
+     "三元运算符"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int x;\n    scanf(\"%d\", &x);\n    printf(\"%d\\n\", x < 0 ? -x : x);\n    return 0;\n}",
+    "stdin": "7\n",
+    "expect": "7",
+    "case_index": 1,
+    "hint": "`x < 0 ? -x : x`"
+   },
+   {
+    "id": "trace-c016",
+    "qid": "c016",
+    "title": "成绩等级",
+    "chapter": 4,
+    "difficulty": "easy",
+    "tags": [
+     "分支"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int s;\n    scanf(\"%d\", &s);\n    if (s >= 90)      printf(\"A\\n\");\n    else if (s >= 80) printf(\"B\\n\");\n    else if (s >= 70) printf(\"C\\n\");\n    else if (s >= 60) printf(\"D\\n\");\n    else              printf(\"F\\n\");\n    return 0;\n}",
+    "stdin": "95\n",
+    "expect": "A",
+    "case_index": 0,
+    "hint": "if-else if 链，从高到低判断。"
+   },
+   {
+    "id": "trace-c017",
+    "qid": "c017",
+    "title": "1 到 n 求和",
+    "chapter": 4,
+    "difficulty": "easy",
+    "tags": [
+     "循环",
+     "累加"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    long long sum = 0;\n    for (int i = 1; i <= n; i++) sum += i;\n    printf(\"%lld\\n\", sum);\n    return 0;\n}",
+    "stdin": "1\n",
+    "expect": "1",
+    "case_index": 1,
+    "hint": "累加变量要用 `long long`，n=10^6 时和约 5×10^11，超过 int。"
+   },
+   {
+    "id": "trace-c018",
+    "qid": "c018",
+    "title": "九九乘法表的一行",
+    "chapter": 4,
+    "difficulty": "easy",
+    "tags": [
+     "嵌套循环"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 1; i <= n; i++) {\n        if (i > 1) putchar(' ');\n        printf(\"%d*%d=%d\", n, i, n * i);\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "stdin": "1\n",
+    "expect": "1*1=1",
+    "case_index": 1,
+    "hint": "注意最后一个元素后面不要多输出空格。"
+   },
+   {
+    "id": "trace-c019",
+    "qid": "c019",
+    "title": "素数判断",
+    "chapter": 4,
+    "difficulty": "medium",
+    "tags": [
+     "素数",
+     "循环"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long n;\n    scanf(\"%lld\", &n);\n    if (n < 2) { printf(\"no\\n\"); return 0; }\n    for (long long i = 2; i * i <= n; i++) {\n        if (n % i == 0) { printf(\"no\\n\"); return 0; }\n    }\n    printf(\"yes\\n\");\n    return 0;\n}",
+    "stdin": "1\n",
+    "expect": "no",
+    "case_index": 1,
+    "hint": "只需试除到 √n。写成 `i * i <= n` 避免开方函数。"
+   },
+   {
+    "id": "trace-c020",
+    "qid": "c020",
+    "title": "1 到 n 的偶数",
+    "chapter": 4,
+    "difficulty": "easy",
+    "tags": [
+     "循环",
+     "continue"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int first = 1;\n    for (int i = 2; i <= n; i += 2) {\n        if (!first) putchar(' ');\n        printf(\"%d\", i);\n        first = 0;\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "stdin": "2\n",
+    "expect": "2",
+    "case_index": 2,
+    "hint": "可以用 `i += 2` 直接跳，也可以用 continue 练习。"
+   },
+   {
+    "id": "trace-c021",
+    "qid": "c021",
+    "title": "整数反转",
+    "chapter": 4,
+    "difficulty": "medium",
+    "tags": [
+     "循环",
+     "数字拆分"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long n;\n    scanf(\"%lld\", &n);\n    int neg = n < 0;\n    if (neg) n = -n;\n    long long rev = 0;\n    while (n > 0) {\n        rev = rev * 10 + n % 10;\n        n /= 10;\n    }\n    printf(\"%lld\\n\", neg ? -rev : rev);\n    return 0;\n}",
+    "stdin": "0\n",
+    "expect": "0",
+    "case_index": 2,
+    "hint": "先取绝对值处理，最后补符号。用 `rev * 10 + n % 10` 逐位构建。"
+   },
+   {
+    "id": "trace-c022",
+    "qid": "c022",
+    "title": "最大公约数（辗转相除）",
+    "chapter": 4,
+    "difficulty": "medium",
+    "tags": [
+     "循环",
+     "最大公约数"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long a, b;\n    scanf(\"%lld %lld\", &a, &b);\n    while (b != 0) {\n        long long t = a % b;\n        a = b;\n        b = t;\n    }\n    printf(\"%lld\\n\", a);\n    return 0;\n}",
+    "stdin": "12 18\n",
+    "expect": "6",
+    "case_index": 0,
+    "hint": "`while (b) { t = a % b; a = b; b = t; }` 循环结束时 a 就是答案。"
+   },
+   {
+    "id": "trace-c023",
+    "qid": "c023",
+    "title": "最大值与最小值",
+    "chapter": 5,
+    "difficulty": "easy",
+    "tags": [
+     "数组",
+     "遍历"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int a[1000];\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    int mx = a[0], mn = a[0];\n    for (int i = 1; i < n; i++) {\n        if (a[i] > mx) mx = a[i];\n        if (a[i] < mn) mn = a[i];\n    }\n    printf(\"%d %d\\n\", mx, mn);\n    return 0;\n}",
+    "stdin": "5\n3 9 1 7 4\n",
+    "expect": "9 1",
+    "case_index": 0,
+    "hint": "初始化时把 min 设成第一个元素，不要设成 0。"
+   },
+   {
+    "id": "trace-c024",
+    "qid": "c024",
+    "title": "数组逆序输出",
+    "chapter": 5,
+    "difficulty": "easy",
+    "tags": [
+     "数组",
+     "逆序"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    for (int i = n - 1; i >= 0; i--) {\n        if (i != n - 1) putchar(' ');\n        printf(\"%d\", a[i]);\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "stdin": "1\n7\n",
+    "expect": "7",
+    "case_index": 1,
+    "hint": "从 n-1 倒着遍历。"
+   },
+   {
+    "id": "trace-c025",
+    "qid": "c025",
+    "title": "求和与平均值",
+    "chapter": 5,
+    "difficulty": "easy",
+    "tags": [
+     "数组",
+     "统计"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\"%d\", &n);\n    long long sum = 0;\n    for (int i = 0; i < n; i++) {\n        scanf(\"%d\", &a[i]);\n        sum += a[i];\n    }\n    printf(\"%lld %.2f\\n\", sum, (double)sum / n);\n    return 0;\n}",
+    "stdin": "3\n1 2 4\n",
+    "expect": "7 2.33",
+    "case_index": 1,
+    "hint": "平均值要用 `(double)sum / n`。"
+   },
+   {
+    "id": "trace-c026",
+    "qid": "c026",
+    "title": "冒泡排序",
+    "chapter": 5,
+    "difficulty": "medium",
+    "tags": [
+     "排序",
+     "冒泡"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    for (int i = 0; i < n - 1; i++) {\n        int swapped = 0;\n        for (int j = 0; j < n - 1 - i; j++) {\n            if (a[j] > a[j + 1]) {\n                int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;\n                swapped = 1;\n            }\n        }\n        if (!swapped) break;\n    }\n    for (int i = 0; i < n; i++) {\n        if (i) putchar(' ');\n        printf(\"%d\", a[i]);\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "stdin": "1\n9\n",
+    "expect": "9",
+    "case_index": 2,
+    "hint": "两层循环，外层控制轮数，内层比较相邻元素。加 swapped 标志提前退出。"
+   },
+   {
+    "id": "trace-c027",
+    "qid": "c027",
+    "title": "二分查找",
+    "chapter": 5,
+    "difficulty": "medium",
+    "tags": [
+     "二分查找"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000], t;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    scanf(\"%d\", &t);\n    int lo = 0, hi = n - 1, ans = -1;\n    while (lo <= hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (a[mid] == t) { ans = mid; break; }\n        if (a[mid] < t) lo = mid + 1;\n        else hi = mid - 1;\n    }\n    printf(\"%d\\n\", ans);\n    return 0;\n}",
+    "stdin": "5\n1 3 5 7 9\n7\n",
+    "expect": "3",
+    "case_index": 0,
+    "hint": "`mid = lo + (hi - lo) / 2` 防溢出。循环条件是 `lo <= hi`。"
+   },
+   {
+    "id": "trace-c028",
+    "qid": "c028",
+    "title": "正负零统计",
+    "chapter": 5,
+    "difficulty": "easy",
+    "tags": [
+     "数组",
+     "统计"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int pos = 0, neg = 0, zero = 0;\n    for (int i = 0; i < n; i++) {\n        int x;\n        scanf(\"%d\", &x);\n        if (x > 0) pos++;\n        else if (x < 0) neg++;\n        else zero++;\n    }\n    printf(\"%d %d %d\\n\", pos, neg, zero);\n    return 0;\n}",
+    "stdin": "6\n1 -2 0 3 -4 0\n",
+    "expect": "2 2 2",
+    "case_index": 0,
+    "hint": "三个计数器，一次遍历。"
+   },
+   {
+    "id": "trace-c029",
+    "qid": "c029",
+    "title": "矩阵转置",
+    "chapter": 5,
+    "difficulty": "medium",
+    "tags": [
+     "二维数组",
+     "矩阵"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int m, n, a[10][10];\n    scanf(\"%d %d\", &m, &n);\n    for (int i = 0; i < m; i++)\n        for (int j = 0; j < n; j++)\n            scanf(\"%d\", &a[i][j]);\n\n    for (int j = 0; j < n; j++) {\n        for (int i = 0; i < m; i++) {\n            if (i) putchar(' ');\n            printf(\"%d\", a[i][j]);\n        }\n        putchar('\\n');\n    }\n    return 0;\n}",
+    "stdin": "1 1\n7\n",
+    "expect": "7",
+    "case_index": 1,
+    "hint": "新矩阵的第 i 行第 j 列 = 原矩阵的第 j 行第 i 列。"
+   },
+   {
+    "id": "trace-c030",
+    "qid": "c030",
+    "title": "阶乘（递归）",
+    "chapter": 6,
+    "difficulty": "medium",
+    "tags": [
+     "函数",
+     "递归"
+    ],
+    "code": "#include <stdio.h>\n\nlong long fact(int n) {\n    if (n <= 1) return 1;\n    return n * fact(n - 1);\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%lld\\n\", fact(n));\n    return 0;\n}",
+    "stdin": "0\n",
+    "expect": "1",
+    "case_index": 1,
+    "hint": "`if (n <= 1) return 1; return n * f(n - 1);`"
+   },
+   {
+    "id": "trace-c031",
+    "qid": "c031",
+    "title": "斐波那契数列",
+    "chapter": 6,
+    "difficulty": "medium",
+    "tags": [
+     "函数",
+     "递归",
+     "记忆化"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    long long a = 0, b = 1;\n    for (int i = 0; i < n; i++) {\n        long long t = a + b;\n        a = b;\n        b = t;\n    }\n    printf(\"%lld\\n\", a);\n    return 0;\n}",
+    "stdin": "0\n",
+    "expect": "0",
+    "case_index": 1,
+    "hint": "迭代写法：`a=0, b=1; 循环 n 次 { t=a+b; a=b; b=t; }`。注意用 long long。"
+   },
+   {
+    "id": "trace-c032",
+    "qid": "c032",
+    "title": "汉诺塔步数",
+    "chapter": 6,
+    "difficulty": "medium",
+    "tags": [
+     "函数",
+     "递归"
+    ],
+    "code": "#include <stdio.h>\n\nlong long hanoi(int n) {\n    if (n == 0) return 0;\n    return 2 * hanoi(n - 1) + 1;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%lld\\n\", hanoi(n));\n    return 0;\n}",
+    "stdin": "3\n",
+    "expect": "7",
+    "case_index": 0,
+    "hint": "也可以用公式 2^n - 1，但本题要求递归。注意 2^30 超出 int。"
+   },
+   {
+    "id": "trace-c033",
+    "qid": "c033",
+    "title": "完全数判断",
+    "chapter": 6,
+    "difficulty": "easy",
+    "tags": [
+     "函数",
+     "完全数"
+    ],
+    "code": "#include <stdio.h>\n\nlong long sum_proper_divisors(int n) {\n    long long s = 0;\n    for (int i = 1; i * i <= n; i++) {\n        if (n % i == 0) {\n            s += i;\n            if (i != 1 && i != n / i) s += n / i;\n        }\n    }\n    return s;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", sum_proper_divisors(n) == n ? \"yes\" : \"no\");\n    return 0;\n}",
+    "stdin": "10\n",
+    "expect": "no",
+    "case_index": 2,
+    "hint": "试除到 n/2 即可，或到 √n 时成对累加（更快）。"
+   },
+   {
+    "id": "trace-c034",
+    "qid": "c034",
+    "title": "数组排序（函数封装）",
+    "chapter": 6,
+    "difficulty": "medium",
+    "tags": [
+     "函数",
+     "数组参数"
+    ],
+    "code": "#include <stdio.h>\n\nvoid sort(int a[], int n) {\n    for (int i = 0; i < n - 1; i++)\n        for (int j = 0; j < n - 1 - i; j++)\n            if (a[j] > a[j + 1]) {\n                int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;\n            }\n}\n\nint main(void) {\n    int n, a[100];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    sort(a, n);\n    for (int i = 0; i < n; i++) {\n        if (i) putchar(' ');\n        printf(\"%d\", a[i]);\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "stdin": "2\n2 1\n",
+    "expect": "1 2",
+    "case_index": 1,
+    "hint": "数组参数写成 `int a[]` 等价于 `int *a`，函数内 `sizeof(a)` 是 8，长度必须另传。"
+   },
+   {
+    "id": "trace-c035",
+    "qid": "c035",
+    "title": "用指针交换（函数版）",
+    "chapter": 7,
+    "difficulty": "medium",
+    "tags": [
+     "指针",
+     "参数"
+    ],
+    "code": "#include <stdio.h>\n\nvoid swap(int *a, int *b) {\n    int t = *a;\n    *a = *b;\n    *b = t;\n}\n\nint main(void) {\n    int x, y;\n    scanf(\"%d %d\", &x, &y);\n    swap(&x, &y);\n    printf(\"%d %d\\n\", x, y);\n    return 0;\n}",
+    "stdin": "1 2\n",
+    "expect": "2 1",
+    "case_index": 0,
+    "hint": "函数内用 `*a`、`*b` 操作，调用时传 `&x`、`&y`。"
+   },
+   {
+    "id": "trace-c036",
+    "qid": "c036",
+    "title": "用指针求数组和",
+    "chapter": 7,
+    "difficulty": "medium",
+    "tags": [
+     "指针",
+     "遍历"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    long long sum = 0;\n    for (int *p = a; p < a + n; p++) sum += *p;\n    printf(\"%lld\\n\", sum);\n    return 0;\n}",
+    "stdin": "4\n1 2 3 4\n",
+    "expect": "10",
+    "case_index": 0,
+    "hint": "`for (int *p = a; p < a + n; p++) sum += *p;`"
+   },
+   {
+    "id": "trace-c037",
+    "qid": "c037",
+    "title": "minmax：一次遍历带回两个结果",
+    "chapter": 7,
+    "difficulty": "medium",
+    "tags": [
+     "指针",
+     "输出参数"
+    ],
+    "code": "#include <stdio.h>\n\nvoid minmax(const int *a, int n, int *mn, int *mx) {\n    int lo = a[0], hi = a[0];\n    for (int i = 1; i < n; i++) {\n        if (a[i] < lo) lo = a[i];\n        if (a[i] > hi) hi = a[i];\n    }\n    if (mn) *mn = lo;\n    if (mx) *mx = hi;\n}\n\nint main(void) {\n    int n, a[1000], lo, hi;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    minmax(a, n, &lo, &hi);\n    printf(\"%d %d\\n\", lo, hi);\n    return 0;\n}",
+    "stdin": "1\n7\n",
+    "expect": "7 7",
+    "case_index": 1,
+    "hint": "`const int *a` 表示不修改数组内容。输出参数用 `if (mn) *mn = ...` 更健壮。"
+   },
+   {
+    "id": "trace-c038",
+    "qid": "c038",
+    "title": "动态数组求和",
+    "chapter": 8,
+    "difficulty": "medium",
+    "tags": [
+     "malloc",
+     "动态数组"
+    ],
+    "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int *a = malloc((size_t)n * sizeof(*a));\n    if (!a) return 1;\n    long long sum = 0;\n    for (int i = 0; i < n; i++) {\n        scanf(\"%d\", &a[i]);\n        sum += a[i];\n    }\n    printf(\"%lld\\n\", sum);\n    free(a);\n    return 0;\n}",
+    "stdin": "3\n1 2 3\n",
+    "expect": "6",
+    "case_index": 0,
+    "hint": "`int *a = malloc(n * sizeof(*a)); if (!a) return 1; ... free(a);`"
+   },
+   {
+    "id": "trace-c039",
+    "qid": "c039",
+    "title": "动态数组原地逆序",
+    "chapter": 8,
+    "difficulty": "hard",
+    "tags": [
+     "calloc",
+     "动态数组",
+     "逆序"
+    ],
+    "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int *a = calloc((size_t)n, sizeof(*a));\n    if (!a) return 1;\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n\n    for (int i = 0, j = n - 1; i < j; i++, j--) {\n        int t = a[i]; a[i] = a[j]; a[j] = t;\n    }\n\n    for (int i = 0; i < n; i++) {\n        if (i) putchar(' ');\n        printf(\"%d\", a[i]);\n    }\n    putchar('\\n');\n    free(a);\n    return 0;\n}",
+    "stdin": "4\n1 2 3 4\n",
+    "expect": "4 3 2 1",
+    "case_index": 1,
+    "hint": "双指针：`i` 从 0、`j` 从 n-1，交换后向中间收缩，直到 `i >= j`。"
+   },
+   {
+    "id": "trace-c040",
+    "qid": "c040",
+    "title": "约瑟夫环",
+    "chapter": 8,
+    "difficulty": "hard",
+    "tags": [
+     "模拟",
+     "数组"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, m;\n    scanf(\"%d %d\", &n, &m);\n    int alive[10000] = {0};\n    int cnt = n, pos = 0;\n    while (cnt > 1) {\n        int step = 0;\n        while (step < m) {\n            if (!alive[pos]) step++;\n            if (step == m) break;\n            pos = (pos + 1) % n;\n        }\n        alive[pos] = 1;\n        cnt--;\n        pos = (pos + 1) % n;\n    }\n    for (int i = 0; i < n; i++)\n        if (!alive[i]) printf(\"%d\\n\", i + 1);\n    return 0;\n}",
+    "stdin": "5 3\n",
+    "expect": "4",
+    "case_index": 0,
+    "hint": "用数组标记出圈状态，模拟过程。或者用递推公式 `f(i) = (f(i-1) + m) % i`。"
+   },
+   {
+    "id": "trace-c041",
+    "qid": "c041",
+    "title": "手写 strlen",
+    "chapter": 9,
+    "difficulty": "easy",
+    "tags": [
+     "字符串",
+     "指针"
+    ],
+    "code": "#include <stdio.h>\n#include <stddef.h>\n\nsize_t my_strlen(const char *s) {\n    const char *p = s;\n    while (*p) p++;\n    return (size_t)(p - s);\n}\n\nint main(void) {\n    char s[1001];\n    scanf(\"%1000s\", s);\n    printf(\"%zu\\n\", my_strlen(s));\n    return 0;\n}",
+    "stdin": "hello\n",
+    "expect": "5",
+    "case_index": 0,
+    "hint": "`while (*s) s++;` 然后返回走过的字符数。"
+   },
+   {
+    "id": "trace-c042",
+    "qid": "c042",
+    "title": "字符串反转",
+    "chapter": 9,
+    "difficulty": "medium",
+    "tags": [
+     "字符串",
+     "双指针"
+    ],
+    "code": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\"%1000s\", s);\n    size_t n = strlen(s);\n    for (size_t i = 0, j = n - 1; i < j; i++, j--) {\n        char t = s[i]; s[i] = s[j]; s[j] = t;\n    }\n    printf(\"%s\\n\", s);\n    return 0;\n}",
+    "stdin": "x\n",
+    "expect": "x",
+    "case_index": 2,
+    "hint": "`strlen` 求长度后，i 从 0、j 从 len-1 向中间交换。"
+   },
+   {
+    "id": "trace-c043",
+    "qid": "c043",
+    "title": "回文串判断",
+    "chapter": 9,
+    "difficulty": "medium",
+    "tags": [
+     "字符串",
+     "双指针"
+    ],
+    "code": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\"%1000s\", s);\n    int n = (int)strlen(s);\n    int ok = 1;\n    for (int i = 0, j = n - 1; i < j; i++, j--) {\n        if (s[i] != s[j]) { ok = 0; break; }\n    }\n    printf(\"%s\\n\", ok ? \"yes\" : \"no\");\n    return 0;\n}",
+    "stdin": "abc\n",
+    "expect": "no",
+    "case_index": 1,
+    "hint": "`s[i] != s[j]` 就立刻判负。"
+   },
+   {
+    "id": "trace-c044",
+    "qid": "c044",
+    "title": "统计元音字母",
+    "chapter": 9,
+    "difficulty": "easy",
+    "tags": [
+     "字符串",
+     "统计"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\"%1000s\", s);\n    int cnt = 0;\n    for (int i = 0; s[i]; i++) {\n        char c = s[i];\n        if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';\n        if (c=='a'||c=='e'||c=='i'||c=='o'||c=='u') cnt++;\n    }\n    printf(\"%d\\n\", cnt);\n    return 0;\n}",
+    "stdin": "hello\n",
+    "expect": "2",
+    "case_index": 0,
+    "hint": "遍历每个字符，先统一转小写再判断。"
+   },
+   {
+    "id": "trace-c045",
+    "qid": "c045",
+    "title": "大小写互换",
+    "chapter": 9,
+    "difficulty": "medium",
+    "tags": [
+     "字符串",
+     "ASCII"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\"%1000s\", s);\n    for (int i = 0; s[i]; i++) {\n        if (s[i] >= 'a' && s[i] <= 'z') s[i] -= 32;\n        else if (s[i] >= 'A' && s[i] <= 'Z') s[i] += 32;\n    }\n    printf(\"%s\\n\", s);\n    return 0;\n}",
+    "stdin": "Hello\n",
+    "expect": "hELLO",
+    "case_index": 0,
+    "hint": "`'a' - 'A'` 恒等于 32，大小写互转就是加减 32。"
+   },
+   {
+    "id": "trace-c046",
+    "qid": "c046",
+    "title": "单词计数",
+    "chapter": 9,
+    "difficulty": "medium",
+    "tags": [
+     "字符串",
+     "分割"
+    ],
+    "code": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char line[1001];\n    if (!fgets(line, sizeof line, stdin)) return 0;\n    int cnt = 0, in_word = 0;\n    for (int i = 0; line[i]; i++) {\n        if (line[i] == ' ' || line[i] == '\\n' || line[i] == '\\t') {\n            in_word = 0;\n        } else if (!in_word) {\n            in_word = 1;\n            cnt++;\n        }\n    }\n    printf(\"%d\\n\", cnt);\n    return 0;\n}",
+    "stdin": "hello world\n",
+    "expect": "2",
+    "case_index": 0,
+    "hint": "核心逻辑：当前字符不是空格、前一个字符是空格（或位置 0）时，单词数 +1。"
+   },
+   {
+    "id": "trace-c047",
+    "qid": "c047",
+    "title": "手写字符串拼接",
+    "chapter": 9,
+    "difficulty": "medium",
+    "tags": [
+     "字符串",
+     "拼接"
+    ],
+    "code": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char a[300], b[101];\n    scanf(\"%100s %100s\", a, b);\n    size_t i = strlen(a);\n    for (size_t j = 0; b[j]; j++, i++) a[i] = b[j];\n    a[i] = '\\0';\n    printf(\"%s\\n\", a);\n    return 0;\n}",
+    "stdin": "a b\n",
+    "expect": "ab",
+    "case_index": 1,
+    "hint": "先 `strlen(a)` 找到结尾位置，再从这里开始复制 b 的每个字符，最后补 `'\\0'`。"
+   },
+   {
+    "id": "trace-c048",
+    "qid": "c048",
+    "title": "出现次数最多的字母",
+    "chapter": 9,
+    "difficulty": "hard",
+    "tags": [
+     "字符串",
+     "哈希",
+     "统计"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    char line[1001];\n    if (!fgets(line, sizeof line, stdin)) return 0;\n    int cnt[26] = {0};\n    for (int i = 0; line[i]; i++) {\n        if (line[i] >= 'a' && line[i] <= 'z') cnt[line[i] - 'a']++;\n    }\n    int best = 0;\n    for (int i = 1; i < 26; i++)\n        if (cnt[i] > cnt[best]) best = i;\n    printf(\"%c %d\\n\", 'a' + best, cnt[best]);\n    return 0;\n}",
+    "stdin": "hello world\n",
+    "expect": "l 3",
+    "case_index": 0,
+    "hint": "开一个 `int cnt[26] = {0}` 直接当哈希表，下标就是 `c - 'a'`。"
+   },
+   {
+    "id": "trace-c049",
+    "qid": "c049",
+    "title": "学生成绩排序",
+    "chapter": 10,
+    "difficulty": "medium",
+    "tags": [
+     "结构体",
+     "排序"
+    ],
+    "code": "#include <stdio.h>\n\ntypedef struct { char name[32]; int score; } Student;\n\nint main(void) {\n    int n;\n    Student s[100];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++)\n        scanf(\"%31s %d\", s[i].name, &s[i].score);\n\n    for (int i = 0; i < n - 1; i++)\n        for (int j = 0; j < n - 1 - i; j++)\n            if (s[j].score < s[j + 1].score) {\n                Student t = s[j]; s[j] = s[j + 1]; s[j + 1] = t;\n            }\n\n    for (int i = 0; i < n; i++) printf(\"%s\\n\", s[i].name);\n    return 0;\n}",
+    "stdin": "2\na 100\nb 100\n",
+    "expect": "a\nb",
+    "case_index": 1,
+    "hint": "定义 `struct Student { char name[32]; int score; }`，用稳定排序（冒泡）或记录原始下标。"
+   },
+   {
+    "id": "trace-c050",
+    "qid": "c050",
+    "title": "结构体指针求最高分",
+    "chapter": 10,
+    "difficulty": "medium",
+    "tags": [
+     "结构体",
+     "指针"
+    ],
+    "code": "#include <stdio.h>\n\ntypedef struct { int id; int score; } Student;\n\nStudent *find_top(Student *arr, int n) {\n    Student *best = &arr[0];\n    for (int i = 1; i < n; i++)\n        if (arr[i].score > best->score) best = &arr[i];\n    return best;\n}\n\nint main(void) {\n    int n;\n    Student s[100];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d %d\", &s[i].id, &s[i].score);\n    Student *top = find_top(s, n);\n    printf(\"%d\\n\", top->id);\n    return 0;\n}",
+    "stdin": "1\n7 60\n",
+    "expect": "7",
+    "case_index": 1,
+    "hint": "函数返回 `&arr[i]`，用 `->` 访问成员。"
+   },
+   {
+    "id": "trace-c051",
+    "qid": "c051",
+    "title": "用枚举做简单计算器",
+    "chapter": 10,
+    "difficulty": "medium",
+    "tags": [
+     "结构体",
+     "枚举"
+    ],
+    "code": "#include <stdio.h>\n\ntypedef enum { ADD, SUB, MUL, DIV } Op;\n\nint main(void) {\n    int a, b;\n    char c;\n    scanf(\"%d %c %d\", &a, &c, &b);\n\n    Op op = ADD;\n    switch (c) {\n        case '+': op = ADD; break;\n        case '-': op = SUB; break;\n        case '*': op = MUL; break;\n        case '/': op = DIV; break;\n        default: return 1;\n    }\n\n    int r = 0;\n    switch (op) {\n        case ADD: r = a + b; break;\n        case SUB: r = a - b; break;\n        case MUL: r = a * b; break;\n        case DIV: r = a / b; break;\n    }\n    printf(\"%d\\n\", r);\n    return 0;\n}",
+    "stdin": "3 + 4\n",
+    "expect": "7",
+    "case_index": 0,
+    "hint": "先读第一个数、运算符字符、第二个数：`scanf(\"%d %c %d\", &a, &op, &b)`。"
+   },
+   {
+    "id": "trace-c052",
+    "qid": "c052",
+    "title": "读到 EOF 为止求和",
+    "chapter": 11,
+    "difficulty": "medium",
+    "tags": [
+     "EOF",
+     "循环读取"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long sum = 0;\n    int x;\n    while (scanf(\"%d\", &x) == 1) sum += x;\n    printf(\"%lld\\n\", sum);\n    return 0;\n}",
+    "stdin": "1 2 3\n",
+    "expect": "6",
+    "case_index": 0,
+    "hint": "`while (scanf(\"%d\", &x) == 1)` 是读 EOF 的标准写法，不要用 `while (!feof(stdin))`。"
+   },
+   {
+    "id": "trace-c053",
+    "qid": "c053",
+    "title": "统计行数",
+    "chapter": 11,
+    "difficulty": "medium",
+    "tags": [
+     "fgets",
+     "行处理"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    char line[4096];\n    int lines = 0;\n    while (fgets(line, sizeof line, stdin)) lines++;\n    printf(\"%d\\n\", lines);\n    return 0;\n}",
+    "stdin": "a\nb\nc\n",
+    "expect": "3",
+    "case_index": 0,
+    "hint": "`while (fgets(line, sizeof line, stdin)) lines++;` 这个写法天然处理了最后一行无换行的情况。"
+   },
+   {
+    "id": "trace-c054",
+    "qid": "c054",
+    "title": "从文本中提取数字",
+    "chapter": 11,
+    "difficulty": "hard",
+    "tags": [
+     "解析",
+     "sscanf"
+    ],
+    "code": "#include <stdio.h>\n#include <stdlib.h>\n#include <ctype.h>\n\nint main(void) {\n    char line[4096];\n    if (!fgets(line, sizeof line, stdin)) return 0;\n    long long sum = 0;\n    const char *p = line;\n    while (*p) {\n        if (isdigit((unsigned char)*p) ||\n            ((*p == '-' || *p == '+') && isdigit((unsigned char)p[1]))) {\n            char *end;\n            long v = strtol(p, &end, 10);\n            sum += v;\n            p = end;\n        } else {\n            p++;\n        }\n    }\n    printf(\"%lld\\n\", sum);\n    return 0;\n}",
+    "stdin": "1 2 3\n",
+    "expect": "6",
+    "case_index": 1,
+    "hint": "遍历字符，遇到数字或符号就开始累积，用 `strtol` 一次解析更省事。"
+   },
+   {
+    "id": "trace-c055",
+    "qid": "c055",
+    "title": "用宏实现最大值",
+    "chapter": 12,
+    "difficulty": "easy",
+    "tags": [
+     "宏"
+    ],
+    "code": "#include <stdio.h>\n\n#define MAX(a, b) ((a) > (b) ? (a) : (b))\n\nint main(void) {\n    int a, b, c;\n    scanf(\"%d %d %d\", &a, &b, &c);\n    printf(\"%d\\n\", MAX(MAX(a, b), c));\n    return 0;\n}",
+    "stdin": "3 9 5\n",
+    "expect": "9",
+    "case_index": 0,
+    "hint": "`#define MAX(a,b) ((a) > (b) ? (a) : (b))`"
+   },
+   {
+    "id": "trace-c056",
+    "qid": "c056",
+    "title": "打印变量名与值",
+    "chapter": 12,
+    "difficulty": "medium",
+    "tags": [
+     "宏",
+     "字符串化"
+    ],
+    "code": "#include <stdio.h>\n\n#define SHOW(x) printf(\"%s = %d\\n\", #x, (x))\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    SHOW(n);\n    return 0;\n}",
+    "stdin": "42\n",
+    "expect": "n = 42",
+    "case_index": 0,
+    "hint": "`#define SHOW(x) printf(\"%s = %d\\n\", #x, (x))`，`#x` 把参数变成字符串。"
+   },
+   {
+    "id": "trace-c057",
+    "qid": "c057",
+    "title": "条件编译：输出模式",
+    "chapter": 12,
+    "difficulty": "medium",
+    "tags": [
+     "条件编译"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n#ifdef VERBOSE\n    printf(\"[debug] value=%d\\n\", n);\n#else\n    printf(\"%d\\n\", n);\n#endif\n    return 0;\n}",
+    "stdin": "5\n",
+    "expect": "5",
+    "case_index": 0,
+    "hint": "`#ifdef VERBOSE ... #else ... #endif`。用 `scanf` 读 n，两个分支都要输出它。"
+   },
+   {
+    "id": "trace-c058",
+    "qid": "c058",
+    "title": "排序并去重",
+    "chapter": 12,
+    "difficulty": "hard",
+    "tags": [
+     "综合",
+     "去重",
+     "排序"
+    ],
+    "code": "#include <stdio.h>\n\nint a[1000];\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n\n    for (int i = 0; i < n - 1; i++)\n        for (int j = 0; j < n - 1 - i; j++)\n            if (a[j] > a[j + 1]) {\n                int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;\n            }\n\n    int first = 1;\n    for (int i = 0; i < n; i++) {\n        if (i > 0 && a[i] == a[i - 1]) continue;\n        if (!first) putchar(' ');\n        printf(\"%d\", a[i]);\n        first = 0;\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "stdin": "1\n5\n",
+    "expect": "5",
+    "case_index": 1,
+    "hint": "先排序，再输出时跳过与前一个相同的元素。也可以边输出边判断。"
+   },
+   {
+    "id": "trace-c059",
+    "qid": "c059",
+    "title": "矩阵乘法",
+    "chapter": 12,
+    "difficulty": "hard",
+    "tags": [
+     "综合",
+     "矩阵乘法"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int m, n, p;\n    int A[20][20], B[20][20];\n    long long C[20][20] = {{0}};\n\n    scanf(\"%d %d %d\", &m, &n, &p);\n    for (int i = 0; i < m; i++)\n        for (int j = 0; j < n; j++) scanf(\"%d\", &A[i][j]);\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < p; j++) scanf(\"%d\", &B[i][j]);\n\n    for (int i = 0; i < m; i++)\n        for (int k = 0; k < n; k++)\n            for (int j = 0; j < p; j++)\n                C[i][j] += (long long)A[i][k] * B[k][j];\n\n    for (int i = 0; i < m; i++) {\n        for (int j = 0; j < p; j++) {\n            if (j) putchar(' ');\n            printf(\"%lld\", C[i][j]);\n        }\n        putchar('\\n');\n    }\n    return 0;\n}",
+    "stdin": "1 1 1\n2\n3\n",
+    "expect": "6",
+    "case_index": 1,
+    "hint": "三重循环：`C[i][j] = Σ A[i][k] * B[k][j]`。中间那层循环放最里面缓存更友好。"
+   },
+   {
+    "id": "trace-c060",
+    "qid": "c060",
+    "title": "大数阶乘",
+    "chapter": 12,
+    "difficulty": "hard",
+    "tags": [
+     "综合",
+     "大数"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int d[1000] = {0};\n    d[0] = 1;\n    int len = 1;\n\n    for (int k = 2; k <= n; k++) {\n        int carry = 0;\n        for (int i = 0; i < len; i++) {\n            int v = d[i] * k + carry;\n            d[i] = v % 10;\n            carry = v / 10;\n        }\n        while (carry) {\n            d[len++] = carry % 10;\n            carry /= 10;\n        }\n    }\n\n    for (int i = len - 1; i >= 0; i--) putchar('0' + d[i]);\n    putchar('\\n');\n    return 0;\n}",
+    "stdin": "5\n",
+    "expect": "120",
+    "case_index": 0,
+    "hint": "用 `int d[1000]` 逆序存各位（d[0] 是个位），每次 `d[i] * k + carry`。"
+   }
+  ],
+  "cloze": [
+   {
+    "id": "cloze-c003",
+    "qid": "c003",
+    "title": "星号三角形",
+    "chapter": 1,
+    "difficulty": "easy",
+    "tags": [
+     "输出",
+     "循环"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 1; i <= n; i++) {\n        for (int j = 0; j < i; j++) putchar('*');\n        putchar('\\n');\n    }\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 1; i "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "<="
+     },
+     {
+      "t": "text",
+      "v": " n; i++) {\n        for (int j = 0; j < i; j++) "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('*');\n        "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    }\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "<=",
+     "putchar",
+     "putchar"
+    ],
+    "bank": [
+     "||",
+     "fgets",
+     "%d",
+     "%lf",
+     "putchar",
+     "<="
+    ],
+    "hint": "外层循环控制行，内层循环控制每行的星号数量。"
+   },
+   {
+    "id": "cloze-c004",
+    "qid": "c004",
+    "title": "A + B",
+    "chapter": 2,
+    "difficulty": "easy",
+    "tags": [
+     "输入输出",
+     "整数"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a + b);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "a, "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "b);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", a + b);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%d",
+     "&",
+     "&",
+     "printf",
+     "%d"
+    ],
+    "bank": [
+     "fopen",
+     "fgets",
+     "||",
+     "scanf",
+     "&",
+     "printf",
+     "%d",
+     "sizeof"
+    ],
+    "hint": "`scanf(\"%d %d\", &a, &b)` 一次读两个。"
+   },
+   {
+    "id": "cloze-c005",
+    "qid": "c005",
+    "title": "摄氏转华氏",
+    "chapter": 2,
+    "difficulty": "easy",
+    "tags": [
+     "浮点",
+     "格式化"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    double c;\n    scanf(\"%lf\", &c);\n    printf(\"%.2f\\n\", c * 9.0 / 5.0 + 32.0);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    double c;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%lf"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "c);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%.2f"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", c * 9.0 / 5.0 + 32.0);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%lf",
+     "&",
+     "printf",
+     "%.2f"
+    ],
+    "bank": [
+     "malloc",
+     "&&",
+     "fgets",
+     "&",
+     "%lf",
+     "printf",
+     "scanf",
+     "%.2f",
+     "fopen",
+     "*"
+    ],
+    "hint": "注意 `9 / 5` 是整数除法得 1，要写成 `9.0 / 5` 或 `c * 9 / 5.0`。"
+   },
+   {
+    "id": "cloze-c006",
+    "qid": "c006",
+    "title": "圆的面积与周长",
+    "chapter": 2,
+    "difficulty": "easy",
+    "tags": [
+     "浮点",
+     "常量"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    const double PI = 3.1415926;\n    double r;\n    scanf(\"%lf\", &r);\n    printf(\"%.3f %.3f\\n\", PI * r * r, 2 * PI * r);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    const double PI = 3.1415926;\n    double r;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%lf"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "r);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%.3f"
+     },
+     {
+      "t": "text",
+      "v": " "
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "%.3f"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", PI "
+     },
+     {
+      "t": "blank",
+      "i": 6,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": " r "
+     },
+     {
+      "t": "blank",
+      "i": 7,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": " r, 2 * PI * r);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%lf",
+     "&",
+     "printf",
+     "%.3f",
+     "%.3f",
+     "*",
+     "*"
+    ],
+    "bank": [
+     "scanf",
+     "printf",
+     "->",
+     "&",
+     "sizeof",
+     "NULL",
+     "%lf",
+     "&&",
+     "%.3f",
+     "strcpy",
+     "*",
+     "fopen"
+    ],
+    "hint": "别用 `scanf(\"%f\")` 读 double。"
+   },
+   {
+    "id": "cloze-c007",
+    "qid": "c007",
+    "title": "交换两个整数",
+    "chapter": 2,
+    "difficulty": "easy",
+    "tags": [
+     "变量",
+     "交换"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int a, b, t;\n    scanf(\"%d %d\", &a, &b);\n    t = a; a = b; b = t;\n    printf(\"%d %d\\n\", a, b);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int a, b, t;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "a, "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "b);\n    t = a; a = b; b = t;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d\\n\", a, b);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%d",
+     "&",
+     "&",
+     "printf",
+     "%d"
+    ],
+    "bank": [
+     "%d",
+     "&",
+     "%lf",
+     "free",
+     "fgets",
+     "%s",
+     "scanf",
+     "printf"
+    ],
+    "hint": "`int t = a; a = b; b = t;`"
+   },
+   {
+    "id": "cloze-c008",
+    "qid": "c008",
+    "title": "整数与浮点除法",
+    "chapter": 2,
+    "difficulty": "medium",
+    "tags": [
+     "整数除法",
+     "陷阱"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    scanf(\"%d %d\", &a, &b);\n    printf(\"%d\\n\", a / b);\n    printf(\"%d\\n\", a % b);\n    printf(\"%.4f\\n\", (double)a / b);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d\", &a, &b);\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", a / b);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\\n\", a % b);\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%.4f"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", (double)a / b);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "printf",
+     "%.4f"
+    ],
+    "bank": [
+     "%.4f",
+     "printf",
+     "%d",
+     "&",
+     "*",
+     "%f"
+    ],
+    "hint": "第三行要先把 a 或 b 转成 double，否则会先做整数除法。"
+   },
+   {
+    "id": "cloze-c009",
+    "qid": "c009",
+    "title": "各位数字之和",
+    "chapter": 2,
+    "difficulty": "medium",
+    "tags": [
+     "取模",
+     "数字拆分"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long n;\n    scanf(\"%lld\", &n);\n    int sum = 0;\n    while (n > 0) {\n        sum += (int)(n % 10);\n        n /= 10;\n    }\n    printf(\"%d\\n\", sum);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    long long n;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "n);\n    int sum = 0;\n    while (n > 0) {\n        sum += (int)(n % 10);\n        n /= 10;\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", sum);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%lld",
+     "&",
+     "printf",
+     "%d"
+    ],
+    "bank": [
+     "&",
+     "%d",
+     "==",
+     "%lf",
+     "%lld",
+     "scanf",
+     "strcpy",
+     "&&",
+     "printf",
+     "free"
+    ],
+    "hint": "`n % 10` 拿到个位，`n / 10` 去掉个位，循环直到 n 为 0。"
+   },
+   {
+    "id": "cloze-c010",
+    "qid": "c010",
+    "title": "闰年判断",
+    "chapter": 3,
+    "difficulty": "medium",
+    "tags": [
+     "逻辑运算",
+     "分支"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int y;\n    scanf(\"%d\", &y);\n    if ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0)\n        printf(\"yes\\n\");\n    else\n        printf(\"no\\n\");\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int y;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &y);\n    if ((y % 4 "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "=="
+     },
+     {
+      "t": "text",
+      "v": " 0 && y % 100 != 0) || y % 400 == 0)\n        "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"yes\\n\");\n    else\n        "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"no\\n\");\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "==",
+     "printf",
+     "printf"
+    ],
+    "bank": [
+     "*",
+     "==",
+     "%lf",
+     "printf",
+     "%d",
+     "fgets"
+    ],
+    "hint": "`(y % 4 == 0 && y % 100 != 0) || y % 400 == 0`"
+   },
+   {
+    "id": "cloze-c011",
+    "qid": "c011",
+    "title": "三个数的最大值",
+    "chapter": 3,
+    "difficulty": "easy",
+    "tags": [
+     "三元运算符"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int a, b, c, m;\n    scanf(\"%d %d %d\", &a, &b, &c);\n    m = a > b ? a : b;\n    m = m > c ? m : c;\n    printf(\"%d\\n\", m);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int a, b, c, m;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d %d\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "a, "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "b, &c);\n    m = a > b ? a : b;\n    m = m > c ? m : c;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", m);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%d",
+     "&",
+     "&",
+     "printf",
+     "%d"
+    ],
+    "bank": [
+     "strlen",
+     "&",
+     "scanf",
+     "malloc",
+     "%d",
+     "&&",
+     "printf",
+     "fopen"
+    ],
+    "hint": "先求前两个的最大值，再和第三个比。"
+   },
+   {
+    "id": "cloze-c012",
+    "qid": "c012",
+    "title": "奇偶判断（位运算）",
+    "chapter": 3,
+    "difficulty": "easy",
+    "tags": [
+     "位运算"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", (n & 1) ? \"odd\" : \"even\");\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "n);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%s"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", (n "
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": " 1) ? \"odd\" : \"even\");\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%d",
+     "&",
+     "printf",
+     "%s",
+     "&"
+    ],
+    "bank": [
+     "%d",
+     "&",
+     "%s",
+     "printf",
+     "&&",
+     "%lf",
+     "NULL",
+     "*",
+     "%f",
+     "scanf"
+    ],
+    "hint": "任何整数的二进制最低位为 1 就是奇数：`n & 1`。"
+   },
+   {
+    "id": "cloze-c013",
+    "qid": "c013",
+    "title": "判断 2 的幂",
+    "chapter": 3,
+    "difficulty": "medium",
+    "tags": [
+     "位运算"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    unsigned int n;\n    scanf(\"%u\", &n);\n    printf(\"%s\\n\", (n > 0 && (n & (n - 1)) == 0) ? \"yes\" : \"no\");\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    unsigned int n;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%u"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "n);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%s"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", (n > 0 "
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "&&"
+     },
+     {
+      "t": "text",
+      "v": " (n "
+     },
+     {
+      "t": "blank",
+      "i": 6,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": " (n - 1)) "
+     },
+     {
+      "t": "blank",
+      "i": 7,
+      "answer": "=="
+     },
+     {
+      "t": "text",
+      "v": " 0) ? \"yes\" : \"no\");\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%u",
+     "&",
+     "printf",
+     "%s",
+     "&&",
+     "&",
+     "=="
+    ],
+    "bank": [
+     "NULL",
+     "strlen",
+     "*",
+     "==",
+     "fgets",
+     "&&",
+     "printf",
+     "scanf",
+     "%lf",
+     "!=",
+     "&",
+     "%c",
+     "%s",
+     "%u"
+    ],
+    "hint": "`n & (n - 1)` 会消掉最低位的 1，结果为 0 就是 2 的幂。别忘了 n > 0。"
+   },
+   {
+    "id": "cloze-c014",
+    "qid": "c014",
+    "title": "秒数转时分秒",
+    "chapter": 3,
+    "difficulty": "easy",
+    "tags": [
+     "取模",
+     "换算"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long t;\n    scanf(\"%lld\", &t);\n    long long h = t / 3600;\n    long long m = t % 3600 / 60;\n    long long s = t % 60;\n    printf(\"%lld:%lld:%lld\\n\", h, m, s);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    long long t;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "t);\n    long long h = t / 3600;\n    long long m = t % 3600 / 60;\n    long long s = t % 60;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": ":%lld:%lld\\n\", h, m, s);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%lld",
+     "&",
+     "printf",
+     "%lld"
+    ],
+    "bank": [
+     "free",
+     "&",
+     "scanf",
+     "malloc",
+     "printf",
+     "%s",
+     "||",
+     "%lld"
+    ],
+    "hint": "先 `t / 3600` 得小时，再对剩下的取模。"
+   },
+   {
+    "id": "cloze-c015",
+    "qid": "c015",
+    "title": "绝对值",
+    "chapter": 3,
+    "difficulty": "easy",
+    "tags": [
+     "三元运算符"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int x;\n    scanf(\"%d\", &x);\n    printf(\"%d\\n\", x < 0 ? -x : x);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int x;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "x);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", x < 0 ? -x : x);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%d",
+     "&",
+     "printf",
+     "%d"
+    ],
+    "bank": [
+     "&",
+     "%c",
+     "printf",
+     "sizeof",
+     "%f",
+     "->",
+     "scanf",
+     "%d"
+    ],
+    "hint": "`x < 0 ? -x : x`"
+   },
+   {
+    "id": "cloze-c016",
+    "qid": "c016",
+    "title": "成绩等级",
+    "chapter": 4,
+    "difficulty": "easy",
+    "tags": [
+     "分支"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int s;\n    scanf(\"%d\", &s);\n    if (s >= 90)      printf(\"A\\n\");\n    else if (s >= 80) printf(\"B\\n\");\n    else if (s >= 70) printf(\"C\\n\");\n    else if (s >= 60) printf(\"D\\n\");\n    else              printf(\"F\\n\");\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int s;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &s);\n    if (s "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": ">="
+     },
+     {
+      "t": "text",
+      "v": " 90)      printf(\"A\\n\");\n    else if (s "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": ">="
+     },
+     {
+      "t": "text",
+      "v": " 80) printf(\"B\\n\");\n    else if (s >= 70) "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"C\\n\");\n    else if (s >= 60) "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"D\\n\");\n    else              printf(\"F\\n\");\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     ">=",
+     ">=",
+     "printf",
+     "printf"
+    ],
+    "bank": [
+     "%d",
+     "malloc",
+     "scanf",
+     "&",
+     "printf",
+     ">="
+    ],
+    "hint": "if-else if 链，从高到低判断。"
+   },
+   {
+    "id": "cloze-c017",
+    "qid": "c017",
+    "title": "1 到 n 求和",
+    "chapter": 4,
+    "difficulty": "easy",
+    "tags": [
+     "循环",
+     "累加"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    long long sum = 0;\n    for (int i = 1; i <= n; i++) sum += i;\n    printf(\"%lld\\n\", sum);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    long long sum = 0;\n    for (int i = 1; i "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "<="
+     },
+     {
+      "t": "text",
+      "v": " n; i++) sum += i;\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", sum);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "<=",
+     "%lld"
+    ],
+    "bank": [
+     "<=",
+     "->",
+     "%d",
+     "fgets",
+     "%f",
+     "%lld"
+    ],
+    "hint": "累加变量要用 `long long`，n=10^6 时和约 5×10^11，超过 int。"
+   },
+   {
+    "id": "cloze-c018",
+    "qid": "c018",
+    "title": "九九乘法表的一行",
+    "chapter": 4,
+    "difficulty": "easy",
+    "tags": [
+     "嵌套循环"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 1; i <= n; i++) {\n        if (i > 1) putchar(' ');\n        printf(\"%d*%d=%d\", n, i, n * i);\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 1; i "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "<="
+     },
+     {
+      "t": "text",
+      "v": " n; i++) {\n        if (i > 1) "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "(' ');\n        printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "*%d=%d\", n, i, n * i);\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "<=",
+     "putchar",
+     "%d",
+     "putchar"
+    ],
+    "bank": [
+     "fopen",
+     "printf",
+     "%s",
+     "%d",
+     "<=",
+     "putchar"
+    ],
+    "hint": "注意最后一个元素后面不要多输出空格。"
+   },
+   {
+    "id": "cloze-c019",
+    "qid": "c019",
+    "title": "素数判断",
+    "chapter": 4,
+    "difficulty": "medium",
+    "tags": [
+     "素数",
+     "循环"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long n;\n    scanf(\"%lld\", &n);\n    if (n < 2) { printf(\"no\\n\"); return 0; }\n    for (long long i = 2; i * i <= n; i++) {\n        if (n % i == 0) { printf(\"no\\n\"); return 0; }\n    }\n    printf(\"yes\\n\");\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    long long n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    if (n < 2) { "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"no\\n\"); return 0; }\n    for (long long i = 2; i * i "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "<="
+     },
+     {
+      "t": "text",
+      "v": " n; i++) {\n        if (n "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "% i"
+     },
+     {
+      "t": "text",
+      "v": " == 0) { printf(\"no\\n\"); return 0; }\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"yes\\n\");\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%lld",
+     "printf",
+     "<=",
+     "% i",
+     "printf"
+    ],
+    "bank": [
+     "<=",
+     "printf",
+     "%lf",
+     "%s",
+     "&",
+     "%lld",
+     "strlen",
+     "% i"
+    ],
+    "hint": "只需试除到 √n。写成 `i * i <= n` 避免开方函数。"
+   },
+   {
+    "id": "cloze-c020",
+    "qid": "c020",
+    "title": "1 到 n 的偶数",
+    "chapter": 4,
+    "difficulty": "easy",
+    "tags": [
+     "循环",
+     "continue"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int first = 1;\n    for (int i = 2; i <= n; i += 2) {\n        if (!first) putchar(' ');\n        printf(\"%d\", i);\n        first = 0;\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    int first = 1;\n    for (int i = 2; i "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "<="
+     },
+     {
+      "t": "text",
+      "v": " n; i += 2) {\n        if (!first) "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "(' ');\n        printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", i);\n        first = 0;\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "<=",
+     "putchar",
+     "%d",
+     "putchar"
+    ],
+    "bank": [
+     "<=",
+     "%f",
+     "putchar",
+     "%d",
+     "NULL",
+     "&"
+    ],
+    "hint": "可以用 `i += 2` 直接跳，也可以用 continue 练习。"
+   },
+   {
+    "id": "cloze-c021",
+    "qid": "c021",
+    "title": "整数反转",
+    "chapter": 4,
+    "difficulty": "medium",
+    "tags": [
+     "循环",
+     "数字拆分"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long n;\n    scanf(\"%lld\", &n);\n    int neg = n < 0;\n    if (neg) n = -n;\n    long long rev = 0;\n    while (n > 0) {\n        rev = rev * 10 + n % 10;\n        n /= 10;\n    }\n    printf(\"%lld\\n\", neg ? -rev : rev);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    long long n;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "n);\n    int neg = n < 0;\n    if (neg) n = -n;\n    long long rev = 0;\n    while (n > 0) {\n        rev = rev * 10 + n % 10;\n        n /= 10;\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", neg ? -rev : rev);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%lld",
+     "&",
+     "printf",
+     "%lld"
+    ],
+    "bank": [
+     "strlen",
+     ">=",
+     "free",
+     "%lld",
+     "&",
+     "scanf",
+     "printf",
+     "NULL"
+    ],
+    "hint": "先取绝对值处理，最后补符号。用 `rev * 10 + n % 10` 逐位构建。"
+   },
+   {
+    "id": "cloze-c022",
+    "qid": "c022",
+    "title": "最大公约数（辗转相除）",
+    "chapter": 4,
+    "difficulty": "medium",
+    "tags": [
+     "循环",
+     "最大公约数"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long a, b;\n    scanf(\"%lld %lld\", &a, &b);\n    while (b != 0) {\n        long long t = a % b;\n        a = b;\n        b = t;\n    }\n    printf(\"%lld\\n\", a);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    long long a, b;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": " %lld\", &a, &b);\n    while (b "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "!="
+     },
+     {
+      "t": "text",
+      "v": " 0) {\n        long long t = a % b;\n        a = b;\n        b = t;\n    }\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", a);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%lld",
+     "!=",
+     "%lld"
+    ],
+    "bank": [
+     "&&",
+     "%lld",
+     "!=",
+     "fopen"
+    ],
+    "hint": "`while (b) { t = a % b; a = b; b = t; }` 循环结束时 a 就是答案。"
+   },
+   {
+    "id": "cloze-c023",
+    "qid": "c023",
+    "title": "最大值与最小值",
+    "chapter": 5,
+    "difficulty": "easy",
+    "tags": [
+     "数组",
+     "遍历"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int a[1000];\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    int mx = a[0], mn = a[0];\n    for (int i = 1; i < n; i++) {\n        if (a[i] > mx) mx = a[i];\n        if (a[i] < mn) mn = a[i];\n    }\n    printf(\"%d %d\\n\", mx, mn);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    int a[1000];\n    for (int i = 0; i < n; i++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n    int mx = a[0], mn = a[0];\n    for (int i = 1; i < n; i++) {\n        if (a[i] > mx) mx = a[i];\n        if (a[i] < mn) mn = a[i];\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d %d\\n\", mx, mn);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "printf"
+    ],
+    "bank": [
+     "printf",
+     "%lf",
+     "%d",
+     "malloc"
+    ],
+    "hint": "初始化时把 min 设成第一个元素，不要设成 0。"
+   },
+   {
+    "id": "cloze-c024",
+    "qid": "c024",
+    "title": "数组逆序输出",
+    "chapter": 5,
+    "difficulty": "easy",
+    "tags": [
+     "数组",
+     "逆序"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    for (int i = n - 1; i >= 0; i--) {\n        if (i != n - 1) putchar(' ');\n        printf(\"%d\", a[i]);\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 0; i < n; i++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n    for (int i = n - 1; i "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": ">="
+     },
+     {
+      "t": "text",
+      "v": " 0; i--) {\n        if (i "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "!="
+     },
+     {
+      "t": "text",
+      "v": " n - 1) putchar(' ');\n        "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\", a[i]);\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     ">=",
+     "!=",
+     "printf",
+     "putchar"
+    ],
+    "bank": [
+     "putchar",
+     "sizeof",
+     ">=",
+     "fopen",
+     "malloc",
+     "!=",
+     "%d",
+     "strlen",
+     "%c",
+     "printf"
+    ],
+    "hint": "从 n-1 倒着遍历。"
+   },
+   {
+    "id": "cloze-c025",
+    "qid": "c025",
+    "title": "求和与平均值",
+    "chapter": 5,
+    "difficulty": "easy",
+    "tags": [
+     "数组",
+     "统计"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\"%d\", &n);\n    long long sum = 0;\n    for (int i = 0; i < n; i++) {\n        scanf(\"%d\", &a[i]);\n        sum += a[i];\n    }\n    printf(\"%lld %.2f\\n\", sum, (double)sum / n);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    long long sum = 0;\n    for (int i = 0; i < n; i++) {\n        scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n        sum += a[i];\n    }\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": " %.2f\\n\", sum, (double)sum / n);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "%lld"
+    ],
+    "bank": [
+     "%d",
+     "fgets",
+     "printf",
+     "%lld"
+    ],
+    "hint": "平均值要用 `(double)sum / n`。"
+   },
+   {
+    "id": "cloze-c026",
+    "qid": "c026",
+    "title": "冒泡排序",
+    "chapter": 5,
+    "difficulty": "medium",
+    "tags": [
+     "排序",
+     "冒泡"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    for (int i = 0; i < n - 1; i++) {\n        int swapped = 0;\n        for (int j = 0; j < n - 1 - i; j++) {\n            if (a[j] > a[j + 1]) {\n                int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;\n                swapped = 1;\n            }\n        }\n        if (!swapped) break;\n    }\n    for (int i = 0; i < n; i++) {\n        if (i) putchar(' ');\n        printf(\"%d\", a[i]);\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 0; i < n; i++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n    for (int i = 0; i < n - 1; i++) {\n        int swapped = 0;\n        for (int j = 0; j < n - 1 - i; j++) {\n            if (a[j] > a[j + 1]) {\n                int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;\n                swapped = 1;\n            }\n        }\n        if (!swapped) break;\n    }\n    for (int i = 0; i < n; i++) {\n        if (i) "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "(' ');\n        "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\", a[i]);\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "putchar",
+     "printf",
+     "putchar"
+    ],
+    "bank": [
+     "%c",
+     "putchar",
+     "->",
+     "fopen",
+     "%d",
+     "printf"
+    ],
+    "hint": "两层循环，外层控制轮数，内层比较相邻元素。加 swapped 标志提前退出。"
+   },
+   {
+    "id": "cloze-c027",
+    "qid": "c027",
+    "title": "二分查找",
+    "chapter": 5,
+    "difficulty": "medium",
+    "tags": [
+     "二分查找"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000], t;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    scanf(\"%d\", &t);\n    int lo = 0, hi = n - 1, ans = -1;\n    while (lo <= hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (a[mid] == t) { ans = mid; break; }\n        if (a[mid] < t) lo = mid + 1;\n        else hi = mid - 1;\n    }\n    printf(\"%d\\n\", ans);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000], t;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 0; i < n; i++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\", &t);\n    int lo = 0, hi = n - 1, ans = -1;\n    while (lo "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "<="
+     },
+     {
+      "t": "text",
+      "v": " hi) {\n        int mid = lo + (hi - lo) / 2;\n        if (a[mid] "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "=="
+     },
+     {
+      "t": "text",
+      "v": " t) { ans = mid; break; }\n        if (a[mid] < t) lo = mid + 1;\n        else hi = mid - 1;\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\\n\", ans);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "scanf",
+     "<=",
+     "==",
+     "printf"
+    ],
+    "bank": [
+     "&&",
+     "scanf",
+     "printf",
+     "strlen",
+     "<=",
+     "%d",
+     "malloc",
+     "sizeof",
+     "NULL",
+     "=="
+    ],
+    "hint": "`mid = lo + (hi - lo) / 2` 防溢出。循环条件是 `lo <= hi`。"
+   },
+   {
+    "id": "cloze-c028",
+    "qid": "c028",
+    "title": "正负零统计",
+    "chapter": 5,
+    "difficulty": "easy",
+    "tags": [
+     "数组",
+     "统计"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int pos = 0, neg = 0, zero = 0;\n    for (int i = 0; i < n; i++) {\n        int x;\n        scanf(\"%d\", &x);\n        if (x > 0) pos++;\n        else if (x < 0) neg++;\n        else zero++;\n    }\n    printf(\"%d %d %d\\n\", pos, neg, zero);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    int pos = 0, neg = 0, zero = 0;\n    for (int i = 0; i < n; i++) {\n        int x;\n        scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &x);\n        if (x > 0) pos++;\n        else if (x < 0) neg++;\n        else zero++;\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d %d %d\\n\", pos, neg, zero);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "printf"
+    ],
+    "bank": [
+     "%lf",
+     "printf",
+     "malloc",
+     "%d"
+    ],
+    "hint": "三个计数器，一次遍历。"
+   },
+   {
+    "id": "cloze-c029",
+    "qid": "c029",
+    "title": "矩阵转置",
+    "chapter": 5,
+    "difficulty": "medium",
+    "tags": [
+     "二维数组",
+     "矩阵"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int m, n, a[10][10];\n    scanf(\"%d %d\", &m, &n);\n    for (int i = 0; i < m; i++)\n        for (int j = 0; j < n; j++)\n            scanf(\"%d\", &a[i][j]);\n\n    for (int j = 0; j < n; j++) {\n        for (int i = 0; i < m; i++) {\n            if (i) putchar(' ');\n            printf(\"%d\", a[i][j]);\n        }\n        putchar('\\n');\n    }\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int m, n, a[10][10];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d\", &m, &n);\n    for (int i = 0; i < m; i++)\n        for (int j = 0; j < n; j++)\n            scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i][j]);\n\n    for (int j = 0; j < n; j++) {\n        for (int i = 0; i < m; i++) {\n            if (i) "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "(' ');\n            "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\", a[i][j]);\n        }\n        "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    }\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "putchar",
+     "printf",
+     "putchar"
+    ],
+    "bank": [
+     "putchar",
+     "&&",
+     "strlen",
+     "!=",
+     "printf",
+     "%d"
+    ],
+    "hint": "新矩阵的第 i 行第 j 列 = 原矩阵的第 j 行第 i 列。"
+   },
+   {
+    "id": "cloze-c030",
+    "qid": "c030",
+    "title": "阶乘（递归）",
+    "chapter": 6,
+    "difficulty": "medium",
+    "tags": [
+     "函数",
+     "递归"
+    ],
+    "code": "#include <stdio.h>\n\nlong long fact(int n) {\n    if (n <= 1) return 1;\n    return n * fact(n - 1);\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%lld\\n\", fact(n));\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nlong long fact(int n) {\n    if (n "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "<="
+     },
+     {
+      "t": "text",
+      "v": " 1) return 1;\n    return n "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": " fact(n - 1);\n}\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", fact(n));\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "<=",
+     "*",
+     "%d",
+     "%lld"
+    ],
+    "bank": [
+     "||",
+     "!=",
+     "%lld",
+     "free",
+     "fgets",
+     "*",
+     "%d",
+     "<="
+    ],
+    "hint": "`if (n <= 1) return 1; return n * f(n - 1);`"
+   },
+   {
+    "id": "cloze-c031",
+    "qid": "c031",
+    "title": "斐波那契数列",
+    "chapter": 6,
+    "difficulty": "medium",
+    "tags": [
+     "函数",
+     "递归",
+     "记忆化"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    long long a = 0, b = 1;\n    for (int i = 0; i < n; i++) {\n        long long t = a + b;\n        a = b;\n        b = t;\n    }\n    printf(\"%lld\\n\", a);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "n);\n    long long a = 0, b = 1;\n    for (int i = 0; i < n; i++) {\n        long long t = a + b;\n        a = b;\n        b = t;\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", a);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%d",
+     "&",
+     "printf",
+     "%lld"
+    ],
+    "bank": [
+     "scanf",
+     "%lld",
+     "%c",
+     "strcpy",
+     "strlen",
+     "%f",
+     "printf",
+     "&",
+     "->",
+     "%d"
+    ],
+    "hint": "迭代写法：`a=0, b=1; 循环 n 次 { t=a+b; a=b; b=t; }`。注意用 long long。"
+   },
+   {
+    "id": "cloze-c032",
+    "qid": "c032",
+    "title": "汉诺塔步数",
+    "chapter": 6,
+    "difficulty": "medium",
+    "tags": [
+     "函数",
+     "递归"
+    ],
+    "code": "#include <stdio.h>\n\nlong long hanoi(int n) {\n    if (n == 0) return 0;\n    return 2 * hanoi(n - 1) + 1;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%lld\\n\", hanoi(n));\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nlong long hanoi(int n) {\n    if (n "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "=="
+     },
+     {
+      "t": "text",
+      "v": " 0) return 0;\n    return 2 "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": " hanoi(n - 1) + 1;\n}\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", hanoi(n));\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "==",
+     "*",
+     "%d",
+     "%lld"
+    ],
+    "bank": [
+     "%c",
+     "%d",
+     "malloc",
+     "%lld",
+     "==",
+     "*",
+     "->",
+     "!="
+    ],
+    "hint": "也可以用公式 2^n - 1，但本题要求递归。注意 2^30 超出 int。"
+   },
+   {
+    "id": "cloze-c033",
+    "qid": "c033",
+    "title": "完全数判断",
+    "chapter": 6,
+    "difficulty": "easy",
+    "tags": [
+     "函数",
+     "完全数"
+    ],
+    "code": "#include <stdio.h>\n\nlong long sum_proper_divisors(int n) {\n    long long s = 0;\n    for (int i = 1; i * i <= n; i++) {\n        if (n % i == 0) {\n            s += i;\n            if (i != 1 && i != n / i) s += n / i;\n        }\n    }\n    return s;\n}\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    printf(\"%s\\n\", sum_proper_divisors(n) == n ? \"yes\" : \"no\");\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nlong long sum_proper_divisors(int n) {\n    long long s = 0;\n    for (int i = 1; i * i "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "<="
+     },
+     {
+      "t": "text",
+      "v": " n; i++) {\n        if (n "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "% i"
+     },
+     {
+      "t": "text",
+      "v": " == 0) {\n            s += i;\n            if (i "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "!="
+     },
+     {
+      "t": "text",
+      "v": " 1 && i != n / i) s += n / i;\n        }\n    }\n    return s;\n}\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%s"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", sum_proper_divisors(n) == n ? \"yes\" : \"no\");\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "<=",
+     "% i",
+     "!=",
+     "%d",
+     "%s"
+    ],
+    "bank": [
+     "% i",
+     "free",
+     "malloc",
+     "printf",
+     "%f",
+     "%d",
+     "%s",
+     "!=",
+     ">=",
+     "<="
+    ],
+    "hint": "试除到 n/2 即可，或到 √n 时成对累加（更快）。"
+   },
+   {
+    "id": "cloze-c034",
+    "qid": "c034",
+    "title": "数组排序（函数封装）",
+    "chapter": 6,
+    "difficulty": "medium",
+    "tags": [
+     "函数",
+     "数组参数"
+    ],
+    "code": "#include <stdio.h>\n\nvoid sort(int a[], int n) {\n    for (int i = 0; i < n - 1; i++)\n        for (int j = 0; j < n - 1 - i; j++)\n            if (a[j] > a[j + 1]) {\n                int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;\n            }\n}\n\nint main(void) {\n    int n, a[100];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    sort(a, n);\n    for (int i = 0; i < n; i++) {\n        if (i) putchar(' ');\n        printf(\"%d\", a[i]);\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nvoid sort(int a[], int n) {\n    for (int i = 0; i < n - 1; i++)\n        for (int j = 0; j < n - 1 - i; j++)\n            if (a[j] > a[j + 1]) {\n                int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;\n            }\n}\n\nint main(void) {\n    int n, a[100];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 0; i < n; i++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n    sort(a, n);\n    for (int i = 0; i < n; i++) {\n        if (i) "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "(' ');\n        "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\", a[i]);\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "putchar",
+     "printf",
+     "putchar"
+    ],
+    "bank": [
+     "%d",
+     ">=",
+     "printf",
+     "scanf",
+     "strcpy",
+     "putchar"
+    ],
+    "hint": "数组参数写成 `int a[]` 等价于 `int *a`，函数内 `sizeof(a)` 是 8，长度必须另传。"
+   },
+   {
+    "id": "cloze-c035",
+    "qid": "c035",
+    "title": "用指针交换（函数版）",
+    "chapter": 7,
+    "difficulty": "medium",
+    "tags": [
+     "指针",
+     "参数"
+    ],
+    "code": "#include <stdio.h>\n\nvoid swap(int *a, int *b) {\n    int t = *a;\n    *a = *b;\n    *b = t;\n}\n\nint main(void) {\n    int x, y;\n    scanf(\"%d %d\", &x, &y);\n    swap(&x, &y);\n    printf(\"%d %d\\n\", x, y);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nvoid swap(int "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "a, int *b) {\n    int t = "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "a;\n    *a = *b;\n    *b = t;\n}\n\nint main(void) {\n    int x, y;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d\", &x, &y);\n    swap("
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "x, &y);\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d\\n\", x, y);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "*",
+     "*",
+     "%d",
+     "&",
+     "%d"
+    ],
+    "bank": [
+     "*",
+     "free",
+     "->",
+     "%c",
+     "%d",
+     "&"
+    ],
+    "hint": "函数内用 `*a`、`*b` 操作，调用时传 `&x`、`&y`。"
+   },
+   {
+    "id": "cloze-c036",
+    "qid": "c036",
+    "title": "用指针求数组和",
+    "chapter": 7,
+    "difficulty": "medium",
+    "tags": [
+     "指针",
+     "遍历"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    long long sum = 0;\n    for (int *p = a; p < a + n; p++) sum += *p;\n    printf(\"%lld\\n\", sum);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n, a[1000];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 0; i < n; i++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n    long long sum = 0;\n    for (int "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "p = a; p < a + n; p++) sum += *p;\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", sum);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "*",
+     "%lld"
+    ],
+    "bank": [
+     "strlen",
+     "printf",
+     "%lld",
+     "free",
+     "%d",
+     "*"
+    ],
+    "hint": "`for (int *p = a; p < a + n; p++) sum += *p;`"
+   },
+   {
+    "id": "cloze-c037",
+    "qid": "c037",
+    "title": "minmax：一次遍历带回两个结果",
+    "chapter": 7,
+    "difficulty": "medium",
+    "tags": [
+     "指针",
+     "输出参数"
+    ],
+    "code": "#include <stdio.h>\n\nvoid minmax(const int *a, int n, int *mn, int *mx) {\n    int lo = a[0], hi = a[0];\n    for (int i = 1; i < n; i++) {\n        if (a[i] < lo) lo = a[i];\n        if (a[i] > hi) hi = a[i];\n    }\n    if (mn) *mn = lo;\n    if (mx) *mx = hi;\n}\n\nint main(void) {\n    int n, a[1000], lo, hi;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n    minmax(a, n, &lo, &hi);\n    printf(\"%d %d\\n\", lo, hi);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nvoid minmax(const int "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "a, int n, int *mn, int *mx) {\n    int lo = a[0], hi = a[0];\n    for (int i = 1; i < n; i++) {\n        if (a[i] < lo) lo = a[i];\n        if (a[i] > hi) hi = a[i];\n    }\n    if (mn) "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "mn = lo;\n    if (mx) *mx = hi;\n}\n\nint main(void) {\n    int n, a[1000], lo, hi;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 0; i < n; i++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n    minmax(a, n, "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "lo, &hi);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d %d\\n\", lo, hi);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "*",
+     "*",
+     "%d",
+     "%d",
+     "&",
+     "printf"
+    ],
+    "bank": [
+     "%lf",
+     "*",
+     "fgets",
+     "%d",
+     "%c",
+     "free",
+     "printf",
+     "&"
+    ],
+    "hint": "`const int *a` 表示不修改数组内容。输出参数用 `if (mn) *mn = ...` 更健壮。"
+   },
+   {
+    "id": "cloze-c038",
+    "qid": "c038",
+    "title": "动态数组求和",
+    "chapter": 8,
+    "difficulty": "medium",
+    "tags": [
+     "malloc",
+     "动态数组"
+    ],
+    "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int *a = malloc((size_t)n * sizeof(*a));\n    if (!a) return 1;\n    long long sum = 0;\n    for (int i = 0; i < n; i++) {\n        scanf(\"%d\", &a[i]);\n        sum += a[i];\n    }\n    printf(\"%lld\\n\", sum);\n    free(a);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    int *a = malloc((size_t)n * "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "sizeof"
+     },
+     {
+      "t": "text",
+      "v": "(*a));\n    if (!a) return 1;\n    long long sum = 0;\n    for (int i = 0; i < n; i++) {\n        scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n        sum += a[i];\n    }\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", sum);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "free"
+     },
+     {
+      "t": "text",
+      "v": "(a);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "sizeof",
+     "%d",
+     "%lld",
+     "free"
+    ],
+    "bank": [
+     "sizeof",
+     "scanf",
+     "free",
+     "%d",
+     "%s",
+     "&",
+     "%lld",
+     "strlen"
+    ],
+    "hint": "`int *a = malloc(n * sizeof(*a)); if (!a) return 1; ... free(a);`"
+   },
+   {
+    "id": "cloze-c039",
+    "qid": "c039",
+    "title": "动态数组原地逆序",
+    "chapter": 8,
+    "difficulty": "hard",
+    "tags": [
+     "calloc",
+     "动态数组",
+     "逆序"
+    ],
+    "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int *a = calloc((size_t)n, sizeof(*a));\n    if (!a) return 1;\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n\n    for (int i = 0, j = n - 1; i < j; i++, j--) {\n        int t = a[i]; a[i] = a[j]; a[j] = t;\n    }\n\n    for (int i = 0; i < n; i++) {\n        if (i) putchar(' ');\n        printf(\"%d\", a[i]);\n    }\n    putchar('\\n');\n    free(a);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n#include <stdlib.h>\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    int *a = calloc((size_t)n, "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "sizeof"
+     },
+     {
+      "t": "text",
+      "v": "(*a));\n    if (!a) return 1;\n    for (int i = 0; i < n; i++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n\n    for (int i = 0, j = n - 1; i < j; i++, j--) {\n        int t = a[i]; a[i] = a[j]; a[j] = t;\n    }\n\n    for (int i = 0; i < n; i++) {\n        if (i) "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "(' ');\n        "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\", a[i]);\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    "
+     },
+     {
+      "t": "blank",
+      "i": 6,
+      "answer": "free"
+     },
+     {
+      "t": "text",
+      "v": "(a);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "sizeof",
+     "%d",
+     "putchar",
+     "printf",
+     "putchar",
+     "free"
+    ],
+    "bank": [
+     "putchar",
+     "printf",
+     "%c",
+     "strcpy",
+     "sizeof",
+     "free",
+     "malloc",
+     "%d",
+     "NULL",
+     "!="
+    ],
+    "hint": "双指针：`i` 从 0、`j` 从 n-1，交换后向中间收缩，直到 `i >= j`。"
+   },
+   {
+    "id": "cloze-c040",
+    "qid": "c040",
+    "title": "约瑟夫环",
+    "chapter": 8,
+    "difficulty": "hard",
+    "tags": [
+     "模拟",
+     "数组"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n, m;\n    scanf(\"%d %d\", &n, &m);\n    int alive[10000] = {0};\n    int cnt = n, pos = 0;\n    while (cnt > 1) {\n        int step = 0;\n        while (step < m) {\n            if (!alive[pos]) step++;\n            if (step == m) break;\n            pos = (pos + 1) % n;\n        }\n        alive[pos] = 1;\n        cnt--;\n        pos = (pos + 1) % n;\n    }\n    for (int i = 0; i < n; i++)\n        if (!alive[i]) printf(\"%d\\n\", i + 1);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n, m;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d\", &n, &m);\n    int alive[10000] = {0};\n    int cnt = n, pos = 0;\n    while (cnt > 1) {\n        int step = 0;\n        while (step < m) {\n            if (!alive[pos]) step++;\n            if (step "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "=="
+     },
+     {
+      "t": "text",
+      "v": " m) break;\n            pos = (pos + 1) % n;\n        }\n        alive[pos] = 1;\n        cnt--;\n        pos = (pos + 1) % n;\n    }\n    for (int i = 0; i < n; i++)\n        if (!alive[i]) printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", i + 1);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "==",
+     "%d"
+    ],
+    "bank": [
+     "fgets",
+     "==",
+     "NULL",
+     "%d"
+    ],
+    "hint": "用数组标记出圈状态，模拟过程。或者用递推公式 `f(i) = (f(i-1) + m) % i`。"
+   },
+   {
+    "id": "cloze-c041",
+    "qid": "c041",
+    "title": "手写 strlen",
+    "chapter": 9,
+    "difficulty": "easy",
+    "tags": [
+     "字符串",
+     "指针"
+    ],
+    "code": "#include <stdio.h>\n#include <stddef.h>\n\nsize_t my_strlen(const char *s) {\n    const char *p = s;\n    while (*p) p++;\n    return (size_t)(p - s);\n}\n\nint main(void) {\n    char s[1001];\n    scanf(\"%1000s\", s);\n    printf(\"%zu\\n\", my_strlen(s));\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n#include <stddef.h>\n\nsize_t my_strlen(const char "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "s) {\n    const char "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "p = s;\n    while (*p) p++;\n    return (size_t)(p - s);\n}\n\nint main(void) {\n    char s[1001];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%1000s"
+     },
+     {
+      "t": "text",
+      "v": "\", s);\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%zu"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", my_strlen(s));\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "*",
+     "*",
+     "%1000s",
+     "%zu"
+    ],
+    "bank": [
+     "%f",
+     "%1000s",
+     "||",
+     "fgets",
+     "%zu",
+     "*"
+    ],
+    "hint": "`while (*s) s++;` 然后返回走过的字符数。"
+   },
+   {
+    "id": "cloze-c042",
+    "qid": "c042",
+    "title": "字符串反转",
+    "chapter": 9,
+    "difficulty": "medium",
+    "tags": [
+     "字符串",
+     "双指针"
+    ],
+    "code": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\"%1000s\", s);\n    size_t n = strlen(s);\n    for (size_t i = 0, j = n - 1; i < j; i++, j--) {\n        char t = s[i]; s[i] = s[j]; s[j] = t;\n    }\n    printf(\"%s\\n\", s);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%1000s"
+     },
+     {
+      "t": "text",
+      "v": "\", s);\n    size_t n = "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "strlen"
+     },
+     {
+      "t": "text",
+      "v": "(s);\n    for (size_t i = 0, j = n - 1; i < j; i++, j--) {\n        char t = s[i]; s[i] = s[j]; s[j] = t;\n    }\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%s"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", s);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%1000s",
+     "strlen",
+     "%s"
+    ],
+    "bank": [
+     "strlen",
+     "%lf",
+     "printf",
+     "%s",
+     ">=",
+     "%1000s"
+    ],
+    "hint": "`strlen` 求长度后，i 从 0、j 从 len-1 向中间交换。"
+   },
+   {
+    "id": "cloze-c043",
+    "qid": "c043",
+    "title": "回文串判断",
+    "chapter": 9,
+    "difficulty": "medium",
+    "tags": [
+     "字符串",
+     "双指针"
+    ],
+    "code": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\"%1000s\", s);\n    int n = (int)strlen(s);\n    int ok = 1;\n    for (int i = 0, j = n - 1; i < j; i++, j--) {\n        if (s[i] != s[j]) { ok = 0; break; }\n    }\n    printf(\"%s\\n\", ok ? \"yes\" : \"no\");\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%1000s"
+     },
+     {
+      "t": "text",
+      "v": "\", s);\n    int n = (int)"
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "strlen"
+     },
+     {
+      "t": "text",
+      "v": "(s);\n    int ok = 1;\n    for (int i = 0, j = n - 1; i < j; i++, j--) {\n        if (s[i] "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "!="
+     },
+     {
+      "t": "text",
+      "v": " s[j]) { ok = 0; break; }\n    }\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%s"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", ok ? \"yes\" : \"no\");\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%1000s",
+     "strlen",
+     "!=",
+     "%s"
+    ],
+    "bank": [
+     ">=",
+     "&",
+     "%s",
+     "!=",
+     "strlen",
+     "%d",
+     "scanf",
+     "%1000s"
+    ],
+    "hint": "`s[i] != s[j]` 就立刻判负。"
+   },
+   {
+    "id": "cloze-c044",
+    "qid": "c044",
+    "title": "统计元音字母",
+    "chapter": 9,
+    "difficulty": "easy",
+    "tags": [
+     "字符串",
+     "统计"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\"%1000s\", s);\n    int cnt = 0;\n    for (int i = 0; s[i]; i++) {\n        char c = s[i];\n        if (c >= 'A' && c <= 'Z') c = c - 'A' + 'a';\n        if (c=='a'||c=='e'||c=='i'||c=='o'||c=='u') cnt++;\n    }\n    printf(\"%d\\n\", cnt);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%1000s"
+     },
+     {
+      "t": "text",
+      "v": "\", s);\n    int cnt = 0;\n    for (int i = 0; s[i]; i++) {\n        char c = s[i];\n        if (c "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": ">="
+     },
+     {
+      "t": "text",
+      "v": " 'A' && c <= 'Z') c = c - 'A' + 'a';\n        if (c"
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "=="
+     },
+     {
+      "t": "text",
+      "v": "'a'||c=='e'||c=='i'||c=='o'||c=='u') cnt++;\n    }\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", cnt);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%1000s",
+     ">=",
+     "==",
+     "%d"
+    ],
+    "bank": [
+     "%1000s",
+     "==",
+     "fgets",
+     "%f",
+     "free",
+     "%d",
+     ">=",
+     "%lf"
+    ],
+    "hint": "遍历每个字符，先统一转小写再判断。"
+   },
+   {
+    "id": "cloze-c045",
+    "qid": "c045",
+    "title": "大小写互换",
+    "chapter": 9,
+    "difficulty": "medium",
+    "tags": [
+     "字符串",
+     "ASCII"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\"%1000s\", s);\n    for (int i = 0; s[i]; i++) {\n        if (s[i] >= 'a' && s[i] <= 'z') s[i] -= 32;\n        else if (s[i] >= 'A' && s[i] <= 'Z') s[i] += 32;\n    }\n    printf(\"%s\\n\", s);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    char s[1001];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%1000s"
+     },
+     {
+      "t": "text",
+      "v": "\", s);\n    for (int i = 0; s[i]; i++) {\n        if (s[i] "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": ">="
+     },
+     {
+      "t": "text",
+      "v": " 'a' && s[i] <= 'z') s[i] -= 32;\n        else if (s[i] "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": ">="
+     },
+     {
+      "t": "text",
+      "v": " 'A' && s[i] <= 'Z') s[i] += 32;\n    }\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%s"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", s);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%1000s",
+     ">=",
+     ">=",
+     "%s"
+    ],
+    "bank": [
+     "%f",
+     "%1000s",
+     ">=",
+     "%s",
+     "fgets",
+     "sizeof"
+    ],
+    "hint": "`'a' - 'A'` 恒等于 32，大小写互转就是加减 32。"
+   },
+   {
+    "id": "cloze-c046",
+    "qid": "c046",
+    "title": "单词计数",
+    "chapter": 9,
+    "difficulty": "medium",
+    "tags": [
+     "字符串",
+     "分割"
+    ],
+    "code": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char line[1001];\n    if (!fgets(line, sizeof line, stdin)) return 0;\n    int cnt = 0, in_word = 0;\n    for (int i = 0; line[i]; i++) {\n        if (line[i] == ' ' || line[i] == '\\n' || line[i] == '\\t') {\n            in_word = 0;\n        } else if (!in_word) {\n            in_word = 1;\n            cnt++;\n        }\n    }\n    printf(\"%d\\n\", cnt);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char line[1001];\n    if (!fgets(line, "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "sizeof"
+     },
+     {
+      "t": "text",
+      "v": " line, stdin)) return 0;\n    int cnt = 0, in_word = 0;\n    for (int i = 0; line[i]; i++) {\n        if (line[i] "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "=="
+     },
+     {
+      "t": "text",
+      "v": " ' ' || line[i] == '\\n' || line[i] == '\\t') {\n            in_word = 0;\n        } else if (!in_word) {\n            in_word = 1;\n            cnt++;\n        }\n    }\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", cnt);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "sizeof",
+     "==",
+     "%d"
+    ],
+    "bank": [
+     "sizeof",
+     "==",
+     "strlen",
+     "malloc",
+     "%d",
+     "%s"
+    ],
+    "hint": "核心逻辑：当前字符不是空格、前一个字符是空格（或位置 0）时，单词数 +1。"
+   },
+   {
+    "id": "cloze-c047",
+    "qid": "c047",
+    "title": "手写字符串拼接",
+    "chapter": 9,
+    "difficulty": "medium",
+    "tags": [
+     "字符串",
+     "拼接"
+    ],
+    "code": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char a[300], b[101];\n    scanf(\"%100s %100s\", a, b);\n    size_t i = strlen(a);\n    for (size_t j = 0; b[j]; j++, i++) a[i] = b[j];\n    a[i] = '\\0';\n    printf(\"%s\\n\", a);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n#include <string.h>\n\nint main(void) {\n    char a[300], b[101];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%100s"
+     },
+     {
+      "t": "text",
+      "v": " %100s\", a, b);\n    size_t i = "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "strlen"
+     },
+     {
+      "t": "text",
+      "v": "(a);\n    for (size_t j = 0; b[j]; j++, i++) a[i] = b[j];\n    a[i] = '\\0';\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%s"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", a);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%100s",
+     "strlen",
+     "%s"
+    ],
+    "bank": [
+     "printf",
+     "*",
+     "strlen",
+     "%s",
+     "%100s",
+     "!="
+    ],
+    "hint": "先 `strlen(a)` 找到结尾位置，再从这里开始复制 b 的每个字符，最后补 `'\\0'`。"
+   },
+   {
+    "id": "cloze-c048",
+    "qid": "c048",
+    "title": "出现次数最多的字母",
+    "chapter": 9,
+    "difficulty": "hard",
+    "tags": [
+     "字符串",
+     "哈希",
+     "统计"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    char line[1001];\n    if (!fgets(line, sizeof line, stdin)) return 0;\n    int cnt[26] = {0};\n    for (int i = 0; line[i]; i++) {\n        if (line[i] >= 'a' && line[i] <= 'z') cnt[line[i] - 'a']++;\n    }\n    int best = 0;\n    for (int i = 1; i < 26; i++)\n        if (cnt[i] > cnt[best]) best = i;\n    printf(\"%c %d\\n\", 'a' + best, cnt[best]);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    char line[1001];\n    if (!fgets(line, "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "sizeof"
+     },
+     {
+      "t": "text",
+      "v": " line, stdin)) return 0;\n    int cnt[26] = {0};\n    for (int i = 0; line[i]; i++) {\n        if (line[i] "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": ">="
+     },
+     {
+      "t": "text",
+      "v": " 'a' && line[i] <= 'z') cnt[line[i] - 'a']++;\n    }\n    int best = 0;\n    for (int i = 1; i < 26; i++)\n        if (cnt[i] > cnt[best]) best = i;\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%c"
+     },
+     {
+      "t": "text",
+      "v": " %d\\n\", 'a' + best, cnt[best]);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "sizeof",
+     ">=",
+     "%c"
+    ],
+    "bank": [
+     "fgets",
+     "%c",
+     "sizeof",
+     ">=",
+     "->",
+     "%s"
+    ],
+    "hint": "开一个 `int cnt[26] = {0}` 直接当哈希表，下标就是 `c - 'a'`。"
+   },
+   {
+    "id": "cloze-c049",
+    "qid": "c049",
+    "title": "学生成绩排序",
+    "chapter": 10,
+    "difficulty": "medium",
+    "tags": [
+     "结构体",
+     "排序"
+    ],
+    "code": "#include <stdio.h>\n\ntypedef struct { char name[32]; int score; } Student;\n\nint main(void) {\n    int n;\n    Student s[100];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++)\n        scanf(\"%31s %d\", s[i].name, &s[i].score);\n\n    for (int i = 0; i < n - 1; i++)\n        for (int j = 0; j < n - 1 - i; j++)\n            if (s[j].score < s[j + 1].score) {\n                Student t = s[j]; s[j] = s[j + 1]; s[j + 1] = t;\n            }\n\n    for (int i = 0; i < n; i++) printf(\"%s\\n\", s[i].name);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\ntypedef struct { char name[32]; int score; } Student;\n\nint main(void) {\n    int n;\n    Student s[100];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 0; i < n; i++)\n        scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%31s"
+     },
+     {
+      "t": "text",
+      "v": " %d\", s[i].name, &s[i].score);\n\n    for (int i = 0; i < n - 1; i++)\n        for (int j = 0; j < n - 1 - i; j++)\n            if (s[j].score < s[j + 1].score) {\n                Student t = s[j]; s[j] = s[j + 1]; s[j + 1] = t;\n            }\n\n    for (int i = 0; i < n; i++) printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%s"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", s[i].name);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%31s",
+     "%s"
+    ],
+    "bank": [
+     "%d",
+     "%s",
+     "printf",
+     "&",
+     "%31s",
+     "sizeof"
+    ],
+    "hint": "定义 `struct Student { char name[32]; int score; }`，用稳定排序（冒泡）或记录原始下标。"
+   },
+   {
+    "id": "cloze-c050",
+    "qid": "c050",
+    "title": "结构体指针求最高分",
+    "chapter": 10,
+    "difficulty": "medium",
+    "tags": [
+     "结构体",
+     "指针"
+    ],
+    "code": "#include <stdio.h>\n\ntypedef struct { int id; int score; } Student;\n\nStudent *find_top(Student *arr, int n) {\n    Student *best = &arr[0];\n    for (int i = 1; i < n; i++)\n        if (arr[i].score > best->score) best = &arr[i];\n    return best;\n}\n\nint main(void) {\n    int n;\n    Student s[100];\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d %d\", &s[i].id, &s[i].score);\n    Student *top = find_top(s, n);\n    printf(\"%d\\n\", top->id);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\ntypedef struct { int id; int score; } Student;\n\nStudent "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "find_top(Student *arr, int n) {\n    Student *best = "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "arr[0];\n    for (int i = 1; i < n; i++)\n        if (arr[i].score > best"
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "->"
+     },
+     {
+      "t": "text",
+      "v": "score) best = &arr[i];\n    return best;\n}\n\nint main(void) {\n    int n;\n    Student s[100];\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 0; i < n; i++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d\", &s[i].id, &s[i].score);\n    Student "
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "top = find_top(s, n);\n    printf(\"%d\\n\", top"
+     },
+     {
+      "t": "blank",
+      "i": 6,
+      "answer": "->"
+     },
+     {
+      "t": "text",
+      "v": "id);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "*",
+     "&",
+     "->",
+     "%d",
+     "%d",
+     "*",
+     "->"
+    ],
+    "bank": [
+     "->",
+     "*",
+     "||",
+     "%d",
+     "fgets",
+     "==",
+     "&",
+     "NULL"
+    ],
+    "hint": "函数返回 `&arr[i]`，用 `->` 访问成员。"
+   },
+   {
+    "id": "cloze-c051",
+    "qid": "c051",
+    "title": "用枚举做简单计算器",
+    "chapter": 10,
+    "difficulty": "medium",
+    "tags": [
+     "结构体",
+     "枚举"
+    ],
+    "code": "#include <stdio.h>\n\ntypedef enum { ADD, SUB, MUL, DIV } Op;\n\nint main(void) {\n    int a, b;\n    char c;\n    scanf(\"%d %c %d\", &a, &c, &b);\n\n    Op op = ADD;\n    switch (c) {\n        case '+': op = ADD; break;\n        case '-': op = SUB; break;\n        case '*': op = MUL; break;\n        case '/': op = DIV; break;\n        default: return 1;\n    }\n\n    int r = 0;\n    switch (op) {\n        case ADD: r = a + b; break;\n        case SUB: r = a - b; break;\n        case MUL: r = a * b; break;\n        case DIV: r = a / b; break;\n    }\n    printf(\"%d\\n\", r);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\ntypedef enum { ADD, SUB, MUL, DIV } Op;\n\nint main(void) {\n    int a, b;\n    char c;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %c %d\", &a, &c, &b);\n\n    Op op = ADD;\n    switch (c) {\n        case '+': op = ADD; break;\n        case '-': op = SUB; break;\n        case '*': op = MUL; break;\n        case '/': op = DIV; break;\n        default: return 1;\n    }\n\n    int r = 0;\n    switch (op) {\n        case ADD: r = a + b; break;\n        case SUB: r = a - b; break;\n        case MUL: r = a "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": " b; break;\n        case DIV: r = a / b; break;\n    }\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", r);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "*",
+     "%d"
+    ],
+    "bank": [
+     "&",
+     "%d",
+     "*",
+     "malloc"
+    ],
+    "hint": "先读第一个数、运算符字符、第二个数：`scanf(\"%d %c %d\", &a, &op, &b)`。"
+   },
+   {
+    "id": "cloze-c052",
+    "qid": "c052",
+    "title": "读到 EOF 为止求和",
+    "chapter": 11,
+    "difficulty": "medium",
+    "tags": [
+     "EOF",
+     "循环读取"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    long long sum = 0;\n    int x;\n    while (scanf(\"%d\", &x) == 1) sum += x;\n    printf(\"%lld\\n\", sum);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    long long sum = 0;\n    int x;\n    while ("
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "x) "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "=="
+     },
+     {
+      "t": "text",
+      "v": " 1) sum += x;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", sum);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%d",
+     "&",
+     "==",
+     "printf",
+     "%lld"
+    ],
+    "bank": [
+     "%lf",
+     "==",
+     "&",
+     "%lld",
+     "->",
+     "%f",
+     "printf",
+     "%d",
+     "fgets",
+     "*",
+     "scanf",
+     "fopen"
+    ],
+    "hint": "`while (scanf(\"%d\", &x) == 1)` 是读 EOF 的标准写法，不要用 `while (!feof(stdin))`。"
+   },
+   {
+    "id": "cloze-c053",
+    "qid": "c053",
+    "title": "统计行数",
+    "chapter": 11,
+    "difficulty": "medium",
+    "tags": [
+     "fgets",
+     "行处理"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    char line[4096];\n    int lines = 0;\n    while (fgets(line, sizeof line, stdin)) lines++;\n    printf(\"%d\\n\", lines);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    char line[4096];\n    int lines = 0;\n    while ("
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "fgets"
+     },
+     {
+      "t": "text",
+      "v": "(line, "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "sizeof"
+     },
+     {
+      "t": "text",
+      "v": " line, stdin)) lines++;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", lines);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "fgets",
+     "sizeof",
+     "printf",
+     "%d"
+    ],
+    "bank": [
+     "%c",
+     "&&",
+     "strlen",
+     "%d",
+     "sizeof",
+     "fgets",
+     "printf",
+     "fopen"
+    ],
+    "hint": "`while (fgets(line, sizeof line, stdin)) lines++;` 这个写法天然处理了最后一行无换行的情况。"
+   },
+   {
+    "id": "cloze-c054",
+    "qid": "c054",
+    "title": "从文本中提取数字",
+    "chapter": 11,
+    "difficulty": "hard",
+    "tags": [
+     "解析",
+     "sscanf"
+    ],
+    "code": "#include <stdio.h>\n#include <stdlib.h>\n#include <ctype.h>\n\nint main(void) {\n    char line[4096];\n    if (!fgets(line, sizeof line, stdin)) return 0;\n    long long sum = 0;\n    const char *p = line;\n    while (*p) {\n        if (isdigit((unsigned char)*p) ||\n            ((*p == '-' || *p == '+') && isdigit((unsigned char)p[1]))) {\n            char *end;\n            long v = strtol(p, &end, 10);\n            sum += v;\n            p = end;\n        } else {\n            p++;\n        }\n    }\n    printf(\"%lld\\n\", sum);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n#include <stdlib.h>\n#include <ctype.h>\n\nint main(void) {\n    char line[4096];\n    if (!fgets(line, "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "sizeof"
+     },
+     {
+      "t": "text",
+      "v": " line, stdin)) return 0;\n    long long sum = 0;\n    const char "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "p = line;\n    while ("
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": "p) {\n        if (isdigit((unsigned char)*p) "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "||"
+     },
+     {
+      "t": "text",
+      "v": "\n            ((*p "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "=="
+     },
+     {
+      "t": "text",
+      "v": " '-' || *p == '+') && isdigit((unsigned char)p[1]))) {\n            char *end;\n            long v = strtol(p, "
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "end, 10);\n            sum += v;\n            p = end;\n        } else {\n            p++;\n        }\n    }\n    printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 6,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", sum);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "sizeof",
+     "*",
+     "*",
+     "||",
+     "==",
+     "&",
+     "%lld"
+    ],
+    "bank": [
+     "->",
+     "printf",
+     "%s",
+     "&",
+     "||",
+     "scanf",
+     "==",
+     "*",
+     "sizeof",
+     "%f",
+     "malloc",
+     "%lld"
+    ],
+    "hint": "遍历字符，遇到数字或符号就开始累积，用 `strtol` 一次解析更省事。"
+   },
+   {
+    "id": "cloze-c055",
+    "qid": "c055",
+    "title": "用宏实现最大值",
+    "chapter": 12,
+    "difficulty": "easy",
+    "tags": [
+     "宏"
+    ],
+    "code": "#include <stdio.h>\n\n#define MAX(a, b) ((a) > (b) ? (a) : (b))\n\nint main(void) {\n    int a, b, c;\n    scanf(\"%d %d %d\", &a, &b, &c);\n    printf(\"%d\\n\", MAX(MAX(a, b), c));\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\n#define MAX(a, b) ((a) > (b) ? (a) : (b))\n\nint main(void) {\n    int a, b, c;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d %d\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "a, "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "b, &c);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", MAX(MAX(a, b), c));\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%d",
+     "&",
+     "&",
+     "printf",
+     "%d"
+    ],
+    "bank": [
+     "%lf",
+     "%s",
+     "%d",
+     "printf",
+     "&",
+     "!=",
+     "scanf",
+     "strlen"
+    ],
+    "hint": "`#define MAX(a,b) ((a) > (b) ? (a) : (b))`"
+   },
+   {
+    "id": "cloze-c056",
+    "qid": "c056",
+    "title": "打印变量名与值",
+    "chapter": 12,
+    "difficulty": "medium",
+    "tags": [
+     "宏",
+     "字符串化"
+    ],
+    "code": "#include <stdio.h>\n\n#define SHOW(x) printf(\"%s = %d\\n\", #x, (x))\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    SHOW(n);\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\n#define SHOW(x) printf(\"%s = %d\\n\", #x, (x))\n\nint main(void) {\n    int n;\n    "
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&"
+     },
+     {
+      "t": "text",
+      "v": "n);\n    SHOW(n);\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "scanf",
+     "%d",
+     "&"
+    ],
+    "bank": [
+     "scanf",
+     "%d",
+     "sizeof",
+     "fopen",
+     "&",
+     "%s"
+    ],
+    "hint": "`#define SHOW(x) printf(\"%s = %d\\n\", #x, (x))`，`#x` 把参数变成字符串。"
+   },
+   {
+    "id": "cloze-c057",
+    "qid": "c057",
+    "title": "条件编译：输出模式",
+    "chapter": 12,
+    "difficulty": "medium",
+    "tags": [
+     "条件编译"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n#ifdef VERBOSE\n    printf(\"[debug] value=%d\\n\", n);\n#else\n    printf(\"%d\\n\", n);\n#endif\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n#ifdef VERBOSE\n    printf(\"[debug] value="
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\\n\", n);\n#else\n    "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\\n\", n);\n#endif\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "printf"
+    ],
+    "bank": [
+     "%d",
+     "printf",
+     "*",
+     "!="
+    ],
+    "hint": "`#ifdef VERBOSE ... #else ... #endif`。用 `scanf` 读 n，两个分支都要输出它。"
+   },
+   {
+    "id": "cloze-c058",
+    "qid": "c058",
+    "title": "排序并去重",
+    "chapter": 12,
+    "difficulty": "hard",
+    "tags": [
+     "综合",
+     "去重",
+     "排序"
+    ],
+    "code": "#include <stdio.h>\n\nint a[1000];\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    for (int i = 0; i < n; i++) scanf(\"%d\", &a[i]);\n\n    for (int i = 0; i < n - 1; i++)\n        for (int j = 0; j < n - 1 - i; j++)\n            if (a[j] > a[j + 1]) {\n                int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;\n            }\n\n    int first = 1;\n    for (int i = 0; i < n; i++) {\n        if (i > 0 && a[i] == a[i - 1]) continue;\n        if (!first) putchar(' ');\n        printf(\"%d\", a[i]);\n        first = 0;\n    }\n    putchar('\\n');\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint a[1000];\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    for (int i = 0; i < n; i++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &a[i]);\n\n    for (int i = 0; i < n - 1; i++)\n        for (int j = 0; j < n - 1 - i; j++)\n            if (a[j] > a[j + 1]) {\n                int t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;\n            }\n\n    int first = 1;\n    for (int i = 0; i < n; i++) {\n        if (i > 0 "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "&&"
+     },
+     {
+      "t": "text",
+      "v": " a[i] == a[i - 1]) continue;\n        if (!first) "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "(' ');\n        "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "printf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\", a[i]);\n        first = 0;\n    }\n    "
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "&&",
+     "putchar",
+     "printf",
+     "putchar"
+    ],
+    "bank": [
+     "strlen",
+     "%d",
+     "==",
+     "putchar",
+     "free",
+     "printf",
+     "&",
+     "&&"
+    ],
+    "hint": "先排序，再输出时跳过与前一个相同的元素。也可以边输出边判断。"
+   },
+   {
+    "id": "cloze-c059",
+    "qid": "c059",
+    "title": "矩阵乘法",
+    "chapter": 12,
+    "difficulty": "hard",
+    "tags": [
+     "综合",
+     "矩阵乘法"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int m, n, p;\n    int A[20][20], B[20][20];\n    long long C[20][20] = {{0}};\n\n    scanf(\"%d %d %d\", &m, &n, &p);\n    for (int i = 0; i < m; i++)\n        for (int j = 0; j < n; j++) scanf(\"%d\", &A[i][j]);\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < p; j++) scanf(\"%d\", &B[i][j]);\n\n    for (int i = 0; i < m; i++)\n        for (int k = 0; k < n; k++)\n            for (int j = 0; j < p; j++)\n                C[i][j] += (long long)A[i][k] * B[k][j];\n\n    for (int i = 0; i < m; i++) {\n        for (int j = 0; j < p; j++) {\n            if (j) putchar(' ');\n            printf(\"%lld\", C[i][j]);\n        }\n        putchar('\\n');\n    }\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int m, n, p;\n    int A[20][20], B[20][20];\n    long long C[20][20] = {{0}};\n\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": " %d %d\", &m, &n, &p);\n    for (int i = 0; i < m; i++)\n        for (int j = 0; j < n; j++) scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &A[i][j]);\n    for (int i = 0; i < n; i++)\n        for (int j = 0; j < p; j++) "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "scanf"
+     },
+     {
+      "t": "text",
+      "v": "(\"%d\", &B[i][j]);\n\n    for (int i = 0; i < m; i++)\n        for (int k = 0; k < n; k++)\n            for (int j = 0; j < p; j++)\n                C[i][j] += (long long)A[i][k] "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": " B[k][j];\n\n    for (int i = 0; i < m; i++) {\n        for (int j = 0; j < p; j++) {\n            if (j) "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "(' ');\n            printf(\""
+     },
+     {
+      "t": "blank",
+      "i": 5,
+      "answer": "%lld"
+     },
+     {
+      "t": "text",
+      "v": "\", C[i][j]);\n        }\n        "
+     },
+     {
+      "t": "blank",
+      "i": 6,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    }\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "%d",
+     "scanf",
+     "*",
+     "putchar",
+     "%lld",
+     "putchar"
+    ],
+    "bank": [
+     "%d",
+     "sizeof",
+     "putchar",
+     ">=",
+     "%lf",
+     "scanf",
+     "%lld",
+     "fopen",
+     "&&",
+     "*"
+    ],
+    "hint": "三重循环：`C[i][j] = Σ A[i][k] * B[k][j]`。中间那层循环放最里面缓存更友好。"
+   },
+   {
+    "id": "cloze-c060",
+    "qid": "c060",
+    "title": "大数阶乘",
+    "chapter": 12,
+    "difficulty": "hard",
+    "tags": [
+     "综合",
+     "大数"
+    ],
+    "code": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\"%d\", &n);\n    int d[1000] = {0};\n    d[0] = 1;\n    int len = 1;\n\n    for (int k = 2; k <= n; k++) {\n        int carry = 0;\n        for (int i = 0; i < len; i++) {\n            int v = d[i] * k + carry;\n            d[i] = v % 10;\n            carry = v / 10;\n        }\n        while (carry) {\n            d[len++] = carry % 10;\n            carry /= 10;\n        }\n    }\n\n    for (int i = len - 1; i >= 0; i--) putchar('0' + d[i]);\n    putchar('\\n');\n    return 0;\n}",
+    "segments": [
+     {
+      "t": "text",
+      "v": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    scanf(\""
+     },
+     {
+      "t": "blank",
+      "i": 0,
+      "answer": "%d"
+     },
+     {
+      "t": "text",
+      "v": "\", &n);\n    int d[1000] = {0};\n    d[0] = 1;\n    int len = 1;\n\n    for (int k = 2; k "
+     },
+     {
+      "t": "blank",
+      "i": 1,
+      "answer": "<="
+     },
+     {
+      "t": "text",
+      "v": " n; k++) {\n        int carry = 0;\n        for (int i = 0; i < len; i++) {\n            int v = d[i] "
+     },
+     {
+      "t": "blank",
+      "i": 2,
+      "answer": "*"
+     },
+     {
+      "t": "text",
+      "v": " k + carry;\n            d[i] = v % 10;\n            carry = v / 10;\n        }\n        while (carry) {\n            d[len++] = carry % 10;\n            carry /= 10;\n        }\n    }\n\n    for (int i = len - 1; i "
+     },
+     {
+      "t": "blank",
+      "i": 3,
+      "answer": ">="
+     },
+     {
+      "t": "text",
+      "v": " 0; i--) putchar('0' + d[i]);\n    "
+     },
+     {
+      "t": "blank",
+      "i": 4,
+      "answer": "putchar"
+     },
+     {
+      "t": "text",
+      "v": "('\\n');\n    return 0;\n}"
+     }
+    ],
+    "blanks": [
+     "%d",
+     "<=",
+     "*",
+     ">=",
+     "putchar"
+    ],
+    "bank": [
+     "putchar",
+     "->",
+     "fgets",
+     ">=",
+     "%f",
+     "==",
+     "%d",
+     "<=",
+     "&",
+     "*"
+    ],
+    "hint": "用 `int d[1000]` 逆序存各位（d[0] 是个位），每次 `d[i] * k + carry`。"
+   }
+  ],
+  "flash": [
+   {
+    "id": "flash-1-0",
+    "chapter": 1,
+    "chapter_title": "认识 C 与开发环境",
+    "title": "1.1 从源码到可执行文件：编译的四个阶段",
+    "kind": "concept",
+    "points": [
+     "很多人写 C 的第一天就卡在「为什么我的程序跑不起来」，根因是不知道 gcc 到底做了什么。",
+     "一条命令背后其实是四个阶段：",
+     "想亲眼看每一步的产物，就逐个跑：",
+     "知道这四步有什么用？"
+    ]
+   },
+   {
+    "id": "flash-1-1",
+    "chapter": 1,
+    "chapter_title": "认识 C 与开发环境",
+    "title": "1.2 第一个程序，逐字符拆解",
+    "kind": "syntax",
+    "points": [
+     "一段五行代码，每一行都有必须存在的理由：",
+     "\\n 不是「换行」这个动作，是一个字符。",
+     "它是一个转义序列，编译器把它翻译成 ASCII 码 10。",
+     "少了它，你的输出会和 shell 提示符黏在一行："
+    ]
+   },
+   {
+    "id": "flash-1-2",
+    "chapter": 1,
+    "chapter_title": "认识 C 与开发环境",
+    "title": "1.3 变量不是箱子，是一段有编号的内存",
+    "kind": "concept",
+    "points": [
+     "教科书爱说「变量是一个盒子，往里装值」。",
+     "这个比喻会导致你后面学指针时彻底卡死。",
+     "准确的说法是：变量是编译器给某段内存起的名字。",
+     "输出大概长这样（地址每次运行都可能不同）："
+    ]
+   },
+   {
+    "id": "flash-1-3",
+    "chapter": 1,
+    "chapter_title": "认识 C 与开发环境",
+    "title": "1.4 三种错误：编译错、运行错、未定义行为",
+    "kind": "pitfall",
+    "points": [
+     "C 的报错分三类，处理方式完全不同。",
+     "第一类：编译错误（编译期就被拦住）",
+     "好消息：编译器替你兜住了。",
+     "坏消息：C 编译器常常只报第一个错，改一个编一次。"
+    ]
+   },
+   {
+    "id": "flash-2-4",
+    "chapter": 2,
+    "chapter_title": "变量、数据类型与输入输出",
+    "title": "2.1 整型家族与溢出",
+    "kind": "concept",
+    "points": [
+     "C 的整数类型不是「一个类型」，而是一族按宽度排列的类型：",
+     "注意 long 那一行。",
+     "在 Windows 上 long 是 4 字节，在 Linux 64 位上通常是 8 字节。",
+     "跨平台代码不要用 long 存需要 64 位的数，用 long long 或 <stdint.h> 里的 int64_t。"
+    ]
+   },
+   {
+    "id": "flash-2-5",
+    "chapter": 2,
+    "chapter_title": "变量、数据类型与输入输出",
+    "title": "2.2 浮点数：为什么 0.1 + 0.2 不等于 0.3",
+    "kind": "concept",
+    "points": [
+     "原因：十进制小数转二进制会无限循环。",
+     "0.1 的二进制是 0.00011001100110011...（1100 无限循环）。",
+     "double 只有 52 位有效位，必须截断，于是存进去的就已经不是精确的 0.1 了。",
+     "两个近似值相加，误差浮出来。"
+    ]
+   },
+   {
+    "id": "flash-2-6",
+    "chapter": 2,
+    "chapter_title": "变量、数据类型与输入输出",
+    "title": "2.3 char：一个字节的两种身份",
+    "kind": "concept",
+    "points": [
+     "char 占 1 个字节，但它同时是整数类型和字符类型。",
+     "这两重身份是同一个东西。",
+     "'A' 就是 65 的另一种写法。",
+     "所以 'a' - 'A' 恒等于 32，大小写转换可以直接做加减："
+    ]
+   },
+   {
+    "id": "flash-2-7",
+    "chapter": 2,
+    "chapter_title": "变量、数据类型与输入输出",
+    "title": "2.4 printf / scanf 的格式符与陷阱",
+    "kind": "pitfall",
+    "points": [
+     "printf 的格式符必须和参数类型严格匹配，编译器不会替你检查（除非开了 -Wformat，默认开）。",
+     "类型不匹配是 UB。",
+     "坑一：double 在 printf 用 %f，在 scanf 用 %lf。",
+     "这两个不对称，必须记。"
+    ]
+   },
+   {
+    "id": "flash-3-8",
+    "chapter": 3,
+    "chapter_title": "运算符与表达式",
+    "title": "3.1 整数除法、取模与隐式转换",
+    "kind": "concept",
+    "points": [
+     "整数除以整数，结果还是整数，小数部分直接截断。",
+     "这是初学者最常见的 bug 来源：明明写了除法，结果全是 0。",
+     "取模的符号规则（C99 起）：结果符号与被除数一致。",
+     "这跟数学上「余数总为正」不同。"
+    ]
+   },
+   {
+    "id": "flash-3-9",
+    "chapter": 3,
+    "chapter_title": "运算符与表达式",
+    "title": "3.2 关系运算、逻辑运算与短路求值",
+    "kind": "concept",
+    "points": [
+     "C 里没有布尔类型（C99 才有 _Bool），关系运算的结果是 int：真为 1，假为 0。",
+     "这带来一个 C 特有的写法：",
+     "短路求值：&& 和 || 保证从左到右求值，且能提前确定结果时右边不执行。",
+     "这个特性有两个重要用途："
+    ]
+   },
+   {
+    "id": "flash-3-10",
+    "chapter": 3,
+    "chapter_title": "运算符与表达式",
+    "title": "3.3 位运算：C 最锋利的工具",
+    "kind": "concept",
+    "points": [
+     "位运算直接操作二进制位，是做掩码、状态标志、哈希、压缩的首选。",
+     "1u << n 里的 u 不能省。",
+     "1 << 31 在 32 位 int 上是 UB（有符号溢出），1u << 31 才是明确的 2147483648。",
+     "右移的坑： 对负数右移，标准规定是实现定义（算术右移补 1，逻辑右移补 0）。"
+    ]
+   },
+   {
+    "id": "flash-3-11",
+    "chapter": 3,
+    "chapter_title": "运算符与表达式",
+    "title": "3.4 优先级、结合性与未定义行为",
+    "kind": "pitfall",
+    "points": [
+     "优先级不用全背，记住这几条就够：",
+     "() [] -> . 最高——不确定就加括号，这是最优解",
+     "单目 ! ~ ++ -- & * sizeof 次之，从右往左",
+     "算术 * / % 高于 + -"
+    ]
+   },
+   {
+    "id": "flash-4-12",
+    "chapter": 4,
+    "chapter_title": "分支与循环",
+    "title": "4.1 if / else if / else 与悬空 else",
+    "kind": "syntax",
+    "points": [
+     "判断条件从上往下依次测试，命中即停。",
+     "所以 >= 90 必须写在 >= 80 前面，否则 95 分会先命中 >= 80。",
+     "悬空 else：else 永远匹配最近的 if。",
+     "缩进骗了你的眼睛。"
+    ]
+   },
+   {
+    "id": "flash-4-13",
+    "chapter": 4,
+    "chapter_title": "分支与循环",
+    "title": "4.2 switch 与 break 穿透",
+    "kind": "syntax",
+    "points": [
+     "switch 的表达式必须是整型（int、char、enum），不能是浮点或字符串。",
+     "忘记 break 会「穿透」到下一个 case，这是 bug 也是特性：",
+     "等级 3 会累加 100 + 50 + 10。",
+     "这种写法是合法的，但必须加注释标明是有意的，否则读代码的人会以为是漏了 break。"
+    ]
+   },
+   {
+    "id": "flash-4-14",
+    "chapter": 4,
+    "chapter_title": "分支与循环",
+    "title": "4.3 for / while / do-while 怎么选",
+    "kind": "concept",
+    "points": [
+     "三种循环能力上等价，选择的是语义清晰度。",
+     "for：循环次数已知，或需要显式的计数器。",
+     "标准结构是 初始化; 条件; 步进。",
+     "三个部分都可以省略，但省略条件等于死循环："
+    ]
+   },
+   {
+    "id": "flash-4-15",
+    "chapter": 4,
+    "chapter_title": "分支与循环",
+    "title": "4.4 break、continue 与嵌套循环的跳出",
+    "kind": "syntax",
+    "points": [
+     "break 跳出整个循环，continue 跳过本轮剩余部分。",
+     "break 只跳一层。",
+     "嵌套循环里想一次跳出两层，C 没有直接语法，有三种做法：",
+     "关于 goto 的态度： 教科书说「goto 有害」，那是针对「往回跳」的意大利面条代码。"
+    ]
+   },
+   {
+    "id": "flash-5-16",
+    "chapter": 5,
+    "chapter_title": "数组",
+    "title": "5.1 声明、初始化与遍历",
+    "kind": "syntax",
+    "points": [
+     "int c[5] = {0} 是清零的惯用法，不是「只把第一个设成 0」——剩下的会被补 0。",
+     "而 int c[5]; 绝对不会自动清零，局部数组里是栈上的残留值。",
+     "这只在数组还在当前作用域内有效。",
+     "一旦数组作为参数传给函数，它就退化成指针，sizeof 得到的是指针大小（8），不是数组大小。"
+    ]
+   },
+   {
+    "id": "flash-5-17",
+    "chapter": 5,
+    "chapter_title": "数组",
+    "title": "5.2 数组在内存里就是一块连续的字节",
+    "kind": "concept",
+    "points": [
+     "地址每次加 4，正好是 sizeof(int)。",
+     "数组没有「元素位置表」，只有首地址 + 偏移计算。",
+     "所以 a[i] 的本质是：",
+     "这也解释了三件看起来奇怪的事："
+    ]
+   },
+   {
+    "id": "flash-5-18",
+    "chapter": 5,
+    "chapter_title": "数组",
+    "title": "5.3 二维数组与传参退化",
+    "kind": "concept",
+    "points": [
+     "为什么列数不能省？",
+     "因为二维数组在内存里是一维展开的，按行优先（row-major）连续存放：",
+     "编译器要用 m + (i * 列数 + j) 算地址。",
+     "不知道列数就算不出偏移，所以列数必须写。"
+    ]
+   },
+   {
+    "id": "flash-5-19",
+    "chapter": 5,
+    "chapter_title": "数组",
+    "title": "5.4 排序与查找：手写冒泡与二分",
+    "kind": "practice",
+    "points": [
+     "冒泡排序——教学价值大于实用价值：",
+     "时间复杂度 O(n²)，最好情况（已有序）O(n)。",
+     "swapped 标志是关键优化，省掉它就在最好情况下也跑满 n²。",
+     "二分查找——必须有序，O(log n)："
+    ]
+   },
+   {
+    "id": "flash-6-20",
+    "chapter": 6,
+    "chapter_title": "函数",
+    "title": "6.1 声明、定义与调用顺序",
+    "kind": "syntax",
+    "points": [
+     "为什么需要声明？",
+     "因为 C 编译器从上往下单遍扫描。",
+     "调用 add 时如果还没见过它，就不知道参数类型和返回类型。",
+     "C99 之前，不声明会「隐式声明为返回 int」，可能编过但行为错。"
+    ]
+   },
+   {
+    "id": "flash-6-21",
+    "chapter": 6,
+    "chapter_title": "函数",
+    "title": "6.2 C 只有值传递：为什么 swap 会失败",
+    "kind": "concept",
+    "points": [
+     "这是 C 最需要想通的一课。",
+     "原因：C 永远是值传递。",
+     "调用 swap_wrong(x, y) 时，是把 x 的值拷贝进形参 a，y 的值拷贝进 b。",
+     "函数里改的是副本，函数返回后副本销毁，x 和 y 从来没被碰过。"
+    ]
+   },
+   {
+    "id": "flash-6-22",
+    "chapter": 6,
+    "chapter_title": "函数",
+    "title": "6.3 作用域、生命周期与 static",
+    "kind": "concept",
+    "points": [
+     "C 里变量的两个维度容易混：作用域（代码里能看见它的范围）和生命周期（它存在于内存中的时间）。",
+     "static 局部变量是最有用的一个：只初始化一次，函数返回后值保留。",
+     "三次调用输出 1、2、3。",
+     "它常见于「只初始化一次的缓存」："
+    ]
+   },
+   {
+    "id": "flash-6-23",
+    "chapter": 6,
+    "chapter_title": "函数",
+    "title": "6.4 递归与栈：函数是怎么调用自己的",
+    "kind": "concept",
+    "points": [
+     "递归函数就是调用自己的函数。",
+     "写对递归需要两件事：终止条件和向终止条件收敛。",
+     "每次调用都会在栈上压一帧，存放参数、局部变量、返回地址。",
+     "递归的两个代价："
+    ]
+   },
+   {
+    "id": "flash-7-24",
+    "chapter": 7,
+    "chapter_title": "指针基础",
+    "title": "7.1 地址、解引用与三件不同的事",
+    "kind": "concept",
+    "points": [
+     "三个必须分清的东西：",
+     "* 绑定的是变量名，不是类型。",
+     "这是 C 声明语法遗留的设计缺陷，建议一行只声明一个变量。",
+     "指针必须初始化："
+    ]
+   },
+   {
+    "id": "flash-7-25",
+    "chapter": 7,
+    "chapter_title": "指针基础",
+    "title": "7.2 指针与数组：等价但有区别",
+    "kind": "concept",
+    "points": [
+     "第 5 章说过数组在内存里连续，所以指针加上偏移就能访问元素：",
+     "**p[i] 就是 *(p + i)**，这是语言定义，不是巧合。",
+     "遍历的四种写法，性能完全一样：",
+     "但数组和指针不是一回事："
+    ]
+   },
+   {
+    "id": "flash-7-26",
+    "chapter": 7,
+    "chapter_title": "指针基础",
+    "title": "7.3 指针作为输出参数",
+    "kind": "practice",
+    "points": [
+     "C 函数只能返回一个值。",
+     "想带回多个结果，标准做法是传指针。",
+     "if (out_min) 这个判空是有意设计的：调用方如果只想要最大值，可以传 NULL，函数就跳过写入。",
+     "这是 C 库的常见约定。"
+    ]
+   },
+   {
+    "id": "flash-7-27",
+    "chapter": 7,
+    "chapter_title": "指针基础",
+    "title": "7.4 const 与指针的三种组合",
+    "kind": "pitfall",
+    "points": [
+     "const 放在 * 的哪一边，含义完全不同。",
+     "读法是：从右往左读。",
+     "第一种：指向常量的指针（最常见）",
+     "第二种：常量指针（较少见）"
+    ]
+   },
+   {
+    "id": "flash-8-28",
+    "chapter": 8,
+    "chapter_title": "指针进阶与动态内存",
+    "title": "8.1 二级指针：什么时候真的需要它",
+    "kind": "concept",
+    "points": [
+     "二级指针就是「指向指针的指针」。",
+     "什么时候真的需要 ？",
+     "** 只有两种情况：",
+     "一、要在函数里修改调用方的指针本身"
+    ]
+   },
+   {
+    "id": "flash-8-29",
+    "chapter": 8,
+    "chapter_title": "指针进阶与动态内存",
+    "title": "8.2 函数指针与回调",
+    "kind": "concept",
+    "points": [
+     "函数指针存的就是这个地址。",
+     "声明语法为什么这么丑？",
+     "因为 * 必须和名字括在一起，否则 int *op(int, int) 会被解析成「返回 int* 的函数」。",
+     "用 typedef 可以大幅改善可读性："
+    ]
+   },
+   {
+    "id": "flash-8-30",
+    "chapter": 8,
+    "chapter_title": "指针进阶与动态内存",
+    "title": "8.3 malloc / free 与进程内存布局",
+    "kind": "concept",
+    "points": [
+     "先看清内存分区，后面所有行为都有了解释：",
+     "分配必须检查返回值：",
+     "sizeof(int) 不要写成 4。",
+     "**更稳的写法是 sizeof(*a)**，改类型时不用同时改两处："
+    ]
+   },
+   {
+    "id": "flash-8-31",
+    "chapter": 8,
+    "chapter_title": "指针进阶与动态内存",
+    "title": "8.4 四类内存错误与排查方法",
+    "kind": "pitfall",
+    "points": [
+     "C 的 bug 里，内存错误占了很大比例，而且往往在离现场很远的地方才崩。",
+     "错误一：内存泄漏（忘记 free）",
+     "长时间运行的服务里，泄漏会累积到 OOM。",
+     "规则：每个 malloc 都要能指出对应的 free 在哪一行。"
+    ]
+   },
+   {
+    "id": "flash-9-32",
+    "chapter": 9,
+    "chapter_title": "字符串",
+    "title": "9.1 C 没有字符串类型",
+    "kind": "concept",
+    "points": [
+     "别的语言有 String 类型，C 没有。",
+     "C 的「字符串」是一个约定：以 '\\0' 结尾的 char 数组。",
+     "sizeof(s1) 是 6，strlen(s1) 是 5。",
+     "这两个数永远差 1，是理解 C 字符串的第一把钥匙。"
+    ]
+   },
+   {
+    "id": "flash-9-33",
+    "chapter": 9,
+    "chapter_title": "字符串",
+    "title": "9.2 string.h 常用函数与边界",
+    "kind": "syntax",
+    "points": [
+     "strncpy 的坑最值得单说：",
+     "因为源串长度 ≥ n 时，strncpy 不补 \\0。",
+     "snprintf 是首选，它至少不会溢出：",
+     "strtok 的三个限制（所以工程上都避开它）："
+    ]
+   },
+   {
+    "id": "flash-9-34",
+    "chapter": 9,
+    "chapter_title": "字符串",
+    "title": "9.3 手写 strlen / strcpy / strcmp",
+    "kind": "practice",
+    "points": [
+     "面试高频题，也是练指针的最好素材。",
+     "四个值得注意的细节：",
+     "my_strcmp 里强转 unsigned char。",
+     "直接用 char 相减，在 char 有符号的平台上，\"中文字符\"可能是负值，比较结果会错。"
+    ]
+   },
+   {
+    "id": "flash-9-35",
+    "chapter": 9,
+    "chapter_title": "字符串",
+    "title": "9.4 缓冲区溢出：C 最经典的安全漏洞",
+    "kind": "pitfall",
+    "points": [
+     "输入 20 个字符，后 12 个字节会覆盖栈上 buf 之后的内容——包括函数的返回地址。",
+     "这就是缓冲区溢出，1988 年的莫里斯蠕虫、无数次远程代码执行漏洞都是它。",
+     "即使不用 gets，危险的写法到处都是：",
+     "fgets 的一个细节：它会保留换行符，通常需要自己去掉："
+    ]
+   },
+   {
+    "id": "flash-10-36",
+    "chapter": 10,
+    "chapter_title": "结构体、联合与枚举",
+    "title": "10.1 定义、初始化与嵌套",
+    "kind": "syntax",
+    "points": [
+     "推荐用指定初始化器 .x = 3：成员顺序变了也不用改代码，且没写的成员自动为 0。",
+     "结构体可以整体赋值、作为参数、作为返回值（这是数组做不到的）：",
+     "但不建议把大结构体按值传参，会拷贝整个对象：",
+     "结构体指针用 ->："
+    ]
+   },
+   {
+    "id": "flash-10-37",
+    "chapter": 10,
+    "chapter_title": "结构体、联合与枚举",
+    "title": "10.2 内存对齐：为什么 sizeof 比你算的大",
+    "kind": "concept",
+    "points": [
+     "按成员大小相加是 6，但 sizeof(struct A) 通常是 12。",
+     "原因是内存对齐：CPU 访问内存时按字长批量取，如果一个 int 跨越了两个 4 字节块，要么访问两次，要么在部分架构上直接异常。",
+     "所以编译器会在成员之间插入填充字节，让每个成员的偏移是它自身大小的整数倍。",
+     "调整顺序可以省内存："
+    ]
+   },
+   {
+    "id": "flash-10-38",
+    "chapter": 10,
+    "chapter_title": "结构体、联合与枚举",
+    "title": "10.3 union 与 enum",
+    "kind": "concept",
+    "points": [
+     "union：所有成员共享同一块内存。",
+     "用途一：带标签的变体（tagged union），这是 C 实现「多态数据」的标准手法：",
+     "kind 字段是必须的——union 自己不记录「当前哪个成员有效」，搞错就是 UB。",
+     "用途二：类型双关（看同一个数的不同解释）"
+    ]
+   },
+   {
+    "id": "flash-10-39",
+    "chapter": 10,
+    "chapter_title": "结构体、联合与枚举",
+    "title": "10.4 typedef 与 #define 的区别",
+    "kind": "syntax",
+    "points": [
+     "两者都能「造新名字」，但机制完全不同。",
+     "关键差异一：作用域。",
+     "typedef 遵守作用域规则，可以放在函数内、结构体内；#define 从定义处到文件末尾（或 #undef），无视作用域。",
+     "关键差异二：指针。"
+    ]
+   },
+   {
+    "id": "flash-11-40",
+    "chapter": 11,
+    "chapter_title": "文件操作",
+    "title": "11.1 fopen 模式与错误处理",
+    "kind": "syntax",
+    "points": [
+     "文件操作的核心是一个 FILE * 句柄，它背后是操作系统打开的文件描述符加一块缓冲区。",
+     "三个必须知道的点：",
+     "\"w\" 会立刻清空文件，哪怕你后面什么都没写。",
+     "永远检查 fopen 的返回值。"
+    ]
+   },
+   {
+    "id": "flash-11-41",
+    "chapter": 11,
+    "chapter_title": "文件操作",
+    "title": "11.2 文本读写：fprintf / fscanf / fgets",
+    "kind": "syntax",
+    "points": [
+     "写：fprintf 和 fputs",
+     "fprintf 就是「输出到文件的 printf」，格式符规则完全一样。",
+     "读：三种方式，各有适用场景。",
+     "方式一：fgets（逐行读，最安全）"
+    ]
+   },
+   {
+    "id": "flash-11-42",
+    "chapter": 11,
+    "chapter_title": "文件操作",
+    "title": "11.3 二进制读写：fread / fwrite",
+    "kind": "syntax",
+    "points": [
+     "二进制模式直接读写内存字节，不经过任何转换。",
+     "fread / fwrite 的返回值是「成功的元素个数」，不是字节数。",
+     "二进制读写的四个限制（很重要）：",
+     "结构体有填充字节（第 10 章），字节序有大小端差异。"
+    ]
+   },
+   {
+    "id": "flash-11-43",
+    "chapter": 11,
+    "chapter_title": "文件操作",
+    "title": "11.4 资源管理与常见失败模式",
+    "kind": "pitfall",
+    "points": [
+     "文件句柄和堆内存一样，是必须显式释放的资源。",
+     "用错的后果是句柄泄漏，最终 fopen 返回 NULL。",
+     "模式一：多出口函数里漏关文件",
+     "清理代码写四遍，漏一遍就是 bug。"
+    ]
+   },
+   {
+    "id": "flash-12-44",
+    "chapter": 12,
+    "chapter_title": "预处理与多文件编译",
+    "title": "12.1 #define 与宏的三个陷阱",
+    "kind": "pitfall",
+    "points": [
+     "#define 是纯文本替换，发生在编译之前。",
+     "它不理解类型，也不理解表达式结构。",
+     "陷阱一：缺少括号",
+     "正确写法：每个参数和整个表达式都加括号。"
+    ]
+   },
+   {
+    "id": "flash-12-45",
+    "chapter": 12,
+    "chapter_title": "预处理与多文件编译",
+    "title": "12.2 条件编译：一份代码适配多个环境",
+    "kind": "syntax",
+    "points": [
+     "条件编译在预处理阶段决定哪些代码参与编译。",
+     "千万别写 #if X 来判断宏是否存在，除非你确定它被定义过：",
+     "实用模式一：调试开关",
+     "((void)0) 而不是空，是为了让 DBG(\"x\"); 在语法上仍然是一条语句。"
+    ]
+   },
+   {
+    "id": "flash-12-46",
+    "chapter": 12,
+    "chapter_title": "预处理与多文件编译",
+    "title": "12.3 头文件与 include guard",
+    "kind": "concept",
+    "points": [
+     "多文件项目的核心问题是：声明放头文件，定义放 .c 文件。",
+     "为什么需要 include guard？",
+     "没有保护，b.h 的内容会被展开两次，导致「重复定义」错误。",
+     "guard 让第二次包含时整体被跳过。"
+    ]
+   },
+   {
+    "id": "flash-12-47",
+    "chapter": 12,
+    "chapter_title": "预处理与多文件编译",
+    "title": "12.4 多文件编译与 Makefile",
+    "kind": "practice",
+    "points": [
+     "最简单的多文件编译：",
+     "gcc 会依次编译每个 .c，再统一链接。",
+     "分步编译（理解过程用）：",
+     "分步的好处是只重编改过的文件。"
+    ]
+   }
+  ]
+ }
+}

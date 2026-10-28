@@ -91,6 +91,20 @@
       <span class="spacer"></span>
       <button class="btn btn-ghost btn-sm" id="btn-answer">查看参考代码</button>
     </div>
+    <div class="code-vault">
+      <p class="code-save-status" id="draft-status" role="status">代码会自动保存在此浏览器</p>
+      <div class="code-vault-actions">
+        <button type="button" class="btn btn-ghost btn-sm" id="restore-accepted" hidden>恢复最近通过代码</button>
+        {% if current_user %}
+        <div class="submission-controls" id="submission-controls" hidden>
+          <label for="submission-history">提交历史</label>
+          <select id="submission-history" aria-label="选择历史提交"></select>
+          <button type="button" class="btn btn-ghost btn-sm" id="restore-version">载入版本</button>
+        </div>
+        {% endif %}
+        <button type="button" class="btn btn-ghost btn-sm" id="undo-restore" hidden>撤销恢复</button>
+      </div>
+    </div>
   </section>
 </div>
 
@@ -103,123 +117,11 @@
 <script src="{{ url_for('static', filename='vendor/codemirror/mode/clike/clike.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendor/codemirror/addon/edit/closebrackets.min.js') }}"></script>
 <script src="{{ url_for('static', filename='vendor/codemirror/addon/selection/active-line.min.js') }}"></script>
-<script>
-(function () {
-  "use strict";
-
-  var QID = {{ q.id|tojson }};
-  var TEMPLATE = {{ q.template|tojson }};
-  var FIRST_INPUT = {{ (q.cases[0].input if q.cases else '')|tojson }};
-  var LOGGED_IN = {{ (current_user is not none)|tojson }};
-  var STORE_KEY = "cmaster:code:" + QID;
-
-  var saved = null;
-  try { saved = localStorage.getItem(STORE_KEY); } catch (e) {}
-
-  var cm = CMaster.createEditor(document.getElementById("code"), {
-    value: saved != null ? saved : TEMPLATE,
-    onRun: function (kind) { kind === "submit" ? submit() : run(); }
-  });
-
-  var resultArea = document.getElementById("result-area");
-  var btnRun = document.getElementById("btn-run");
-  var btnSubmit = document.getElementById("btn-submit");
-
-  function code() { return cm.getValue(); }
-
-  function run() {
-    if (!code().trim()) { CMaster.toast("先写点代码", "bad"); return; }
-    CMaster.setBusy(btnRun, true, "运行中");
-    CMaster.setJudging(resultArea, true, "运行中");
-    CMaster.api("/api/run", { code: code(), stdin: FIRST_INPUT })
-      .then(function (d) {
-        if (!d.ok) { CMaster.toast(d.error || "运行失败", "bad"); return; }
-        CMaster.renderRunResult(d.result, resultArea);
-      })
-      .catch(function (e) { CMaster.toast(e.message || "网络错误", "bad"); })
-      .finally(function () {
-        CMaster.setBusy(btnRun, false);
-        CMaster.setJudging(resultArea, false);
-      });
-  }
-
-  function submit() {
-    if (!LOGGED_IN) {
-      CMaster.toast("提交判题需要先登录", "bad");
-      setTimeout(function () {
-        location.href = "/login?next=" + encodeURIComponent(location.pathname);
-      }, 700);
-      return;
-    }
-    if (!code().trim()) { CMaster.toast("先写点代码", "bad"); return; }
-
-    CMaster.setBusy(btnSubmit, true, "判题中");
-    CMaster.setJudging(resultArea, true, "判题中");
-    CMaster.api("/api/submit", { qid: QID, code: code() })
-      .then(function (d) {
-        if (!d.ok) { CMaster.toast(d.error || "提交失败", "bad"); return; }
-        CMaster.renderResult(d.result, resultArea);
-        if (d.result.status === "AC") {
-          CMaster.toast("通过！", "ok");
-          try { localStorage.removeItem(STORE_KEY); } catch (e) {}
-        }
-        resultArea.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      })
-      .catch(function (e) { CMaster.toast(e.message || "网络错误", "bad"); })
-      .finally(function () {
-        CMaster.setBusy(btnSubmit, false);
-        CMaster.setJudging(resultArea, false);
-      });
-  }
-
-  document.getElementById("btn-run").addEventListener("click", run);
-  document.getElementById("btn-submit").addEventListener("click", submit);
-
-  document.getElementById("btn-reset").addEventListener("click", function () {
-    if (!confirm("恢复到初始模板？当前代码会丢失。")) return;
-    cm.setValue(TEMPLATE);
-    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
-  });
-
-  document.getElementById("btn-answer").addEventListener("click", function () {
-    var area = document.getElementById("answer-area");
-    if (area.dataset.shown === "1") {
-      area.innerHTML = "";
-      area.dataset.shown = "0";
-      return;
-    }
-    if (!LOGGED_IN) { CMaster.toast("登录后可查看参考代码", "bad"); return; }
-    fetch("/api/answer/" + encodeURIComponent(QID), { credentials: "same-origin" })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        if (!d.ok) { CMaster.toast("拿不到参考代码", "bad"); return; }
-        area.innerHTML = "";
-        var wrap = document.createElement("div");
-        wrap.className = "result";
-        var head = document.createElement("div");
-        head.className = "result-head";
-        head.textContent = "参考代码（先自己写，卡住再看）";
-        wrap.appendChild(head);
-        var body = document.createElement("div");
-        body.className = "result-body";
-        var pre = document.createElement("pre");
-        pre.textContent = d.answer;
-        body.appendChild(pre);
-        wrap.appendChild(body);
-        area.appendChild(wrap);
-        area.dataset.shown = "1";
-      })
-      .catch(function () { CMaster.toast("网络错误", "bad"); });
-  });
-
-  // 自动保存草稿，刷新不丢
-  var saveTimer = null;
-  cm.on("change", function () {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(function () {
-      try { localStorage.setItem(STORE_KEY, cm.getValue()); } catch (e) {}
-    }, 600);
-  });
-})();
-</script>
+<script type="application/json" id="problem-data">{{ {
+  "qid": q.id, "template": q.template, "firstInput": q.cases[0].input if q.cases else '',
+  "loggedIn": current_user is not none, "storageId": user_storage_id,
+  "allowLegacyDraft": allow_legacy_draft, "lastCode": last_code,
+  "solution": solution
+} | tojson }}</script>
+<script src="{{ url_for('static', filename='js/problem.js') }}"></script>
 {% endblock %}

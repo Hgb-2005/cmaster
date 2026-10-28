@@ -66,7 +66,7 @@ int main(void) {
 (function () {
   "use strict";
 
-  var STORE = "cmaster:playground";
+  var STORE = "cmaster:playground:v2:" + document.body.dataset.storageId;
 
   var cm = CMaster.createEditor(document.getElementById("code"), {
     onRun: function () { run(); }
@@ -79,16 +79,15 @@ int main(void) {
 
   try {
     var saved = localStorage.getItem(STORE);
+    if (saved == null && {{ allow_legacy_draft|tojson }}) saved = localStorage.getItem("cmaster:playground");
     if (saved != null) cm.setValue(saved);
   } catch (e) {}
 
-  var timer = null;
-  cm.on("change", function () {
-    clearTimeout(timer);
-    timer = setTimeout(function () {
-      try { localStorage.setItem(STORE, cm.getValue()); } catch (e) {}
-    }, 600);
-  });
+  function saveDraft() {
+    try { localStorage.setItem(STORE, cm.getValue()); } catch (e) {}
+  }
+  cm.on("change", saveDraft);
+  window.addEventListener("pagehide", saveDraft);
 
   function run() {
     var code = cm.getValue();

@@ -6,7 +6,7 @@
   <div class="hero-main">
     <h1>把 C 语言<em>写进手里</em>，不只是看懂</h1>
     <p>
-      12 章系统课程，48 个知识点，60 道可在线判题的练习。
+      {{ chapters|length }} 章系统课程，{{ total_kp }} 个知识点，{{ total_q }} 道可在线判题的练习。
       每一段代码都能在这里编译、运行、拿到逐用例反馈——
       不用装编译器，不用配环境。
     </p>
@@ -25,7 +25,11 @@
     </div>
 
     <div class="hero-actions">
-      <a class="btn btn-primary" href="{{ url_for('chapter_page', cid=1) }}">从第 1 章开始</a>
+      {% if study_plan %}
+        <a class="btn btn-primary" id="continue-learning" href="{{ study_plan[0].url }}">{{ study_plan[0].label }}</a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('chapter_page', cid=1) }}">从第 1 章开始</a>
+      {% endif %}
       <a class="btn" href="{{ url_for('problems_page') }}">直接刷题</a>
       <a class="btn btn-ghost" href="{{ url_for('playground_page') }}">打开游乐场</a>
     </div>
@@ -56,6 +60,26 @@
     </div>
   {% endif %}
 </section>
+
+{% if migration_notice %}
+  <p class="hint-box" role="status">{{ migration_notice }}</p>
+{% endif %}
+{% if study_plan %}
+<section class="study-next" aria-labelledby="study-next-title">
+  <div class="stage-head"><h2 id="study-next-title">接着上次，学一点、写一点</h2><span class="count">你的学习路线</span></div>
+  <p class="stage-desc">回到读过的地方，做一道配套题，再把卡住的知识点练熟。</p>
+  <div class="study-grid">
+    {% for task in study_plan %}
+    <a class="study-card study-{{ task.kind }}" href="{{ task.url }}" data-study="{{ task.kind }}">
+      <span class="study-label"><span class="study-number">0{{ loop.index }}</span>{{ task.label }}</span>
+      <h3>{{ task.title }}</h3>
+      <p>{{ task.description }}</p>
+      <span class="study-action">{{ task.action }} <span aria-hidden="true">↗</span></span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 
 {% for stage in stages %}
   <section class="stage">
