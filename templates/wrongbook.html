@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}错题本 · CMaster{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>错题本</h1>
+  <p>只放「还没通过」的题。做对一次就自动移出——这里不需要纪念品。</p>
+</div>
+
+{% if not items %}
+  <div class="empty">
+    还没有错题。去 <a href="{{ url_for('problems_page') }}">题库</a> 挑一道试试。
+  </div>
+{% else %}
+  {% for item in items %}
+    <div class="wrong-item">
+      <div class="wrong-head">
+        <span class="qid">{{ item.q.id }}</span>
+        <a class="qtitle" href="{{ url_for('problem_page', qid=item.q.id) }}">{{ item.q.title }}</a>
+        <span class="tag diff-{{ item.q.difficulty }}">
+          {{ {'easy':'简单','medium':'中等','hard':'较难'}.get(item.q.difficulty, item.q.difficulty) }}
+        </span>
+        <span class="spacer"></span>
+        <span class="when">{{ item.rec.attempts }} 次尝试</span>
+      </div>
+      <div class="wrong-body">
+        {% if item.rec.message %}
+          <p style="margin:0 0 9px;font-size:13px;color:var(--text-dim)">
+            <span class="verdict {{ item.rec.status }}" style="font-size:11.5px">{{ item.rec.status }}</span>
+            {{ item.rec.message }}
+          </p>
+        {% endif %}
+        {% if item.rec.code %}
+          <pre>{{ item.rec.code }}</pre>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+{% endif %}
+{% endblock %}

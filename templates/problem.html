@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}{{ q.title }} · CMaster{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/lib/codemirror.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/theme/material-darker.min.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="crumb">
+  <a href="{{ url_for('problems_page') }}">题库</a>
+  <span class="sep">/</span>
+  <a href="{{ url_for('chapter_page', cid=chapter.id) }}">第 {{ chapter.id }} 章 {{ chapter.title }}</a>
+  <span class="sep">/</span>
+  <span>{{ q.id }}</span>
+</div>
+
+<div class="solve-layout">
+
+  <!-- 左：题面 -->
+  <section class="pane">
+    <div class="pane-head">
+      <h2>{{ q.title }}</h2>
+      <span class="spacer"></span>
+      <span class="tag diff-{{ q.difficulty }}">
+        {{ {'easy':'简单','medium':'中等','hard':'较难'}.get(q.difficulty, q.difficulty) }}
+      </span>
+      {% if solved and solved.status == 'AC' %}
+        <span class="status-ac">已通过</span>
+      {% endif %}
+    </div>
+
+    <div class="pane-body">
+      <div class="q-desc md">{{ q.description_html|safe }}</div>
+
+      <div class="samples">
+        {% for c in q.cases[:3] %}
+          <div class="sample">
+            <div class="sample-head">样例 {{ loop.index }}{% if c.input %} · 输入{% endif %}</div>
+            <div class="sample-body">
+              <div>
+                <span class="sample-label">输入</span>
+                <pre>{{ c.input if c.input else '（无输入）' }}</pre>
+              </div>
+              <div>
+                <span class="sample-label">期望输出</span>
+                <pre>{{ c.output }}</pre>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      {% if q.cases|length > 3 %}
+        <p style="color:var(--text-mute);font-size:12.5px;margin:10px 0 0">
+          还有 {{ q.cases|length - 3 }} 个隐藏用例，提交时会一起跑。
+        </p>
+      {% endif %}
+
+      {% if q.hint %}
+        <div class="hint-box"><b>提示</b> · {{ q.hint }}</div>
+      {% endif %}
+
+      {% if not current_user %}
+        <div class="hint-box" style="margin-top:14px">
+          <b>未登录</b> · 可以先写代码试运行；要提交判题、记录进度，请
+          <a href="{{ url_for('login_page', next=request.path) }}">登录或注册</a>。
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- 右：编辑器 -->
+  <section class="pane">
+    <div class="pane-head">
+      <h2>main.c</h2>
+      <span class="spacer"></span>
+      <span class="meta" style="font-size:11.5px;color:var(--text-mute);font-family:var(--mono)">
+        Ctrl+Enter 运行 · Ctrl+S 提交
+      </span>
+    </div>
+
+    <div class="editor-wrap">
+      <textarea id="code">{{ q.template }}</textarea>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn btn-sm" id="btn-run">运行</button>
+      <button class="btn btn-ok btn-sm" id="btn-submit" {% if not current_user %}title="登录后可提交"{% endif %}>提交判题</button>
+      <button class="btn btn-ghost btn-sm" id="btn-reset">重置</button>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost btn-sm" id="btn-answer">查看参考代码</button>
+    </div>
+  </section>
+</div>
+
+<div id="result-area"></div>
+<div id="answer-area" class="answer-box"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/codemirror/lib/codemirror.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/mode/clike/clike.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/addon/edit/closebrackets.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/addon/selection/active-line.min.js') }}"></script>
+<script>
+(function () {
+  "use strict";
+
+  var QID = {{ q.id|tojson }};
+  var TEMPLATE = {{ q.template|tojson }};
+  var FIRST_INPUT = {{ (q.cases[0].input if q.cases else '')|tojson }};
+  var LOGGED_IN = {{ (current_user is not none)|tojson }};
+  var STORE_KEY = "cmaster:code:" + QID;
+
+  var saved = null;
+  try { saved = localStorage.getItem(STORE_KEY); } catch (e) {}
+
+  var cm = CMaster.createEditor(document.getElementById("code"), {
+    value: saved != null ? saved : TEMPLATE,
+    onRun: function (kind) { kind === "submit" ? submit() : run(); }
+  });
+
+  var resultArea = document.getElementById("result-area");
+  var btnRun = document.getElementById("btn-run");
+  var btnSubmit = document.getElementById("btn-submit");
+
+  function code() { return cm.getValue(); }
+
+  function run() {
+    if (!code().trim()) { CMaster.toast("先写点代码", "bad"); return; }
+    CMaster.setBusy(btnRun, true, "运行中");
+    CMaster.setJudging(resultArea, true, "运行中");
+    CMaster.api("/api/run", { code: code(), stdin: FIRST_INPUT })
+      .then(function (d) {
+        if (!d.ok) { CMaster.toast(d.error || "运行失败", "bad"); return; }
+        CMaster.renderRunResult(d.result, resultArea);
+      })
+      .catch(function (e) { CMaster.toast(e.message || "网络错误", "bad"); })
+      .finally(function () {
+        CMaster.setBusy(btnRun, false);
+        CMaster.setJudging(resultArea, false);
+      });
+  }
+
+  function submit() {
+    if (!LOGGED_IN) {
+      CMaster.toast("提交判题需要先登录", "bad");
+      setTimeout(function () {
+        location.href = "/login?next=" + encodeURIComponent(location.pathname);
+      }, 700);
+      return;
+    }
+    if (!code().trim()) { CMaster.toast("先写点代码", "bad"); return; }
+
+    CMaster.setBusy(btnSubmit, true, "判题中");
+    CMaster.setJudging(resultArea, true, "判题中");
+    CMaster.api("/api/submit", { qid: QID, code: code() })
+      .then(function (d) {
+        if (!d.ok) { CMaster.toast(d.error || "提交失败", "bad"); return; }
+        CMaster.renderResult(d.result, resultArea);
+        if (d.result.status === "AC") {
+          CMaster.toast("通过！", "ok");
+          try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+        }
+        resultArea.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      })
+      .catch(function (e) { CMaster.toast(e.message || "网络错误", "bad"); })
+      .finally(function () {
+        CMaster.setBusy(btnSubmit, false);
+        CMaster.setJudging(resultArea, false);
+      });
+  }
+
+  document.getElementById("btn-run").addEventListener("click", run);
+  document.getElementById("btn-submit").addEventListener("click", submit);
+
+  document.getElementById("btn-reset").addEventListener("click", function () {
+    if (!confirm("恢复到初始模板？当前代码会丢失。")) return;
+    cm.setValue(TEMPLATE);
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+  });
+
+  document.getElementById("btn-answer").addEventListener("click", function () {
+    var area = document.getElementById("answer-area");
+    if (area.dataset.shown === "1") {
+      area.innerHTML = "";
+      area.dataset.shown = "0";
+      return;
+    }
+    if (!LOGGED_IN) { CMaster.toast("登录后可查看参考代码", "bad"); return; }
+    fetch("/api/answer/" + encodeURIComponent(QID), { credentials: "same-origin" })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d.ok) { CMaster.toast("拿不到参考代码", "bad"); return; }
+        area.innerHTML = "";
+        var wrap = document.createElement("div");
+        wrap.className = "result";
+        var head = document.createElement("div");
+        head.className = "result-head";
+        head.textContent = "参考代码（先自己写，卡住再看）";
+        wrap.appendChild(head);
+        var body = document.createElement("div");
+        body.className = "result-body";
+        var pre = document.createElement("pre");
+        pre.textContent = d.answer;
+        body.appendChild(pre);
+        wrap.appendChild(body);
+        area.appendChild(wrap);
+        area.dataset.shown = "1";
+      })
+      .catch(function () { CMaster.toast("网络错误", "bad"); });
+  });
+
+  // 自动保存草稿，刷新不丢
+  var saveTimer = null;
+  cm.on("change", function () {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      try { localStorage.setItem(STORE_KEY, cm.getValue()); } catch (e) {}
+    }, 600);
+  });
+})();
+</script>
+{% endblock %}

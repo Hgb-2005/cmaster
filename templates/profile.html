@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}我的进度 · CMaster{% endblock %}
+
+{% block content %}
+{# 成就图标：九个 symbol 定义一次，下面用 <use> 复用。
+   全部线条画、stroke 走 currentColor，锁定态只要把 color 调暗就自动灰了。 #}
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="ach-first_read" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 6.6C10.2 5.2 8 4.6 5.5 4.6v13c2.5 0 4.7.6 6.5 2 1.8-1.4 4-2 6.5-2v-13c-2.5 0-4.7.6-6.5 2z"/>
+      <path d="M12 6.6v13"/>
+    </symbol>
+    <symbol id="ach-ten_read" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3 3 7.4l9 4.4 9-4.4z"/>
+      <path d="M3 12.3 12 16.7l9-4.4"/>
+      <path d="M3 17 12 21.4 21 17"/>
+    </symbol>
+    <symbol id="ach-all_read" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="8.6"/>
+      <path d="m8.4 12.2 2.6 2.6 4.7-5.2"/>
+    </symbol>
+    <symbol id="ach-first_ac" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 21V3.6"/>
+      <path d="M6 4.6h11.2l-2.3 3.7 2.3 3.7H6z"/>
+    </symbol>
+    <symbol id="ach-ten_ac" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13.2 2.4 4.6 13.2h6.3l-1 8.4 8.5-10.8h-6.4z"/>
+    </symbol>
+    <symbol id="ach-half_ac" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="8.6"/>
+      <path d="M12 3.4a8.6 8.6 0 0 1 0 17.2z" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="ach-all_ac" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3.8h8v5.4a4 4 0 0 1-8 0z"/>
+      <path d="M8 5.4H5.4a3.1 3.1 0 0 0 3.2 4.2"/>
+      <path d="M16 5.4h2.6a3.1 3.1 0 0 1-3.2 4.2"/>
+      <path d="M12 13.2v3.2"/>
+      <path d="M12 16.4c-1.6 0-3.6 1.1-3.6 4h7.2c0-2.9-2-4-3.6-4z"/>
+    </symbol>
+    <symbol id="ach-streak_3" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2.6c3.6 3.3 6.1 6.1 6.1 9.6a6.1 6.1 0 0 1-12.2 0c0-2 1-3.6 2.6-5.1.2 1.3.9 2.1 1.9 2.4-.5-2.6.1-4.9 1.6-6.9z"/>
+    </symbol>
+    <symbol id="ach-streak_7" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3.4" y="5" width="17.2" height="15.6" rx="2.6"/>
+      <path d="M3.4 10.2h17.2"/>
+      <path d="M8.2 2.8v4M15.8 2.8v4"/>
+      <path d="m8.8 15 2.1 2.1 4.3-4.6"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="page-head">
+  <h1>{{ current_user }} 的学习进度</h1>
+  <p>知识点打开即记为已读；题目通过后从错题本移出。</p>
+</div>
+
+{# ---- 连击条 ---- #}
+{% set week_on = week | selectattr('on') | list | length %}
+<div class="streak-strip {{ 'active' if streak }}">
+  <div class="streak-main">
+    <svg class="streak-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <use href="#ach-streak_3"/>
+    </svg>
+    <b class="streak-num">{{ streak }}</b>
+    <span class="streak-unit">天连续学习</span>
+  </div>
+
+  <div class="streak-dots" aria-hidden="true">
+    {% for d in week %}
+      <span class="sdot {{ 'on' if d.on }} {{ 'today' if d.today }}" title="{{ d.label }}">
+        <i>{{ d.label }}</i>
+      </span>
+    {% endfor %}
+  </div>
+
+  <p class="streak-note">
+    {% if streak == 0 %}
+      今天还没有学习记录，读一页就算开始。
+    {% elif streak < 3 %}
+      近 7 天学了 {{ week_on }} 天，再坚持一下就拿下「三日」。
+    {% elif streak < 7 %}
+      手感正好，连续 7 天解锁「一周」。
+    {% else %}
+      已经连着学了 {{ streak }} 天，这个习惯很难得了。
+    {% endif %}
+  </p>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <b>{{ data.read|length }}<span style="font-size:13px;color:var(--text-mute)">/{{ total_kp }}</span></b>
+    <span>已读知识点</span>
+  </div>
+  <div class="stat-card">
+    <b>{{ data.solved|length }}<span style="font-size:13px;color:var(--text-mute)">/{{ total_q }}</span></b>
+    <span>已通过题目</span>
+  </div>
+  <div class="stat-card">
+    <b>{{ data.wrong|length }}</b>
+    <span>待攻克的错题</span>
+  </div>
+  <div class="stat-card">
+    <b>{{ data.attempts.values()|sum if data.attempts else 0 }}</b>
+    <span>累计提交次数</span>
+  </div>
+</div>
+
+{# ---- 成就墙 ---- #}
+{% set unlocked = achievements | selectattr('unlocked') | list | length %}
+<div class="section-head">
+  <h2>成就</h2>
+  <span class="section-count">{{ unlocked }} / {{ achievements|length }}</span>
+</div>
+
+<div class="ach-grid">
+  {% for a in achievements %}
+    <div class="ach {{ 'on' if a.unlocked else 'off' }}" style="--i: {{ loop.index0 }}">
+      <span class="ach-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ach-{{ a.id }}"/></svg>
+      </span>
+      <span class="ach-body">
+        <b>{{ a.name }}</b>
+        <small>{{ a.desc }}</small>
+      </span>
+      {% if a.unlocked %}<span class="ach-mark" aria-label="已解锁">✓</span>
+      {% else %}<span class="ach-lock" aria-label="未解锁">锁定</span>{% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+{# ---- 学习轨迹热力图 ---- #}
+<div class="section-head">
+  <h2>学习轨迹</h2>
+  <span class="section-count">近半年 {{ heat_days }} 天</span>
+</div>
+
+<div class="heat-wrap">
+  <div class="heat" role="img"
+       aria-label="近半年学习热力图，共 {{ heat_days }} 天有学习记录">
+    {% for col in heat %}
+      <div class="heat-col">
+        {% for d in col %}
+          {% if d.level < 0 %}
+            <i class="heat-cell future"></i>
+          {% else %}
+            <i class="heat-cell lv{{ d.level }}" title="{{ d.title }}"></i>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+  <div class="heat-legend">
+    <span>少</span>
+    <i class="heat-cell lv0"></i>
+    <i class="heat-cell lv1"></i>
+    <i class="heat-cell lv2"></i>
+    <i class="heat-cell lv3"></i>
+    <i class="heat-cell lv4"></i>
+    <span>多</span>
+  </div>
+</div>
+
+{# ---- 分章进度 ---- #}
+<div class="section-head">
+  <h2>分章进度</h2>
+</div>
+
+<div class="progress-list">
+  {% for cid, ch in chapters.items() %}
+    {% set st = stats[cid] %}
+    <div class="progress-row">
+      <span class="cno">{{ cid }}</span>
+      <span class="cname">
+        <a href="{{ url_for('chapter_page', cid=cid) }}">{{ ch.title }}</a>
+      </span>
+      <span class="cbar">
+        <span class="bar {{ 'full' if st.percent == 100 }}"><i style="width: {{ st.percent }}%"></i></span>
+      </span>
+      <span class="pct">{{ st.kp_done }}/{{ st.kp_total }} · {{ st.q_done }}/{{ st.q_total }}</span>
+    </div>
+  {% endfor %}
+</div>
+
+{% if by_diff %}
+  <div class="section-head">
+    <h2>通过的题目难度分布</h2>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-card"><b>{{ by_diff.get('easy', 0) }}</b><span>简单</span></div>
+    <div class="stat-card"><b>{{ by_diff.get('medium', 0) }}</b><span>中等</span></div>
+    <div class="stat-card"><b>{{ by_diff.get('hard', 0) }}</b><span>较难</span></div>
+  </div>
+{% endif %}
+{% endblock %}

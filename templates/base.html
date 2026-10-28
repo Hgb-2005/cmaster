@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/motion.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body data-logged-in="{{ '1' if current_user else '0' }}">
+<header class="topbar">
+  <a class="brand" href="{{ url_for('index') }}">
+    <span class="brand-mark">C</span>
+    <span class="brand-text">CMaster</span>
+  </a>
+
+  <nav class="nav">
+    <a href="{{ url_for('index') }}" class="{{ 'on' if request.endpoint == 'index' }}">课程</a>
+    <a href="{{ url_for('problems_page') }}" class="{{ 'on' if request.endpoint in ('problems_page','problem_page') }}">题库</a>
+    {# 「训练」紧跟题库：它是题库的轻量版——同样考这批内容，但只考一个点，
+       两分钟一轮。放在游乐场前面，因为「练熟的」才会去自由创作。 #}
+    {% if current_user %}
+      <a href="{{ url_for('training_page') }}" class="{{ 'on' if request.endpoint == 'training_page' }}">训练</a>
+    {% endif %}
+    <a href="{{ url_for('playground_page') }}" class="{{ 'on' if request.endpoint == 'playground_page' }}">游乐场</a>
+    {% if current_user %}
+      <a href="{{ url_for('wrongbook_page') }}" class="{{ 'on' if request.endpoint == 'wrongbook_page' }}">错题本</a>
+      <a href="{{ url_for('analytics_page') }}" class="{{ 'on' if request.endpoint == 'analytics_page' }}">分析</a>
+      <a href="{{ url_for('map_page') }}" class="{{ 'on' if request.endpoint == 'map_page' }}">图谱</a>
+      {# 「内存」放在图谱后面：它也是「看得见的理解」这一类，
+         但比图谱更具体——图谱回答「该学什么」，这页回答「这段代码到底
+         在内存里干了什么」，所以紧跟在图谱之后、维护者入口之前。 #}
+      <a href="{{ url_for('memory_page') }}" class="{{ 'on' if request.endpoint == 'memory_page' }}">内存</a>
+      {# 「状态」是给维护者看的，和前面五个面向学习者的入口不是一类。
+         单独放最后，不参与「学习动线」的强调色。 #}
+      <a href="{{ url_for('ops_page') }}" class="{{ 'on' if request.endpoint == 'ops_page' }}">状态</a>
+      {# 「管理」和「状态」都是维护者视角，但回答的不是同一个问题：
+         状态看「判题过程跑得怎样」，管理看「这台机器和沙箱本身好不好」。
+         两个都放最后、都叫「状态」会让人以为是一个页面。 #}
+      <a href="{{ url_for('admin_page') }}" class="{{ 'on' if request.endpoint == 'admin_page' }}">管理</a>
+    {% endif %}
+  </nav>
+
+  <div class="nav-right">
+    <button class="search-trigger" id="search-trigger" type="button"
+            aria-label="搜索课程与题目（快捷键 / 或 Ctrl+K）">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+      <span class="label">搜索</span>
+      <kbd>/</kbd>
+    </button>
+    <span id="compiler-badge" class="badge badge-dim" title="编译器状态检测中">检测中</span>
+    {% if current_user %}
+      <a class="user-chip" href="{{ url_for('profile_page') }}">
+        <span class="avatar">{{ current_user[0]|upper }}</span>
+        <span class="user-name">{{ current_user }}</span>
+      </a>
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('logout_page') }}">退出</a>
+    {% else %}
+      <a class="btn btn-primary btn-sm" href="{{ url_for('login_page') }}">登录 / 注册</a>
+    {% endif %}
+  </div>
+</header>
+
+{# 容器宽度做成 block：正文页要窄栏好读，图谱页要宽才铺得开。
+   只给需要的那一页加 .wrap-wide，不为了一个页面把全站改宽。 #}
+{% block layout %}
+<main class="wrap {% block wrap_class %}{% endblock %}">
+  {% block content %}{% endblock %}
+</main>
+{% endblock %}
+
+<footer class="footer">
+  <span>{{ site_name }} · 本地运行的 C 语言学习平台</span>
+  <span class="dot">·</span>
+  {# 这句原话是「判题为子进程执行，无系统级沙箱，请勿暴露到公网」。
+     沙箱做出来之后它就变成了假话，而页脚上的假话比没有这句话更坏——
+     读者会照着它决定「要不要往公网放」。现在说的是能力边界，
+     不是自我免责：隔离是真的，外层防护仍然建议，两件事都写清楚。 #}
+  <span>判题运行在系统级沙箱内（内存 / 进程数 / CPU 均有硬上限）</span>
+  <span class="dot">·</span>
+  <span>公网部署仍建议加外层隔离</span>
+  <span class="dot">·</span>
+  <span>按 <kbd class="footer-kbd">?</kbd> 看快捷键</span>
+</footer>
+
+{# editor.js 必须排在 app.js 前面：app.js 要用它导出的 CMaster 去查编译器状态。
+   这个文件顶层只有定义，不依赖 CodeMirror，所以全站引入是安全的（用不到编辑器的
+   页面只是白拿一个 checkCompiler）。 #}
+<script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ux.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

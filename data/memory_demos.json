@@ -1,0 +1,3363 @@
+{
+ "word": 8,
+ "stack_top": 140726149730048,
+ "scenarios": [
+  {
+   "id": "stack-vars",
+   "title": "局部变量在栈上排开",
+   "tag": "栈",
+   "level": 1,
+   "intro": "同一个函数里的局部变量住在同一块栈帧里。栈向下长，所以后声明的变量地址更小；每个变量按自己的对齐要求落位，char 只占 1 字节，int 占 4，double 占 8。",
+   "code": [
+    "int main(void) {",
+    "    char   c = 'A';",
+    "    int    i = 42;",
+    "    double d = 3.5;",
+    "    return 0;",
+    "}"
+   ],
+   "steps": [
+    {
+     "line": 0,
+     "note": "刚进 main，栈帧已经划出来了，但里面还是空的。栈帧的大小在编译期就定死了，跟走哪条分支无关。",
+     "frames": [],
+     "heap": [],
+     "focus": [],
+     "ghost": "main 的栈帧已经划出来了，还没有变量落位"
+    },
+    {
+     "line": 1,
+     "note": "c 是一个 char，只占 1 字节。注意它的地址——它落在 0x……eff 这种奇数地址上，因为 char 的对齐要求是 1。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 1,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:c",
+         "name": "c",
+         "type": "char",
+         "size": 1,
+         "addr": 140726149730047,
+         "state": "new",
+         "bytes": [
+          "41"
+         ],
+         "value": "'A'"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:c"
+     ]
+    },
+    {
+     "line": 2,
+     "note": "i 是 int，要求 4 字节对齐，所以它不会紧贴在 c 下面（那样会落在0x……efb）。编译器往下取到最近的 4 的倍数 0x……ef8，中间那 3 个字节就这么空着。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 5,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:c",
+         "name": "c",
+         "type": "char",
+         "size": 1,
+         "addr": 140726149730047,
+         "state": "",
+         "bytes": [
+          "41"
+         ],
+         "value": "'A'"
+        },
+        {
+         "id": "main:i",
+         "name": "i",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730040,
+         "state": "new",
+         "bytes": [
+          "2a",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "42"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:i"
+     ]
+    },
+    {
+     "line": 3,
+     "note": "d 是 double，要求 8 字节对齐，继续往下落到 0x……ef0。地址一个比一个小，这就是「栈向下长」。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 13,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:c",
+         "name": "c",
+         "type": "char",
+         "size": 1,
+         "addr": 140726149730047,
+         "state": "",
+         "bytes": [
+          "41"
+         ],
+         "value": "'A'"
+        },
+        {
+         "id": "main:i",
+         "name": "i",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730040,
+         "state": "",
+         "bytes": [
+          "2a",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "42"
+        },
+        {
+         "id": "main:d",
+         "name": "d",
+         "type": "double",
+         "size": 8,
+         "addr": 140726149730032,
+         "state": "new",
+         "bytes": [
+          "00",
+          "00",
+          "00",
+          "00",
+          "00",
+          "00",
+          "0c",
+          "40"
+         ],
+         "value": "3.5"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:d"
+     ]
+    },
+    {
+     "line": 4,
+     "note": "main 返回，整块帧一起回收——不是逐个变量释放。这也是为什么返回一个指向局部变量的指针是错的：那 4 个字节还在，但已经不归你了。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "main 已返回，帧已回收",
+       "base": 140726149730048,
+       "size": 13,
+       "freed": true,
+       "cells": [
+        {
+         "id": "main:c",
+         "name": "c",
+         "type": "char",
+         "size": 1,
+         "addr": 140726149730047,
+         "state": "",
+         "bytes": [
+          "41"
+         ],
+         "value": "'A'"
+        },
+        {
+         "id": "main:i",
+         "name": "i",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730040,
+         "state": "",
+         "bytes": [
+          "2a",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "42"
+        },
+        {
+         "id": "main:d",
+         "name": "d",
+         "type": "double",
+         "size": 8,
+         "addr": 140726149730032,
+         "state": "",
+         "bytes": [
+          "00",
+          "00",
+          "00",
+          "00",
+          "00",
+          "00",
+          "0c",
+          "40"
+         ],
+         "value": "3.5"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "id": "array-stride",
+   "title": "数组是一整块连续的",
+   "tag": "数组",
+   "level": 1,
+   "intro": "int arr[5] 不是五个分散的变量，是一整块 20 字节。元素之间地址正好差 4，一个不多一个不少，这是下标运算能直接算地址的前提：arr[i] 就是 *(arr + i)。",
+   "code": [
+    "int main(void) {",
+    "    int arr[5] = {10, 20, 30, 40, 50};",
+    "    int *p = arr;",
+    "    printf(\"%d\\n\", p[3]);",
+    "    return 0;",
+    "}"
+   ],
+   "steps": [
+    {
+     "line": 1,
+     "note": "arr 一次占了 20 个字节。下面标的是字节，每个 int 4 个字节、小端序——所以 10 写成 0a 00 00 00。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 20,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:arr",
+         "name": "arr",
+         "type": "int[5]",
+         "size": 20,
+         "addr": 140726149730028,
+         "state": "new",
+         "pieces": [
+          {
+           "key": "main:arr#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "0a",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "10",
+           "note": ""
+          },
+          {
+           "key": "main:arr#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "14",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "20",
+           "note": ""
+          },
+          {
+           "key": "main:arr#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "1e",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "30",
+           "note": ""
+          },
+          {
+           "key": "main:arr#3",
+           "label": "[3]",
+           "off": 12,
+           "size": 4,
+           "bytes": [
+            "28",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "40",
+           "note": ""
+          },
+          {
+           "key": "main:arr#4",
+           "label": "[4]",
+           "off": 16,
+           "size": 4,
+           "bytes": [
+            "32",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "50",
+           "note": ""
+          }
+         ],
+         "value": "{10, 20, 30, 40, 50}"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:arr"
+     ]
+    },
+    {
+     "line": 2,
+     "note": "p 里存的是 arr 的起始地址。数组名在大多数表达式里会自动退化成指向首元素的指针，所以 `int *p = arr;` 不用取地址符。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 28,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:arr",
+         "name": "arr",
+         "type": "int[5]",
+         "size": 20,
+         "addr": 140726149730028,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:arr#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "0a",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "10",
+           "note": ""
+          },
+          {
+           "key": "main:arr#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "14",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "20",
+           "note": ""
+          },
+          {
+           "key": "main:arr#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "1e",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "30",
+           "note": ""
+          },
+          {
+           "key": "main:arr#3",
+           "label": "[3]",
+           "off": 12,
+           "size": 4,
+           "bytes": [
+            "28",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "40",
+           "note": ""
+          },
+          {
+           "key": "main:arr#4",
+           "label": "[4]",
+           "off": 16,
+           "size": 4,
+           "bytes": [
+            "32",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "50",
+           "note": ""
+          }
+         ],
+         "value": "{10, 20, 30, 40, 50}"
+        },
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730016,
+         "state": "new",
+         "bytes": [
+          "ec",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4eec",
+         "ptr_to": "main:arr#0"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:p"
+     ]
+    },
+    {
+     "line": 3,
+     "note": "p[3] 不查表、不循环，就是「起始地址 + 3 × 4」。编译器把它算成一次地址加法，然后读那 4 个字节。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 28,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:arr",
+         "name": "arr",
+         "type": "int[5]",
+         "size": 20,
+         "addr": 140726149730028,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:arr#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "0a",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "10",
+           "note": ""
+          },
+          {
+           "key": "main:arr#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "14",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "20",
+           "note": ""
+          },
+          {
+           "key": "main:arr#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "1e",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "30",
+           "note": ""
+          },
+          {
+           "key": "main:arr#3",
+           "label": "[3]",
+           "off": 12,
+           "size": 4,
+           "bytes": [
+            "28",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "40",
+           "note": ""
+          },
+          {
+           "key": "main:arr#4",
+           "label": "[4]",
+           "off": 16,
+           "size": 4,
+           "bytes": [
+            "32",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "50",
+           "note": ""
+          }
+         ],
+         "value": "{10, 20, 30, 40, 50}"
+        },
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730016,
+         "state": "",
+         "bytes": [
+          "ec",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4eec",
+         "ptr_to": "main:arr#0"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:arr#3"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ptr-basic",
+   "title": "指针只是地址",
+   "tag": "指针",
+   "level": 1,
+   "intro": "指针没有魔法。它是一个 8 字节的变量，里面存的是一串数字——那个数字是另一个变量的地址。& 是「取出地址」，* 是「按地址访问」。",
+   "code": [
+    "int main(void) {",
+    "    int  x = 42;",
+    "    int *p = &x;",
+    "    *p = 7;",
+    "    return 0;",
+    "}"
+   ],
+   "steps": [
+    {
+     "line": 1,
+     "note": "x 是一个普通的 int，地址 0x……ee8，里面是 42。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:x",
+         "name": "x",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "new",
+         "bytes": [
+          "2a",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "42"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:x"
+     ]
+    },
+    {
+     "line": 2,
+     "note": "p 是 int*，占 8 字节——指针的大小跟它指向什么无关，只跟机器有关，64 位机器上永远是 8。它存的值就是 x 的地址。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 12,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:x",
+         "name": "x",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "read",
+         "bytes": [
+          "2a",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "42"
+        },
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730032,
+         "state": "new",
+         "bytes": [
+          "fc",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4efc",
+         "ptr_to": "main:x"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:p"
+     ]
+    },
+    {
+     "line": 3,
+     "note": "*p = 7 分两步：先读出 p 里的地址，再往那个地址写 7。改的是 x，p 自己的值一点没变。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 12,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:x",
+         "name": "x",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "chg",
+         "bytes": [
+          "2a",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "42"
+        },
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730032,
+         "state": "",
+         "bytes": [
+          "fc",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4efc",
+         "ptr_to": "main:x"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:x"
+     ]
+    },
+    {
+     "line": 4,
+     "note": "所以 printf 打出来的 x 是 7。指针只是一个「指向」的关系，它不复制数据，也不拥有数据。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 12,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:x",
+         "name": "x",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "",
+         "bytes": [
+          "07",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "7"
+        },
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730032,
+         "state": "",
+         "bytes": [
+          "fc",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4efc",
+         "ptr_to": "main:x"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:x"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ptr-arith",
+   "title": "指针加一，加的是 sizeof",
+   "tag": "指针",
+   "level": 2,
+   "intro": "同一个地址交给两种类型的指针，加一之后走出的距离完全不同。p+1 不是「地址加 1」，是「地址加 sizeof(*p)」。这就是为什么指针必须带类型——不带类型，编译器不知道一步该迈多远。",
+   "code": [
+    "int main(void) {",
+    "    int   a[4] = {1, 2, 3, 4};",
+    "    int  *p  = a;",
+    "    char *pc = (char *)a;",
+    "    p++;      /* 地址 +4 */",
+    "    pc++;     /* 地址 +1 */",
+    "    return 0;",
+    "}"
+   ],
+   "steps": [
+    {
+     "line": 1,
+     "note": "准备一块 16 字节的 int 数组。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 16,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:a",
+         "name": "a",
+         "type": "int[4]",
+         "size": 16,
+         "addr": 140726149730032,
+         "state": "new",
+         "pieces": [
+          {
+           "key": "main:a#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "01",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "1",
+           "note": ""
+          },
+          {
+           "key": "main:a#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "02",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "2",
+           "note": ""
+          },
+          {
+           "key": "main:a#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "03",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "3",
+           "note": ""
+          },
+          {
+           "key": "main:a#3",
+           "label": "[3]",
+           "off": 12,
+           "size": 4,
+           "bytes": [
+            "04",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "4",
+           "note": ""
+          }
+         ],
+         "value": "{1, 2, 3, 4}"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:a"
+     ]
+    },
+    {
+     "line": 2,
+     "note": "两个指针现在存的是同一个地址——a 的起始位置。它们唯一的区别是类型：一个说「我指向 int」，一个说「我指向 char」。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 32,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:a",
+         "name": "a",
+         "type": "int[4]",
+         "size": 16,
+         "addr": 140726149730032,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:a#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "01",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "1",
+           "note": ""
+          },
+          {
+           "key": "main:a#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "02",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "2",
+           "note": ""
+          },
+          {
+           "key": "main:a#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "03",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "3",
+           "note": ""
+          },
+          {
+           "key": "main:a#3",
+           "label": "[3]",
+           "off": 12,
+           "size": 4,
+           "bytes": [
+            "04",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "4",
+           "note": ""
+          }
+         ],
+         "value": "{1, 2, 3, 4}"
+        },
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730024,
+         "state": "new",
+         "bytes": [
+          "f0",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4ef0",
+         "ptr_to": "main:a#0"
+        },
+        {
+         "id": "main:pc",
+         "name": "pc",
+         "type": "char*",
+         "size": 8,
+         "addr": 140726149730016,
+         "state": "new",
+         "bytes": [
+          "f0",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4ef0",
+         "ptr_to": "main:a#0"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:p",
+      "main:pc"
+     ]
+    },
+    {
+     "line": 3,
+     "note": "p++ 之后地址加 4，正好落在 a[1] 上——它跳过了整个元素。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 32,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:a",
+         "name": "a",
+         "type": "int[4]",
+         "size": 16,
+         "addr": 140726149730032,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:a#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "01",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "1",
+           "note": ""
+          },
+          {
+           "key": "main:a#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "02",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "2",
+           "note": ""
+          },
+          {
+           "key": "main:a#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "03",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "3",
+           "note": ""
+          },
+          {
+           "key": "main:a#3",
+           "label": "[3]",
+           "off": 12,
+           "size": 4,
+           "bytes": [
+            "04",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "4",
+           "note": ""
+          }
+         ],
+         "value": "{1, 2, 3, 4}"
+        },
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730024,
+         "state": "chg",
+         "bytes": [
+          "f4",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4ef4",
+         "ptr_to": "main:a#1"
+        },
+        {
+         "id": "main:pc",
+         "name": "pc",
+         "type": "char*",
+         "size": 8,
+         "addr": 140726149730016,
+         "state": "",
+         "bytes": [
+          "f0",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4ef0",
+         "ptr_to": "main:a#0"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:p"
+     ]
+    },
+    {
+     "line": 4,
+     "note": "pc++ 之后地址只加 1，落在 a[0] 的第二个字节上。那个位置没有「一个 char 变量」，它只是 4 个字节里的一块。从这里读出来的值，取决于 1 这个小端整数怎么切——这就是类型双关（type punning）为什么容易出错。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 32,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:a",
+         "name": "a",
+         "type": "int[4]",
+         "size": 16,
+         "addr": 140726149730032,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:a#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "01",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "1",
+           "note": ""
+          },
+          {
+           "key": "main:a#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "02",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "2",
+           "note": ""
+          },
+          {
+           "key": "main:a#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "03",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "3",
+           "note": ""
+          },
+          {
+           "key": "main:a#3",
+           "label": "[3]",
+           "off": 12,
+           "size": 4,
+           "bytes": [
+            "04",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "4",
+           "note": ""
+          }
+         ],
+         "value": "{1, 2, 3, 4}"
+        },
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730024,
+         "state": "",
+         "bytes": [
+          "f4",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4ef4",
+         "ptr_to": "main:a#1"
+        },
+        {
+         "id": "main:pc",
+         "name": "pc",
+         "type": "char*",
+         "size": 8,
+         "addr": 140726149730016,
+         "state": "chg",
+         "bytes": [
+          "f1",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4ef1",
+         "ptr_to": "main:a"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:pc"
+     ]
+    },
+    {
+     "line": 5,
+     "note": "回到开头看：两个指针从同一个地方出发，走了一步，一个到了下一格，一个还在原来那格里。差别全在类型上。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 32,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:a",
+         "name": "a",
+         "type": "int[4]",
+         "size": 16,
+         "addr": 140726149730032,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:a#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "01",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "1",
+           "note": ""
+          },
+          {
+           "key": "main:a#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "02",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "2",
+           "note": ""
+          },
+          {
+           "key": "main:a#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "03",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "3",
+           "note": ""
+          },
+          {
+           "key": "main:a#3",
+           "label": "[3]",
+           "off": 12,
+           "size": 4,
+           "bytes": [
+            "04",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "4",
+           "note": ""
+          }
+         ],
+         "value": "{1, 2, 3, 4}"
+        },
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730024,
+         "state": "",
+         "bytes": [
+          "f4",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4ef4",
+         "ptr_to": "main:a#1"
+        },
+        {
+         "id": "main:pc",
+         "name": "pc",
+         "type": "char*",
+         "size": 8,
+         "addr": 140726149730016,
+         "state": "",
+         "bytes": [
+          "f1",
+          "4e",
+          "2a",
+          "5c",
+          "fd",
+          "7f",
+          "00",
+          "00"
+         ],
+         "value": "0x7ffd5c2a4ef1",
+         "ptr_to": "main:a"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:p",
+      "main:pc"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "string-nul",
+   "title": "字符串末尾那个 \\0",
+   "tag": "字符串",
+   "level": 2,
+   "intro": "C 没有字符串类型，只有 char 数组。所有字符串函数都靠末尾那个 0 判断「到哪算完」。少写一个 0，它们就会一路读下去。",
+   "code": [
+    "int main(void) {",
+    "    char s[4] = \"cat\";",
+    "    char t[3] = {'d', 'o', 'g'};",
+    "    printf(\"%s\\n\", s);   /* cat */",
+    "    printf(\"%s\\n\", t);   /* 灾难 */",
+    "    return 0;",
+    "}"
+   ],
+   "steps": [
+    {
+     "line": 1,
+     "note": "写 \"cat\" 三个字符，但 s 是 char[4]——第 4 个字节是编译器自动补的 '\\0'。不从 1 开始数的原因就在这里：数组长度要留出这个位置。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:s",
+         "name": "s",
+         "type": "char[4]",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:s#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "63"
+           ],
+           "value": "'c'",
+           "note": ""
+          },
+          {
+           "key": "main:s#1",
+           "label": "[1]",
+           "off": 1,
+           "size": 1,
+           "bytes": [
+            "61"
+           ],
+           "value": "'a'",
+           "note": ""
+          },
+          {
+           "key": "main:s#2",
+           "label": "[2]",
+           "off": 2,
+           "size": 1,
+           "bytes": [
+            "74"
+           ],
+           "value": "'t'",
+           "note": ""
+          },
+          {
+           "key": "main:s#3",
+           "label": "[3]",
+           "off": 3,
+           "size": 1,
+           "bytes": [
+            "00"
+           ],
+           "value": "'\\0'",
+           "note": "\\0"
+          }
+         ],
+         "value": "\"cat\""
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:s#3"
+     ]
+    },
+    {
+     "line": 2,
+     "note": "t 是手动初始化的 char[3]，三个字符塞满，没有 '\\0'。它本身没毛病——它只是个 3 字节的数组，不是字符串。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 7,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:s",
+         "name": "s",
+         "type": "char[4]",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:s#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "63"
+           ],
+           "value": "'c'",
+           "note": ""
+          },
+          {
+           "key": "main:s#1",
+           "label": "[1]",
+           "off": 1,
+           "size": 1,
+           "bytes": [
+            "61"
+           ],
+           "value": "'a'",
+           "note": ""
+          },
+          {
+           "key": "main:s#2",
+           "label": "[2]",
+           "off": 2,
+           "size": 1,
+           "bytes": [
+            "74"
+           ],
+           "value": "'t'",
+           "note": ""
+          },
+          {
+           "key": "main:s#3",
+           "label": "[3]",
+           "off": 3,
+           "size": 1,
+           "bytes": [
+            "00"
+           ],
+           "value": "'\\0'",
+           "note": "\\0"
+          }
+         ],
+         "value": "\"cat\""
+        },
+        {
+         "id": "main:t",
+         "name": "t",
+         "type": "char[3]",
+         "size": 3,
+         "addr": 140726149730041,
+         "state": "new",
+         "pieces": [
+          {
+           "key": "main:t#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "64"
+           ],
+           "value": "'d'",
+           "note": ""
+          },
+          {
+           "key": "main:t#1",
+           "label": "[1]",
+           "off": 1,
+           "size": 1,
+           "bytes": [
+            "6f"
+           ],
+           "value": "'o'",
+           "note": ""
+          },
+          {
+           "key": "main:t#2",
+           "label": "[2]",
+           "off": 2,
+           "size": 1,
+           "bytes": [
+            "67"
+           ],
+           "value": "'g'",
+           "note": ""
+          }
+         ],
+         "value": "\"dog\""
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:t"
+     ]
+    },
+    {
+     "line": 3,
+     "note": "printf(\"%s\") 从 t 的起始位置开始，一个字节一个字节往后读，直到遇见 0。但 t 后面是什么？不知道——可能是别的变量、可能是填充、可能是越界的地址。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 7,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:s",
+         "name": "s",
+         "type": "char[4]",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:s#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "63"
+           ],
+           "value": "'c'",
+           "note": ""
+          },
+          {
+           "key": "main:s#1",
+           "label": "[1]",
+           "off": 1,
+           "size": 1,
+           "bytes": [
+            "61"
+           ],
+           "value": "'a'",
+           "note": ""
+          },
+          {
+           "key": "main:s#2",
+           "label": "[2]",
+           "off": 2,
+           "size": 1,
+           "bytes": [
+            "74"
+           ],
+           "value": "'t'",
+           "note": ""
+          },
+          {
+           "key": "main:s#3",
+           "label": "[3]",
+           "off": 3,
+           "size": 1,
+           "bytes": [
+            "00"
+           ],
+           "value": "'\\0'",
+           "note": "\\0"
+          }
+         ],
+         "value": "\"cat\""
+        },
+        {
+         "id": "main:t",
+         "name": "t",
+         "type": "char[3]",
+         "size": 3,
+         "addr": 140726149730041,
+         "state": "bad",
+         "pieces": [
+          {
+           "key": "main:t#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "64"
+           ],
+           "value": "'d'",
+           "note": ""
+          },
+          {
+           "key": "main:t#1",
+           "label": "[1]",
+           "off": 1,
+           "size": 1,
+           "bytes": [
+            "6f"
+           ],
+           "value": "'o'",
+           "note": ""
+          },
+          {
+           "key": "main:t#2",
+           "label": "[2]",
+           "off": 2,
+           "size": 1,
+           "bytes": [
+            "67"
+           ],
+           "value": "'g'",
+           "note": ""
+          }
+         ],
+         "value": "\"dog\""
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:t"
+     ]
+    },
+    {
+     "line": 4,
+     "note": "所以在 C 里，「这个数组是不是字符串」不看它装了什么字符，只看末尾有没有 0。strlen／strcpy／printf 全都按这条规则办事。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 7,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:s",
+         "name": "s",
+         "type": "char[4]",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "read",
+         "pieces": [
+          {
+           "key": "main:s#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "63"
+           ],
+           "value": "'c'",
+           "note": ""
+          },
+          {
+           "key": "main:s#1",
+           "label": "[1]",
+           "off": 1,
+           "size": 1,
+           "bytes": [
+            "61"
+           ],
+           "value": "'a'",
+           "note": ""
+          },
+          {
+           "key": "main:s#2",
+           "label": "[2]",
+           "off": 2,
+           "size": 1,
+           "bytes": [
+            "74"
+           ],
+           "value": "'t'",
+           "note": ""
+          },
+          {
+           "key": "main:s#3",
+           "label": "[3]",
+           "off": 3,
+           "size": 1,
+           "bytes": [
+            "00"
+           ],
+           "value": "'\\0'",
+           "note": "\\0"
+          }
+         ],
+         "value": "\"cat\""
+        },
+        {
+         "id": "main:t",
+         "name": "t",
+         "type": "char[3]",
+         "size": 3,
+         "addr": 140726149730041,
+         "state": "bad",
+         "pieces": [
+          {
+           "key": "main:t#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "64"
+           ],
+           "value": "'d'",
+           "note": ""
+          },
+          {
+           "key": "main:t#1",
+           "label": "[1]",
+           "off": 1,
+           "size": 1,
+           "bytes": [
+            "6f"
+           ],
+           "value": "'o'",
+           "note": ""
+          },
+          {
+           "key": "main:t#2",
+           "label": "[2]",
+           "off": 2,
+           "size": 1,
+           "bytes": [
+            "67"
+           ],
+           "value": "'g'",
+           "note": ""
+          }
+         ],
+         "value": "\"dog\""
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:s",
+      "main:t"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "struct-pad",
+   "title": "结构体为什么变大了",
+   "tag": "结构体",
+   "level": 3,
+   "intro": "sizeof 出来的数往往比成员加起来大。多出来的不是浪费，是为了让每个成员都落在自己对齐要求的位置上——CPU 读一个 4 字节的 int，从 4 的倍数地址读是一次，跨了边界就要读两次再拼起来。",
+   "code": [
+    "struct P { char c; int  i; };  /* sizeof = 8 */",
+    "struct Q { int  i; char c; };  /* sizeof = 8 */",
+    "struct R { char a; double b; char c; }; /* 24 */",
+    "",
+    "int main(void) {",
+    "    struct P p = {'A', 7};",
+    "    struct Q q = {7, 'A'};",
+    "    struct R r = {'A', 2.5, 'B'};",
+    "    return 0;",
+    "}"
+   ],
+   "steps": [
+    {
+     "line": 5,
+     "note": "struct P：c 占 1 字节，i 要求 4 对齐，所以 1、2、3 这三格空出来当填充。总大小 8，实际用了 5。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 8,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "struct P",
+         "size": 8,
+         "addr": 140726149730040,
+         "state": "new",
+         "pieces": [
+          {
+           "key": "main:p#c",
+           "label": "c",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "41"
+           ],
+           "value": "'A'"
+          },
+          {
+           "key": "main:p#pad1",
+           "label": "",
+           "off": 1,
+           "size": 3,
+           "bytes": [
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          },
+          {
+           "key": "main:p#i",
+           "label": "i",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "07",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "7"
+          }
+         ],
+         "value": "{c='A', i=7}"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:p"
+     ]
+    },
+    {
+     "line": 6,
+     "note": "struct Q 一模一样的东西换个顺序：i 占 0..3，c 落在 4。这次洞在末尾——因为整个结构体的大小要取整到最大对齐（4），5 向上取整就是 8。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 16,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "struct P",
+         "size": 8,
+         "addr": 140726149730040,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:p#c",
+           "label": "c",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "41"
+           ],
+           "value": "'A'"
+          },
+          {
+           "key": "main:p#pad1",
+           "label": "",
+           "off": 1,
+           "size": 3,
+           "bytes": [
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          },
+          {
+           "key": "main:p#i",
+           "label": "i",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "07",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "7"
+          }
+         ],
+         "value": "{c='A', i=7}"
+        },
+        {
+         "id": "main:q",
+         "name": "q",
+         "type": "struct Q",
+         "size": 8,
+         "addr": 140726149730032,
+         "state": "new",
+         "pieces": [
+          {
+           "key": "main:q#i",
+           "label": "i",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "07",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "7"
+          },
+          {
+           "key": "main:q#c",
+           "label": "c",
+           "off": 4,
+           "size": 1,
+           "bytes": [
+            "41"
+           ],
+           "value": "'A'"
+          },
+          {
+           "key": "main:q#pad5",
+           "label": "",
+           "off": 5,
+           "size": 3,
+           "bytes": [
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          }
+         ],
+         "value": "{i=7, c='A'}"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:q"
+     ]
+    },
+    {
+     "line": 7,
+     "note": "struct R 更明显：a 在 0，b 是 double 要求 8 对齐所以跳到 8，c 在 16，末尾再补到 24。三个成员只用了 10 字节，sizeof 是 24。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 40,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "struct P",
+         "size": 8,
+         "addr": 140726149730040,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:p#c",
+           "label": "c",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "41"
+           ],
+           "value": "'A'"
+          },
+          {
+           "key": "main:p#pad1",
+           "label": "",
+           "off": 1,
+           "size": 3,
+           "bytes": [
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          },
+          {
+           "key": "main:p#i",
+           "label": "i",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "07",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "7"
+          }
+         ],
+         "value": "{c='A', i=7}"
+        },
+        {
+         "id": "main:q",
+         "name": "q",
+         "type": "struct Q",
+         "size": 8,
+         "addr": 140726149730032,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:q#i",
+           "label": "i",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "07",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "7"
+          },
+          {
+           "key": "main:q#c",
+           "label": "c",
+           "off": 4,
+           "size": 1,
+           "bytes": [
+            "41"
+           ],
+           "value": "'A'"
+          },
+          {
+           "key": "main:q#pad5",
+           "label": "",
+           "off": 5,
+           "size": 3,
+           "bytes": [
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          }
+         ],
+         "value": "{i=7, c='A'}"
+        },
+        {
+         "id": "main:r",
+         "name": "r",
+         "type": "struct R",
+         "size": 24,
+         "addr": 140726149730008,
+         "state": "new",
+         "pieces": [
+          {
+           "key": "main:r#a",
+           "label": "a",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "41"
+           ],
+           "value": "'A'"
+          },
+          {
+           "key": "main:r#pad1",
+           "label": "",
+           "off": 1,
+           "size": 7,
+           "bytes": [
+            "--",
+            "--",
+            "--",
+            "--",
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          },
+          {
+           "key": "main:r#b",
+           "label": "b",
+           "off": 8,
+           "size": 8,
+           "bytes": [
+            "00",
+            "00",
+            "00",
+            "00",
+            "00",
+            "00",
+            "04",
+            "40"
+           ],
+           "value": "2.5"
+          },
+          {
+           "key": "main:r#c",
+           "label": "c",
+           "off": 16,
+           "size": 1,
+           "bytes": [
+            "42"
+           ],
+           "value": "'B'"
+          },
+          {
+           "key": "main:r#pad17",
+           "label": "",
+           "off": 17,
+           "size": 7,
+           "bytes": [
+            "--",
+            "--",
+            "--",
+            "--",
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          }
+         ],
+         "value": "{a='A', b=2.5, c='B'}"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:r"
+     ]
+    },
+    {
+     "line": 8,
+     "note": "所以调结构体顺序能省内存：把小的放后面、大的放前面，填充自然就少了。这也是为什么内核里到处按大小降序排成员。要精确控制就加 #pragma pack(1)，代价是访问变慢。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "",
+       "base": 140726149730048,
+       "size": 40,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "struct P",
+         "size": 8,
+         "addr": 140726149730040,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:p#c",
+           "label": "c",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "41"
+           ],
+           "value": "'A'"
+          },
+          {
+           "key": "main:p#pad1",
+           "label": "",
+           "off": 1,
+           "size": 3,
+           "bytes": [
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          },
+          {
+           "key": "main:p#i",
+           "label": "i",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "07",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "7"
+          }
+         ],
+         "value": "{c='A', i=7}"
+        },
+        {
+         "id": "main:q",
+         "name": "q",
+         "type": "struct Q",
+         "size": 8,
+         "addr": 140726149730032,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:q#i",
+           "label": "i",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "07",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "7"
+          },
+          {
+           "key": "main:q#c",
+           "label": "c",
+           "off": 4,
+           "size": 1,
+           "bytes": [
+            "41"
+           ],
+           "value": "'A'"
+          },
+          {
+           "key": "main:q#pad5",
+           "label": "",
+           "off": 5,
+           "size": 3,
+           "bytes": [
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          }
+         ],
+         "value": "{i=7, c='A'}"
+        },
+        {
+         "id": "main:r",
+         "name": "r",
+         "type": "struct R",
+         "size": 24,
+         "addr": 140726149730008,
+         "state": "",
+         "pieces": [
+          {
+           "key": "main:r#a",
+           "label": "a",
+           "off": 0,
+           "size": 1,
+           "bytes": [
+            "41"
+           ],
+           "value": "'A'"
+          },
+          {
+           "key": "main:r#pad1",
+           "label": "",
+           "off": 1,
+           "size": 7,
+           "bytes": [
+            "--",
+            "--",
+            "--",
+            "--",
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          },
+          {
+           "key": "main:r#b",
+           "label": "b",
+           "off": 8,
+           "size": 8,
+           "bytes": [
+            "00",
+            "00",
+            "00",
+            "00",
+            "00",
+            "00",
+            "04",
+            "40"
+           ],
+           "value": "2.5"
+          },
+          {
+           "key": "main:r#c",
+           "label": "c",
+           "off": 16,
+           "size": 1,
+           "bytes": [
+            "42"
+           ],
+           "value": "'B'"
+          },
+          {
+           "key": "main:r#pad17",
+           "label": "",
+           "off": 17,
+           "size": 7,
+           "bytes": [
+            "--",
+            "--",
+            "--",
+            "--",
+            "--",
+            "--",
+            "--"
+           ],
+           "value": "",
+           "pad": true
+          }
+         ],
+         "value": "{a='A', b=2.5, c='B'}"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:p",
+      "main:q",
+      "main:r"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "recursion",
+   "title": "递归的栈帧",
+   "tag": "函数",
+   "level": 3,
+   "intro": "每次递归调用都会压一个新的栈帧，参数、局部变量各自独立。递归写错最常见的原因不是逻辑，是忘了栈有上限——帧越压越多，最后撞到 guard page 就是段错误。",
+   "code": [
+    "int fact(int n) {",
+    "    if (n <= 1) return 1;",
+    "    return n * fact(n - 1);",
+    "}",
+    "",
+    "int main(void) {",
+    "    int r = fact(3);",
+    "    return 0;",
+    "}"
+   ],
+   "steps": [
+    {
+     "line": 6,
+     "note": "main 里准备调用 fact(3)。这时栈上只有一个帧。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "调用者",
+       "base": 140726149730048,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:r",
+         "name": "r",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "new",
+         "bytes": [
+          "00",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "0"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:r"
+     ]
+    },
+    {
+     "line": 1,
+     "note": "进入 fact(3)。新的帧压在 main 下面，n = 3。n > 1，所以要走 fact(n-1)。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "调用者",
+       "base": 140726149730048,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:r",
+         "name": "r",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "",
+         "bytes": [
+          "00",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "0"
+        }
+       ]
+      },
+      {
+       "id": "fact3",
+       "name": "fact3()",
+       "tip": "fact(3)",
+       "base": 140726149729984,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "fact3:n",
+         "name": "n",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729980,
+         "state": "new",
+         "bytes": [
+          "03",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "3"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "fact3:n"
+     ]
+    },
+    {
+     "line": 1,
+     "note": "fact(2) 又是一个新帧。它的 n 跟上一层那个 n 是两个不同的变量，地址都不一样——这是栈帧最容易被误解的地方。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "调用者",
+       "base": 140726149730048,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:r",
+         "name": "r",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "",
+         "bytes": [
+          "00",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "0"
+        }
+       ]
+      },
+      {
+       "id": "fact3",
+       "name": "fact3()",
+       "tip": "fact(3)",
+       "base": 140726149729984,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "fact3:n",
+         "name": "n",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729980,
+         "state": "",
+         "bytes": [
+          "03",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "3"
+        }
+       ]
+      },
+      {
+       "id": "fact2",
+       "name": "fact2()",
+       "tip": "fact(2)",
+       "base": 140726149729920,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "fact2:n",
+         "name": "n",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729916,
+         "state": "new",
+         "bytes": [
+          "02",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "2"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "fact2:n"
+     ]
+    },
+    {
+     "line": 1,
+     "note": "fact(1) 命中 n <= 1，直接返回 1。这是递归的出口，没有它就永远压栈，直到栈溢出。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "调用者",
+       "base": 140726149730048,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:r",
+         "name": "r",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "",
+         "bytes": [
+          "00",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "0"
+        }
+       ]
+      },
+      {
+       "id": "fact3",
+       "name": "fact3()",
+       "tip": "fact(3)",
+       "base": 140726149729984,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "fact3:n",
+         "name": "n",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729980,
+         "state": "",
+         "bytes": [
+          "03",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "3"
+        }
+       ]
+      },
+      {
+       "id": "fact2",
+       "name": "fact2()",
+       "tip": "fact(2)",
+       "base": 140726149729920,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "fact2:n",
+         "name": "n",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729916,
+         "state": "",
+         "bytes": [
+          "02",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "2"
+        }
+       ]
+      },
+      {
+       "id": "fact1",
+       "name": "fact1()",
+       "tip": "fact(1) → return 1",
+       "base": 140726149729856,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "fact1:n",
+         "name": "n",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729852,
+         "state": "read",
+         "bytes": [
+          "01",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "1"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "fact1:n"
+     ]
+    },
+    {
+     "line": 2,
+     "note": "开始往回算：fact(1) 的帧销毁，fact(2) 用它的返回值算出 2 × 1 = 2。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "调用者",
+       "base": 140726149730048,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:r",
+         "name": "r",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "",
+         "bytes": [
+          "00",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "0"
+        }
+       ]
+      },
+      {
+       "id": "fact3",
+       "name": "fact3()",
+       "tip": "fact(3)",
+       "base": 140726149729984,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "fact3:n",
+         "name": "n",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729980,
+         "state": "",
+         "bytes": [
+          "03",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "3"
+        }
+       ]
+      },
+      {
+       "id": "fact2",
+       "name": "fact2()",
+       "tip": "fact(2) → return 2",
+       "base": 140726149729920,
+       "size": 8,
+       "freed": false,
+       "cells": [
+        {
+         "id": "fact2:n",
+         "name": "n",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729916,
+         "state": "",
+         "bytes": [
+          "02",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "2"
+        },
+        {
+         "id": "fact2:ret",
+         "name": "ret",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729912,
+         "state": "new",
+         "bytes": [
+          "02",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "2"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "fact2:ret"
+     ]
+    },
+    {
+     "line": 2,
+     "note": "再往上：fact(3) 拿到 2，算出 3 × 2 = 6。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "调用者",
+       "base": 140726149730048,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:r",
+         "name": "r",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "",
+         "bytes": [
+          "00",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "0"
+        }
+       ]
+      },
+      {
+       "id": "fact3",
+       "name": "fact3()",
+       "tip": "fact(3) → return 6",
+       "base": 140726149729984,
+       "size": 8,
+       "freed": false,
+       "cells": [
+        {
+         "id": "fact3:n",
+         "name": "n",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729980,
+         "state": "",
+         "bytes": [
+          "03",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "3"
+        },
+        {
+         "id": "fact3:ret",
+         "name": "ret",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149729976,
+         "state": "new",
+         "bytes": [
+          "06",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "6"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "fact3:ret"
+     ]
+    },
+    {
+     "line": 6,
+     "note": "最后回到 main，6 写进 r。所有中间帧都已经销毁，栈回到刚进 main 时的样子。递归的「深度」就是这一刻栈上有几层。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "调用者",
+       "base": 140726149730048,
+       "size": 4,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:r",
+         "name": "r",
+         "type": "int",
+         "size": 4,
+         "addr": 140726149730044,
+         "state": "chg",
+         "bytes": [
+          "06",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "6"
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:r"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "heap-malloc",
+   "title": "堆和栈不是一个地方",
+   "tag": "内存管理",
+   "level": 4,
+   "intro": "malloc 要来的内存不在栈上，在堆上。它不随函数返回自动回收，所以必须自己 free——这是 C 程序内存泄漏的唯一来源。",
+   "code": [
+    "#include <stdlib.h>",
+    "",
+    "int main(void) {",
+    "    int *p = malloc(3 * sizeof(int));",
+    "    p[0] = 1; p[1] = 2; p[2] = 3;",
+    "    printf(\"%d\\n\", p[2]);",
+    "    free(p);",
+    "    return 0;",
+    "}"
+   ],
+   "steps": [
+    {
+     "line": 3,
+     "note": "栈上只有一个 8 字节的 p，堆上什么都还没有。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "栈",
+       "base": 140726149730048,
+       "size": 8,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730040,
+         "state": "new",
+         "bytes": [
+          "00",
+          "00",
+          "00",
+          "00",
+          "00",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "0x0",
+         "ptr_to": ""
+        }
+       ]
+      }
+     ],
+     "heap": [],
+     "focus": [
+      "main:p"
+     ]
+    },
+    {
+     "line": 3,
+     "note": "malloc(12) 在堆上划出 12 个字节，把首地址写进 p。箭头跨过了两个区域——它指的不是栈上的东西。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "栈",
+       "base": 140726149730048,
+       "size": 8,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730040,
+         "state": "new",
+         "bytes": [
+          "a0",
+          "a2",
+          "c0",
+          "12",
+          "a0",
+          "55",
+          "00",
+          "00"
+         ],
+         "value": "0x55a012c0a2a0",
+         "ptr_to": "h:h#0"
+        }
+       ]
+      }
+     ],
+     "heap": [
+      {
+       "id": "h",
+       "name": "堆",
+       "tip": "int[3] 未初始化",
+       "size": 12,
+       "base": 94145997742752,
+       "freed": false,
+       "cells": [
+        {
+         "id": "h:h",
+         "name": "*p",
+         "type": "int[3]",
+         "size": 12,
+         "addr": 94145997742752,
+         "state": "",
+         "value": "{0, 0, 0}",
+         "pieces": [
+          {
+           "key": "h:h#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "00",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "0"
+          },
+          {
+           "key": "h:h#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "00",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "0"
+          },
+          {
+           "key": "h:h#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "00",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "0"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "focus": [
+      "main:p"
+     ]
+    },
+    {
+     "line": 4,
+     "note": "往堆里写三个 int。注意 p 这个变量本身还在栈上，变的是它指向的那块堆内存。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "栈",
+       "base": 140726149730048,
+       "size": 8,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730040,
+         "state": "",
+         "bytes": [
+          "a0",
+          "a2",
+          "c0",
+          "12",
+          "a0",
+          "55",
+          "00",
+          "00"
+         ],
+         "value": "0x55a012c0a2a0",
+         "ptr_to": "h:h#0"
+        }
+       ]
+      }
+     ],
+     "heap": [
+      {
+       "id": "h",
+       "name": "堆",
+       "tip": "int[3]",
+       "size": 12,
+       "base": 94145997742752,
+       "freed": false,
+       "cells": [
+        {
+         "id": "h:h",
+         "name": "*p",
+         "type": "int[3]",
+         "size": 12,
+         "addr": 94145997742752,
+         "state": "",
+         "value": "{1, 2, 3}",
+         "pieces": [
+          {
+           "key": "h:h#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "01",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "1"
+          },
+          {
+           "key": "h:h#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "02",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "2"
+          },
+          {
+           "key": "h:h#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "03",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "3"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "focus": [
+      "h:h"
+     ]
+    },
+    {
+     "line": 6,
+     "note": "free(p) 之后那块内存还归系统，但已经不归你了。p 里的地址没变——C 不会帮你清零，这就是「悬空指针」。再 *p 读一次，行为是未定义的。",
+     "frames": [
+      {
+       "id": "main",
+       "name": "main()",
+       "tip": "栈",
+       "base": 140726149730048,
+       "size": 8,
+       "freed": false,
+       "cells": [
+        {
+         "id": "main:p",
+         "name": "p",
+         "type": "int*",
+         "size": 8,
+         "addr": 140726149730040,
+         "state": "bad",
+         "bytes": [
+          "00",
+          "00",
+          "00",
+          "00",
+          "00",
+          "00",
+          "00",
+          "00"
+         ],
+         "value": "0x0",
+         "ptr_to": ""
+        }
+       ]
+      }
+     ],
+     "heap": [
+      {
+       "id": "h",
+       "name": "堆",
+       "tip": "已释放",
+       "size": 12,
+       "base": 94145997742752,
+       "freed": true,
+       "cells": [
+        {
+         "id": "h:h",
+         "name": "*p",
+         "type": "int[3]",
+         "size": 12,
+         "addr": 94145997742752,
+         "state": "bad",
+         "value": "{1, 2, 3}",
+         "pieces": [
+          {
+           "key": "h:h#0",
+           "label": "[0]",
+           "off": 0,
+           "size": 4,
+           "bytes": [
+            "01",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "1"
+          },
+          {
+           "key": "h:h#1",
+           "label": "[1]",
+           "off": 4,
+           "size": 4,
+           "bytes": [
+            "02",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "2"
+          },
+          {
+           "key": "h:h#2",
+           "label": "[2]",
+           "off": 8,
+           "size": 4,
+           "bytes": [
+            "03",
+            "00",
+            "00",
+            "00"
+           ],
+           "value": "3"
+          }
+         ]
+        }
+       ]
+      }
+     ],
+     "focus": [
+      "main:p"
+     ]
+    }
+   ]
+  }
+ ]
+}

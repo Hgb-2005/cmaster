@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}知识点关系图 · CMaster{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/graph.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/map.css') }}">
+{% endblock %}
+
+{% block wrap_class %}wrap-wide{% endblock %}
+
+{% block content %}
+<div class="map-page">
+
+  <header class="map-head">
+    <div>
+      <h1>知识点关系图</h1>
+      <p class="map-sub">
+        章节之间不是一条直线。线连着的地方，是「学后面这块之前得先会前面那块」。
+        点节点看它的先修和后继，双击进入章节。
+      </p>
+    </div>
+    <div class="map-stats">
+      <div class="map-stat">
+        <b>{{ m.stats.kp_done }}<i>/{{ m.stats.kp_total }}</i></b>
+        <span>已读知识点</span>
+      </div>
+      <div class="map-stat">
+        <b>{{ m.stats.chapters }}</b>
+        <span>章节</span>
+      </div>
+      <div class="map-stat">
+        <b>{{ m.stats.deps }}</b>
+        <span>跨章依赖</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="map-toolbar">
+    <div class="map-search">
+      {# 搜索是「定位」不是「筛选」：图是空间记忆，把节点删掉再放回来
+         会让人重新找一遍位置，反而更慢。所以只移动视线不改变图。 #}
+      <input type="search" id="map-search" placeholder="搜索章节或知识点…"
+             autocomplete="off" aria-label="搜索知识点">
+      <ul class="map-suggest" id="map-suggest" hidden></ul>
+    </div>
+
+    <div class="map-actions">
+      <button type="button" class="map-btn" id="map-focus-todo" aria-pressed="false">
+        聚焦未读
+      </button>
+      <button type="button" class="map-btn" id="map-reset">重置视角</button>
+    </div>
+  </div>
+
+  {# 状态行。搜索定位、聚焦模式、重置视角都要有一句反馈，
+     否则用户点完按钮不知道发生了什么。aria-live 让读屏器
+     也能听到这句变化。 #}
+  <p class="map-note" id="map-note" role="status" aria-live="polite"></p>
+
+  <div class="map-wrap">
+    <div class="map-canvas-host" id="graph-host"></div>
+
+    <aside class="map-aside" id="map-aside">
+      <div class="map-aside-empty" id="map-empty">
+        <p>点击任意节点查看它与其它知识点的关系。</p>
+        <p class="map-hint">拖动空白处平移 · 滚轮缩放 · 拖动节点可调整布局</p>
+      </div>
+
+      <div class="map-detail" id="map-detail" hidden>
+        <h2 id="md-title"></h2>
+        <div class="md-meta" id="md-meta"></div>
+        <div class="md-actions" id="md-actions"></div>
+
+        <div class="md-rel">
+          <h3>先修（学它之前）</h3>
+          <ul id="md-prev"><li class="md-none">没有前置要求</li></ul>
+        </div>
+        <div class="md-rel">
+          <h3>后继（学完能去）</h3>
+          <ul id="md-next"><li class="md-none">这是终点</li></ul>
+        </div>
+      </div>
+
+      <div class="map-legend">
+        <h3>图例</h3>
+        <ul class="lg-edges">
+          <li><i class="lg-line lg-tree"></i>章节 → 小节</li>
+          <li><i class="lg-line lg-seq"></i>阅读顺序</li>
+          <li><i class="lg-line lg-dep"></i>先修依赖</li>
+        </ul>
+        <ul class="lg-kinds">
+          <li><i class="lg-dot" style="background:var(--accent)"></i>概念</li>
+          <li><i class="lg-dot" style="background:var(--purple)"></i>语法</li>
+          <li><i class="lg-dot" style="background:var(--warn)"></i>易错点</li>
+          <li><i class="lg-dot" style="background:var(--ok)"></i>练习</li>
+          <li><i class="lg-dot lg-hollow"></i>空心 = 未读</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+</div>
+
+{# 图和图表一样，数据走 script 标签：首屏就要画，多一次请求多一次白屏 #}
+<script type="application/json" id="map-data">{{ m | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/lib/graph.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+{% endblock %}

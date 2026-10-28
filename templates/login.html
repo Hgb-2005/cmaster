@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}{{ '登录' if mode == 'login' else '注册' }} · CMaster{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <h1>{{ '欢迎回来' if mode == 'login' else '建个账号' }}</h1>
+  <p class="sub">
+    {% if mode == 'login' %}
+      登录后学习进度、判题记录、错题本都会保存。
+    {% else %}
+      账号只存在这台机器上，不上传任何地方。
+    {% endif %}
+  </p>
+
+  {% if error %}<div class="alert alert-bad">{{ error }}</div>{% endif %}
+
+  <form method="post" action="{{ url_for('login_page') }}">
+    <input type="hidden" name="action" value="{{ mode }}">
+    <input type="hidden" name="next" value="{{ next or '/' }}">
+
+    <div class="field">
+      <label for="username">用户名</label>
+      <input id="username" name="username" type="text" required
+             autocomplete="username" value="{{ username or '' }}"
+             placeholder="字母、数字、中文都行">
+    </div>
+
+    <div class="field">
+      <label for="password">密码</label>
+      <input id="password" name="password" type="password" required
+             autocomplete="{{ 'current-password' if mode == 'login' else 'new-password' }}"
+             placeholder="至少 6 位">
+    </div>
+
+    <button class="btn btn-primary btn-block" type="submit" style="margin-top:6px">
+      {{ '登录' if mode == 'login' else '注册并开始' }}
+    </button>
+  </form>
+
+  <div class="switch-line">
+    {% if mode == 'login' %}
+      还没有账号？<button type="button" onclick="switchMode('register')">现在注册</button>
+    {% else %}
+      已经有账号了？<button type="button" onclick="switchMode('login')">去登录</button>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var NEXT = {{ (next or '/')|tojson }};
+
+  function switchMode(mode) {
+    // 重新渲染一次，错误提示也跟着清掉
+    location.href = '/login?next=' + encodeURIComponent(NEXT)
+      + (mode === 'register' ? '&mode=register' : '');
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}学习分析 · {{ site_name }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="an-head">
+  <div>
+    <h1>学习分析</h1>
+    <p class="an-sub">
+      {% set m = a.metrics %}
+      {% if m.total_attempts == 0 %}
+        还没有提交记录。做一道题，这里就有东西可看了。
+      {% else %}
+        基于 {{ m.total_attempts }} 次提交、{{ a.trend.counts | select('gt', 0) | list | length }} 个活跃日的统计。
+      {% endif %}
+    </p>
+  </div>
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('profile_page') }}">回个人中心</a>
+</div>
+
+{# ---------- 指标卡 ---------- #}
+{% set m = a.metrics %}
+<div class="an-stats">
+  <div class="an-stat">
+    <span class="an-stat-label">题目通过</span>
+    <span class="an-stat-value">{{ m.ac }}<i>/{{ m.total_q }}</i></span>
+    <span class="an-stat-foot">
+      <span class="an-bar"><b style="width: {{ m.pass_rate }}%"></b></span>
+      {{ m.pass_rate }}%
+    </span>
+  </div>
+
+  <div class="an-stat">
+    <span class="an-stat-label">知识点已读</span>
+    <span class="an-stat-value">{{ m.kp_read }}<i>/{{ m.kp_total }}</i></span>
+    <span class="an-stat-foot">
+      <span class="an-bar"><b style="width: {{ (100 * m.kp_read / m.kp_total) | round | int }}%"></b></span>
+      {{ (100 * m.kp_read / m.kp_total) | round | int }}%
+    </span>
+  </div>
+
+  <div class="an-stat">
+    <span class="an-stat-label">平均尝试</span>
+    <span class="an-stat-value">{{ m.avg_attempts }}<i>次/题</i></span>
+    <span class="an-stat-foot">含未通过的题</span>
+  </div>
+
+  <div class="an-stat">
+    <span class="an-stat-label">一次过率</span>
+    <span class="an-stat-value">{{ m.one_shot_rate }}<i>%</i></span>
+    <span class="an-stat-foot">首次提交即 AC 的比例</span>
+  </div>
+
+  <div class="an-stat">
+    <span class="an-stat-label">连续学习</span>
+    <span class="an-stat-value">{{ streak }}<i>天</i></span>
+    <span class="an-stat-foot">今天没学也从昨天算</span>
+  </div>
+</div>
+
+{# ---------- 图表 ---------- #}
+<div class="an-grid">
+
+  <section class="chart-card an-span-2">
+    <div class="chart-card-head">
+      <h3>近 30 天活跃度</h3>
+      <span class="hint">每天的学习动作次数</span>
+    </div>
+    <div class="chart-card-body" id="chart-trend"></div>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-card-head">
+      <h3>能力分布</h3>
+      <span class="hint">六维完成度</span>
+    </div>
+    <div class="chart-card-body" id="chart-radar"></div>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-card-head">
+      <h3>题目状态</h3>
+      <span class="hint">共 {{ m.total_q }} 题</span>
+    </div>
+    <div class="chart-card-body" id="chart-status"></div>
+  </section>
+
+  <section class="chart-card an-span-2">
+    <div class="chart-card-head">
+      <h3>章节完成度</h3>
+      <span class="hint">知识点 + 题目综合</span>
+    </div>
+    <div class="chart-card-body" id="chart-chapters"></div>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-card-head">
+      <h3>难度掌握</h3>
+      <span class="hint">已通过 vs 总题数</span>
+    </div>
+    <div class="chart-card-body" id="chart-difficulty"></div>
+  </section>
+
+  <section class="chart-card">
+    <div class="chart-card-head">
+      <h3>薄弱环节</h3>
+      <span class="hint">完成度最低的三章</span>
+    </div>
+    <div class="chart-card-body">
+      {% if a.weak %}
+      <ul class="an-weak">
+        {% for w in a.weak %}
+        <li>
+          <a href="{{ url_for('chapter_page', cid=w.cid) }}">
+            <span class="w-title">{{ w.cid }} · {{ w.title }}</span>
+            <span class="w-meta">
+              知识点 {{ w.kp_done }}/{{ w.kp_total }}
+              · 题目 {{ w.q_done }}/{{ w.q_total }}
+            </span>
+            <span class="an-bar sm"><b style="width: {{ w.percent }}%"></b></span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="an-empty">
+        还没有可以诊断的数据。开始读一节、做一题，这里就会指出短板。
+      </p>
+      {% endif %}
+    </div>
+  </section>
+
+</div>
+
+{# 图表数据走 script 标签而不是 data-* 属性：
+   JSON 里的引号放进 HTML 属性要转义两层，容易出错。
+   type="application/json" 浏览器不会执行，也不参与渲染。 #}
+<script type="application/json" id="analytics-data">{{ a | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/lib/tween.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>
+{% endblock %}

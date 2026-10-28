@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}CMaster · 从零把 C 语言写进手里{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-main">
+    <h1>把 C 语言<em>写进手里</em>，不只是看懂</h1>
+    <p>
+      12 章系统课程，48 个知识点，60 道可在线判题的练习。
+      每一段代码都能在这里编译、运行、拿到逐用例反馈——
+      不用装编译器，不用配环境。
+    </p>
+
+    <div class="hero-stats">
+      <div class="hero-stat"><b>{{ chapters|length }}</b><span>章课程</span></div>
+      <div class="hero-stat"><b>{{ total_kp }}</b><span>个知识点</span></div>
+      <div class="hero-stat"><b>{{ total_q }}</b><span>道判题练习</span></div>
+      {% if current_user %}
+        <div class="hero-stat"><b>{{ read_kp }}</b><span>已读知识点</span></div>
+        <div class="hero-stat"><b>{{ solved_q }}</b><span>已通过</span></div>
+        {% if streak %}
+          <div class="hero-stat hero-stat-fire"><b>{{ streak }}</b><span>天连续</span></div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ url_for('chapter_page', cid=1) }}">从第 1 章开始</a>
+      <a class="btn" href="{{ url_for('problems_page') }}">直接刷题</a>
+      <a class="btn btn-ghost" href="{{ url_for('playground_page') }}">打开游乐场</a>
+    </div>
+  </div>
+
+  {% if current_user %}
+    {# 总进度环：读过的知识点 + 通过的题，两者等权。
+       用 SVG 而不是 canvas —— 它跟着 CSS 变量走，缩放不糊，也不用处理 devicePixelRatio。 #}
+    {% set circumference = 326.73 %}
+    <div class="hero-ring">
+      <svg viewBox="0 0 120 120" width="140" height="140" aria-hidden="true">
+        <defs>
+          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#58a6ff"/>
+            <stop offset="100%" stop-color="#39c5cf"/>
+          </linearGradient>
+        </defs>
+        <circle class="ring-track" cx="60" cy="60" r="52"/>
+        <circle class="ring-fill" cx="60" cy="60" r="52"
+                style="--target: {{ circumference * (1 - overall / 100.0) }}"
+                stroke-dasharray="{{ circumference }}"
+                stroke-dashoffset="{{ circumference }}"/>
+      </svg>
+      <div class="ring-label">
+        <b>{{ overall }}<i>%</i></b>
+        <span>总进度</span>
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+{% for stage in stages %}
+  <section class="stage">
+    <div class="stage-head">
+      <h2>{{ stage.name }}</h2>
+      <span class="count">{{ stage.chapters|length }} 章</span>
+    </div>
+    {% if stage.description %}
+      <p class="stage-desc">{{ stage.description }}</p>
+    {% endif %}
+
+    <div class="grid">
+      {% for item in stage.chapters %}
+        {% set ch = chapters[item.id] %}
+        {% set st = stats.get(item.id) %}
+        <a class="chapter-card" href="{{ url_for('chapter_page', cid=ch.id) }}">
+          <div class="chapter-icon">{{ ch.icon or "§" }}</div>
+          <div class="chapter-body">
+            <div class="chapter-no">第 {{ ch.id }} 章</div>
+            <div class="chapter-title">{{ ch.title }}</div>
+            <div class="chapter-meta">
+              {% if st %}
+                <div class="bar {{ 'full' if st.percent == 100 }}">
+                  <i style="width: {{ st.percent }}%"></i>
+                </div>
+                <span>{{ st.percent }}%</span>
+              {% else %}
+                <span>{{ ch.knowledge_points|length }} 节</span>
+                <span>·</span>
+                <span>{{ qcounts.get(ch.id, 0) }} 题</span>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+{% endfor %}
+{% endblock %}

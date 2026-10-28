@@ -1,0 +1,1167 @@
+/* ============================================================================
+   CMaster —— 内存演示页（/memory）
+   ----------------------------------------------------------------------------
+   这一页不是「文档页」，是「观察台」：左边一行行代码，右边同一块内存在变。
+   所以版式的第一要求是「两个面板要能同时看到、且不互相挤动」——
+   代码宽度固定、内存区自己横滚，切换步骤时页面的高度和列宽都不许跳。
+
+   几何约定（改这个文件之前先读这段）
+   ---------------------------------
+   1. .mem-stage 是箭头的坐标系。memview.js 用
+      getBoundingClientRect() 相减算出端点的 px 坐标，SVG 绝对定位盖在
+      .mem-stage 上，所以 SVG 必须正好等于 .mem-stage 的 padding box，
+      不能用 viewBox 缩放：一缩放，「算出来的 120px」和「画出来的 120px」就不是一回事了。
+   2. .mem-stage 右侧留的 padding 是给箭头拱形用的。拱高在 JS 里是
+      26 + 13 * lane（同一目标被多个指针指着时逐层外扩），现在最多 3 个
+      指针共享一个目标，52px 打底，留 92px 够用且不浪费。改 JS 的 bulge
+      公式时这里要一起改，否则箭头会被裁掉一截——而且只在「三个指针指同一格」
+      那一步才出现，很容易漏看。
+   3. .mem-stage 用 width: max-content：格子宽度是 JS 按字节数算出来的，
+      容器比内容窄时宁可让 .mem-scroll 横滚，也不要让 flex 把格子压扁——
+      压扁之后地址那行（14 个字符的等宽字）会折行，整块高度就乱了。
+   ============================================================================ */
+
+/* ------------------------------------------------------------ 页头 */
+
+.mem-page {
+  display: flex;
+  flex-direction: column;
+}
+
+.mem-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 2px 0 18px;
+}
+
+.mem-head h1 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+
+.mem-sub {
+  margin: 0;
+  max-width: 64ch;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-mute);
+}
+
+.mem-sub code {
+  padding: 1px 5px;
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  background: var(--bg-code);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* 「8 个场景 · 36 步」。
+   用 tabular-nums：数字位数会变，不定宽的话这排字会左右挪。 */
+.mem-headstat {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  flex: 0 0 auto;
+  padding-top: 6px;
+  font-size: 12.5px;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.mem-headstat b {
+  font-size: 19px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.mem-headstat em {
+  font-style: normal;
+  opacity: .45;
+  margin: 0 2px;
+}
+
+/* ------------------------------------------------------------ 两栏骨架 */
+
+.mem-layout {
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* 侧栏跟着滚：场景有 8 个、图例 5 行，比右侧短，滚动时留在视口里更好点。 */
+.mem-side {
+  position: sticky;
+  top: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mem-side-head {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--text-mute);
+}
+
+/* ------------------------------------------------------------ 场景列表 */
+
+.mem-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 一条 = 标签 + 标题 + 步数。
+   标签单独一列（固定宽度）而不是行内小徽标：八个标签长短不一，
+   行内排的话每个标题的起始位置都不一样，扫一遍很累。 */
+.mem-item {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-areas:
+    "tag   title"
+    "tag   meta";
+  column-gap: 8px;
+  row-gap: 1px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-dim);
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.mem-item:hover {
+  background: var(--bg-elev);
+  border-color: var(--border-soft);
+  text-decoration: none;
+  color: var(--text);
+}
+
+.mem-item.on {
+  background: var(--bg-elev-2);
+  border-color: #2f81f766;
+  color: var(--text);
+}
+
+.mem-item-tag {
+  grid-area: tag;
+  align-self: start;
+  margin-top: 1px;
+  padding: 1px 0;
+  border-radius: 4px;
+  background: rgba(88, 166, 255, .12);
+  color: var(--accent);
+  font-size: 10.5px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.mem-item-title {
+  grid-area: title;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mem-item-meta {
+  grid-area: meta;
+  font-size: 11px;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------ 图例 */
+
+.mem-legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+.mem-legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 图例方块的颜色必须和 .s-* / .is-pad 的描边色一致。
+   这四处色值在下面「格子状态」一节再出现一次，改的时候一起改——
+   图例和真相不符比没有图例更糟。 */
+.lg-cell {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 12px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--bg-code);
+}
+
+.lg-new {
+  border-color: #2f81f7aa;
+  background: rgba(88, 166, 255, .16);
+}
+
+.lg-chg {
+  border-color: #d2992288;
+  background: rgba(227, 179, 65, .16);
+}
+
+.lg-read {
+  border-color: #39c5cf88;
+  background: rgba(57, 197, 207, .14);
+}
+
+.lg-pad {
+  border-color: var(--border);
+  background: repeating-linear-gradient(45deg,
+    rgba(107, 122, 141, .28) 0 3px, transparent 3px 6px);
+}
+
+.lg-bad {
+  border-color: #f8514988;
+  background: rgba(248, 81, 73, .16);
+}
+
+/* 侧栏脚注：地址怎么算的、省略了什么。
+   这段必须写出来——不写的话，看到递归四帧「紧挨着」会以为真实栈就是这样。 */
+.mem-foot-note {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--text-mute);
+}
+
+.mem-foot-note code {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* ------------------------------------------------------------ 右侧主区 */
+
+.mem-main {
+  /* minmax(0,1fr) 的 grid 子项默认 min-width:auto，
+     内容一宽就把整页撑出横向滚动条。这一行不能省。 */
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ------------------------------------------------------------ 标题条 */
+
+.mem-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  padding: 9px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--bg-elev);
+}
+
+.mem-titlebar h2 {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: .1px;
+}
+
+/* 场景标签。颜色只用 accent 一档——标签是「分类」不是「状态」，
+   给七个标签七种颜色，用户下一次还是记不住哪个是哪个。 */
+.mem-chip {
+  padding: 1px 7px;
+  border: 1px solid #2f81f755;
+  border-radius: 20px;
+  background: rgba(88, 166, 255, .1);
+  color: var(--accent);
+  font-size: 11px;
+  line-height: 1.7;
+  white-space: nowrap;
+}
+
+.mem-spacer {
+  flex: 1 1 auto;
+  min-width: 8px;
+}
+
+.mem-btn {
+  padding: 5px 11px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg-elev-2);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: background .14s, border-color .14s, color .14s;
+}
+
+.mem-btn:hover:not(:disabled) {
+  border-color: #2f81f788;
+  color: var(--text);
+}
+
+.mem-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* 自动播放按下时用强调色实心：这是个「开关」，不是「一次性动作」，
+   必须一眼看出当前处于开的状态，否则用户会反复点、以为没生效。 */
+.mem-btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: rgba(88, 166, 255, .18);
+  color: var(--accent);
+}
+
+.mem-btn:disabled {
+  opacity: .38;
+  cursor: default;
+}
+
+/* 步进器：← 页码 →。三段贴在一起，中间不设间距，
+   看上去是一个控件而不是三个按钮。 */
+.mem-stepper {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--bg-elev-2);
+}
+
+.mem-stepper .mem-btn {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.mem-btn-nav {
+  width: 30px;
+  padding: 5px 0;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.mem-btn-nav:hover:not(:disabled) {
+  background: rgba(88, 166, 255, .14);
+  color: var(--accent);
+}
+
+.mem-pos {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border-left: 1px solid var(--border-soft);
+  border-right: 1px solid var(--border-soft);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-mute);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ 场景引言 */
+
+.mem-intro {
+  margin: 0;
+  min-height: 2.9em;          /* 两行的高度：切换场景时文案长短不一，不留高度整页会弹一下 */
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-mute);
+}
+
+/* ------------------------------------------------------------ 代码 | 内存 */
+
+.mem-body {
+  display: grid;
+  grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
+
+.mem-codepane,
+.mem-viewpane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--bg-elev);
+  overflow: hidden;
+}
+
+.mem-pane-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 11px;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(27, 34, 48, .55);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  color: var(--text-mute);
+}
+
+.mem-pane-hint {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--text-mute);
+  opacity: .8;
+  white-space: nowrap;
+}
+
+/* 代码区自己竖滚。行数不多（最长 10 行），但字号大、窄屏下会折，
+   不设上限的话代码一长，右边的内存图就被顶到下面去了。 */
+.mem-code {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 8px 0;
+  background: var(--bg-code);
+}
+
+.mem-code-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: ln;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+/* 行号用 counter 而不是在 JS 里拼：拼进文本里的行号会被选中、
+   会被复制进剪贴板，粘到编辑器里就多出一列数字。 */
+.mem-code-line {
+  counter-increment: ln;
+  display: flex;
+  gap: 11px;
+  padding: 0 12px 0 6px;
+  white-space: pre;
+}
+
+.mem-code-line::before {
+  content: counter(ln);
+  flex: 0 0 20px;
+  text-align: right;
+  color: var(--text-mute);
+  opacity: .5;
+  user-select: none;
+}
+
+/* 当前行。用 inset 阴影而不是 border-left：border 会把这行的内容
+   往右推 2px，切一步就抖一下。 */
+.mem-code-line.on {
+  background: linear-gradient(90deg,
+    rgba(88, 166, 255, .15), rgba(88, 166, 255, .02) 82%);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.mem-code-line.on::before {
+  color: var(--accent);
+  opacity: .95;
+}
+
+/* 分词着色。六类，颜色和全站语义一致：
+   关键字=强调色，数字=紫，字符串=绿，字符=暖黄，注释=灰。 */
+.tok-com { color: var(--text-mute); font-style: italic; }
+.tok-str { color: var(--ok); }
+.tok-chr { color: var(--warm); }
+.tok-num { color: var(--purple); }
+.tok-kw  { color: var(--accent); }
+
+/* ------------------------------------------------------------ 内存舞台 */
+
+/* 横向需要时自己滚，不要撑破 grid 列。 */
+.mem-scroll {
+  flex: 1 1 auto;
+  overflow: auto;
+  min-height: 300px;
+}
+
+/* 见文件头「几何约定」第 2、3 条：
+   padding-right 92 = 给箭头拱形留的路；width: max-content = 不压扁格子。 */
+.mem-stage {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 26px;
+  width: max-content;
+  min-width: 100%;
+  min-height: 300px;
+  padding: 13px 92px 16px 13px;
+}
+
+/* ------------------------------------------------------------ 区域（栈 / 堆） */
+
+.mem-region {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+.mem-region-head {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding-left: 2px;
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  color: var(--text-mute);
+}
+
+.mem-region-head b {
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+.mem-region-hint {
+  font-size: 10.5px;
+  letter-spacing: 0;
+  opacity: .7;
+}
+
+.mem-region-body {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+/* 栈和堆用不同的底盘色调区分，但都很淡：
+   这页的重点是格子里的字节，区域色只要「能区分」就够了。 */
+.mem-region-stack .mem-region-body {
+  padding: 0;
+}
+
+.mem-region-heap .mem-region-body {
+  padding: 0;
+}
+
+/* ------------------------------------------------------------ 帧 */
+
+.mem-frame {
+  padding: 7px 9px 9px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #171d28, #121821);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .22);
+}
+
+/* 堆块：没有「帧」的概念，用虚线边和紫色调区分开，
+   提醒读者「这块的边界是 malloc 划的，不是函数调用划的」。 */
+.mem-frame.is-heap {
+  border-style: dashed;
+  border-color: rgba(188, 140, 255, .38);
+  background: linear-gradient(180deg, #1a1626, #14111d);
+}
+
+/* 已 free：内容还在，但所有权没了。用斜纹压一层，
+   和「还在用」形成对比——free 之后那块字节不会自动清零，
+   这一点只看文字特别容易忘。 */
+.mem-frame.is-freed {
+  border-color: rgba(248, 81, 73, .45);
+  background-image: repeating-linear-gradient(45deg,
+    rgba(248, 81, 73, .07) 0 6px, transparent 6px 12px);
+}
+
+.mem-frame.is-freed .mem-cell {
+  opacity: .72;
+}
+
+.mem-frame-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 7px;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed var(--border-soft);
+}
+
+.mem-frame-name {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mem-frame-addr {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-mute);
+  letter-spacing: -.01em;
+}
+
+/* 帧说明（"堆" / "已释放" / "int[3] 未初始化"）靠右，和地址分开，
+   避免读成「地址的一部分」。 */
+.mem-frame-tip {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--warn);
+  white-space: nowrap;
+}
+
+.mem-cells {
+  display: flex;
+  align-items: stretch;
+  gap: 7px;
+}
+
+/* ------------------------------------------------------------ 格子 */
+
+/* 宽度由 memview.js 写进 style.width——取「按字节数算出来的宽度」和
+   「地址行/值行放得下的最小宽度」中较大的那个（箭头要读真实几何）。
+   所以这里必须是 flex:0 0 auto：可收缩的话，一行放不下时格子会缩，
+   而 JS 算箭头时读到的是缩过之后的宽度，标签位置就对不上了。 */
+.mem-cell {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 6px 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-code);
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.mem-cell-addr {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  line-height: 1.4;
+  letter-spacing: -.02em;
+  color: var(--text-mute);
+  opacity: .7;
+  white-space: nowrap;
+}
+
+.mem-cell-head {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-height: 15px;
+  min-width: 0;
+}
+
+.mem-cell-head b {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.mem-cell-type {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--text-mute);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 值可能是 "{c='A', i=7}" 这种长串，格子按字节数定的宽放不下。
+   裁掉但不丢信息：memview.js 同时把完整值写进了 title 和 aria-label。 */
+.mem-cell-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mem-cell-bytes {
+  display: flex;
+  justify-content: space-between;
+  gap: 0;
+  margin-top: 1px;
+}
+
+.mem-cell-bytes i {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 8.5px;
+  letter-spacing: -.02em;
+  color: var(--text-dim);
+  opacity: .85;
+}
+
+/* ------------------------------------------------------------ 格子状态（数据自带）
+
+   四档含义固定：new 这一步新出现 / chg 被改写 / read 被指针指着 / bad 有问题。
+   只用描边 + 极淡的底色，不整块填色：八个格子同时有颜色时，
+   整块区域会变成一堵彩色的墙，反而看不出哪一格是重点。 */
+
+.mem-cell.s-new {
+  border-color: #2f81f7aa;
+  background: linear-gradient(180deg, rgba(88, 166, 255, .10), var(--bg-code));
+}
+
+.mem-cell.s-chg {
+  border-color: #d2992299;
+  background: linear-gradient(180deg, rgba(227, 179, 65, .10), var(--bg-code));
+}
+
+.mem-cell.s-read {
+  border-color: #39c5cf88;
+}
+
+.mem-cell.s-bad {
+  border-color: #f8514999;
+  background: linear-gradient(180deg, rgba(248, 81, 73, .10), var(--bg-code));
+}
+
+/* 顶上那道 2px 的条：颜色和左边图例对应，扫一眼就知道这格是「新的」
+   还是「改过的」。只做在顶边，因为它不会和箭头、和字节行打架。 */
+.mem-cell.s-new::after,
+.mem-cell.s-chg::after,
+.mem-cell.s-bad::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  border-radius: 2px;
+}
+
+.mem-cell.s-new::after { background: var(--accent); }
+.mem-cell.s-chg::after { background: var(--warm); }
+.mem-cell.s-bad::after { background: var(--bad); }
+
+/* 指着别处的指针格子：值（那个地址）用青色，和箭头的颜色一致。 */
+.mem-cell.is-ptr .mem-cell-value {
+  color: var(--cyan);
+}
+
+/* ------------------------------------------------------------ 片段（数组元素 / 结构体成员 / 填充） */
+
+.mem-pieces {
+  display: flex;
+  align-items: stretch;
+  margin-top: 2px;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.mem-piece {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 4px 2px;
+  border-right: 1px solid var(--border-soft);
+  background: rgba(255, 255, 255, .012);
+  transition: box-shadow .16s, border-color .16s;
+}
+
+.mem-piece:last-child {
+  border-right: 0;
+}
+
+.mem-piece-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  line-height: 1.3;
+  color: var(--text-mute);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.mem-piece-value {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mem-piece-bytes {
+  display: flex;
+  justify-content: space-between;
+  gap: 0;
+}
+
+.mem-piece-bytes i {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 8px;
+  letter-spacing: -.02em;
+  color: var(--text-dim);
+  opacity: .8;
+}
+
+/* 填充字节：结构体里那几个「不装东西但确实占地方」的字节。
+   斜纹是「这里没有数据」的通用画法，比涂成灰色更能说明它不是值 0。 */
+.mem-piece.is-pad {
+  background: repeating-linear-gradient(45deg,
+    rgba(107, 122, 141, .16) 0 4px, transparent 4px 8px);
+}
+
+.mem-piece.is-pad .mem-piece-bytes i {
+  opacity: .38;
+}
+
+.mem-piece.is-pad .mem-piece-value {
+  color: var(--text-mute);
+}
+
+/* ------------------------------------------------------------ 一次性动效
+
+   和上面的 s-* 是两回事：s-* 是这格的长期身份，is-enter / is-flash
+   是「这一刻发生的变化」，演完就摘类（memview.js 用 setTimeout 摘）。
+   把两者混在一起，会出现「三步之前的格子还在闪」。 */
+
+@keyframes memCellIn {
+  from { opacity: 0; transform: translateY(5px) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes memCellPulse {
+  0% {
+    box-shadow: inset 0 0 0 1px rgba(227, 179, 65, .85),
+                0 0 16px rgba(227, 179, 65, .30);
+  }
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(227, 179, 65, 0),
+                0 0 0 rgba(227, 179, 65, 0);
+  }
+}
+
+.mem-cell.is-enter {
+  animation: memCellIn .34s cubic-bezier(.2, .7, .3, 1) both;
+}
+
+/* 改写用「光晕脉冲」而不是「底色变化」：底色会和 s-new / s-bad 的渐变
+   抢同一个属性，动画一结束就会跳回另一块颜色，看着像闪错了一下。 */
+.mem-cell.is-flash {
+  animation: memCellPulse .58s ease-out both;
+}
+
+/* ------------------------------------------------------------ 空步骤的占位 */
+
+/* 「帧已划出但还没有变量」「帧刚被回收」这两种步骤，画面里确实没有格子。
+   什么都不画会被当成加载失败，所以给一个虚线框 + 一句说明。
+   虚线是「这里现在没有实体内容」的通用画法，和实心帧区别开。 */
+.mem-ghost {
+  display: flex;
+  align-items: center;
+  min-width: 210px;
+  min-height: 84px;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  color: var(--text-mute);
+  font-size: 11.5px;
+  line-height: 1.6;
+  max-width: 30ch;
+}
+
+/* ------------------------------------------------------------ 箭头 */
+
+/* 绝对定位盖满 .mem-stage 的 padding box：memview.js 算出的坐标就是
+   相对这个点系量的，所以这里不能有 transform、不能有 viewBox 缩放。 */
+.mem-arrows {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.mem-arrow {
+  fill: none;
+  stroke: var(--cyan);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  opacity: .85;
+}
+
+.mem-arrow-head {
+  fill: var(--cyan);
+}
+
+/* 标签压在线上的，所以先描一圈底色当描边（paint-order: stroke），
+   否则线会从字中间穿过去，在深色底上糊成一团。 */
+.mem-arrow-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  fill: var(--cyan);
+  paint-order: stroke;
+  stroke: #121821;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  opacity: .95;
+}
+
+/* 目标高亮：整格和片段都可能被指（char * 指进 int 的第二个字节），
+   所以两种都要。只描目标、不描源，因为「指到哪儿」才是要看的信息。 */
+.mem-cell.is-target,
+.mem-piece.is-target {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 1.5px rgba(57, 197, 207, .5),
+              0 0 14px rgba(57, 197, 207, .2);
+}
+
+/* ------------------------------------------------------------ 进度轨 + 说明 */
+
+.mem-note-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px 12px 11px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--bg-elev);
+}
+
+.mem-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* 11px 的圆点太小，手指和眼睛都不好使。用 ::after 把可点区域扩到 21px，
+   外形不变、点得准。这是纯 CSS 的补救，不用额外套元素。 */
+.mem-dot {
+  position: relative;
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-elev-2);
+  cursor: pointer;
+  transition: background .14s, border-color .14s;
+}
+
+.mem-dot::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+}
+
+.mem-dot:hover {
+  border-color: var(--accent);
+}
+
+.mem-dot.is-done {
+  border-color: #2f81f777;
+  background: rgba(88, 166, 255, .35);
+}
+
+.mem-dot.is-on {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, .25);
+}
+
+/* 说明行：每步的文案长短差很多，留足两行半的高度，
+   否则相邻两步之间整页会上下弹。 */
+.mem-note {
+  margin: 0;
+  min-height: 3.9em;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-dim);
+}
+
+/* 说明里内嵌的代码记号（char、\0、sizeof）跟着一起着色，
+   但要压到正文的字号，否则一句话被几个大字撑得很乱。 */
+.mem-note .tok-kw,
+.mem-note .tok-num,
+.mem-note .tok-str,
+.mem-note .tok-chr {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------ 按键提示 */
+
+.mem-keys {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
+
+.mem-keys kbd {
+  display: inline-block;
+  min-width: 17px;
+  margin: 0 1px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--bg-elev-2);
+  color: var(--text-dim);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------ 渲染器缺失时的兜底 */
+
+.mem-fallback {
+  margin: 0;
+  padding: 22px 16px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--warn);
+  max-width: 46ch;
+}
+
+/* ------------------------------------------------------------ 窄屏
+
+   两个断点，对应两件事：
+     1180 —— 侧栏从「左边一列」变成「上面一片」，否则主区被挤到 700px 以下，
+             代码面板和内存面板横向已经无法并排。
+      900 —— 代码和内存改成上下堆叠。这时候内存图必然要横滚，
+             把提示写在滚动区外面，让人知道右边还有东西。
+   ============================================================================ */
+
+@media (max-width: 1180px) {
+  .mem-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .mem-side {
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px 18px;
+    align-items: start;
+  }
+
+  /* 列表横过来之后，八个条目横排会拉成很长一条，改成两列网格。 */
+  .mem-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 8px;
+  }
+
+  .mem-legend {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mem-foot-note {
+    grid-column: 1 / -1;
+  }
+
+  .mem-body {
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .mem-side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mem-head {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mem-headstat {
+    padding-top: 0;
+  }
+
+  .mem-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mem-scroll {
+    min-height: 240px;
+  }
+
+  .mem-stage {
+    padding-right: 74px;
+    min-height: 240px;
+  }
+
+  .mem-note {
+    min-height: 5.2em;
+  }
+}
+
+@media (max-width: 620px) {
+  .mem-list,
+  .mem-legend {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mem-titlebar {
+    gap: 7px;
+  }
+
+  /* 标题在窄屏独占一行，控件换到第二行，避免「重来/播放/步进器」
+     被挤成三行高。 */
+  .mem-titlebar h2 {
+    flex: 1 0 100%;
+  }
+
+  .mem-spacer {
+    display: none;
+  }
+
+  .mem-keys {
+    display: none;          /* 触屏没有方向键，这行提示纯占位置 */
+  }
+}
+
+/* ------------------------------------------------------------ 减弱动效
+
+   系统开了「减少动态效果」时，入场和脉冲直接关掉：
+   这两条动画都是为了让人注意到变化，而对这个用户群来说，
+   位移和闪烁本身就是不适来源。状态描边保留——它不闪，但信息还在。 */
+
+@media (prefers-reduced-motion: reduce) {
+  .mem-cell.is-enter,
+  .mem-cell.is-flash {
+    animation: none;
+  }
+
+  .mem-cell,
+  .mem-piece,
+  .mem-btn,
+  .mem-dot,
+  .mem-item {
+    transition: none;
+  }
+}

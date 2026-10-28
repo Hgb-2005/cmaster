@@ -1,0 +1,58 @@
+# ============================================================================
+# .dockerignore —— 决定「什么不该进镜像」
+#
+# 这个文件不是可选的洁癖。COPY . . 会把当前目录整个塞进构建上下文，
+# 而这里有两百多 MB 的东西跟 Linux 镜像毫无关系：runtime/w64devkit 是
+# Windows 版的便携 gcc 工具链，进镜像只会让 build 慢十倍、镜像大一倍，
+# 而且没有任何一行代码会去用它。
+#
+# 规则分三类，顺序也是从「必须排除」到「顺手排除」。
+# ============================================================================
+
+# ---- 一、绝不进镜像 ------------------------------------------------------
+# 用户数据：账号口令哈希、学习进度、判题打点、训练记录。
+# 这些是**这台机器上这个人的**数据，不是产品的一部分。打进镜像等于
+# 谁 pull 到这个镜像谁就拿到别人的进度和口令哈希（哪怕是单人使用，
+# 镜像一旦上传到任何 registry 就是个事故）。
+data/users.json
+data/progress/
+data/metrics.json
+data/training.json
+data/.secret
+data/.readyz
+data/*.tmp
+
+# 运行时生成的沙箱宿主：镜像里会重新编译（见 Dockerfile），
+# 把本机的二进制带进去只会有两种结果——平台不对，或者版本过期。
+sandbox/runner_linux
+sandbox/*.exe
+sandbox/*.obj
+
+# ---- 二、Windows 专用的大件（本镜像用不到，占体积最大） -------------------
+runtime/w64devkit/
+runtime/venv/
+runtime/*.7z.exe
+
+# ---- 三、开发期产物 ------------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 版本控制与编辑器
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# 本地临时文件（截图、比对用的一次性输出）
+.tmpcheck/
+.shots_*.png
+*.log
+
+# 说明：data/courses.json、data/question_bank.json、data/answers.json、
+# data/memory_demos.json **不能**排除——它们是运行时输入，缺了就是
+# 一个没有任何课程和题目的空站。上面那份排除清单是逐条列的，
+# 没有用 data/* 这种通配，就是为了避免「顺手把课程也排掉」。

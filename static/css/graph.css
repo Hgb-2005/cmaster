@@ -1,0 +1,130 @@
+/* ============================================================
+   CMGraph —— 关系图组件的样式
+   ------------------------------------------------------------
+   这个文件只管「画布外面那层东西」：容器、光标、浮动提示、
+   键盘焦点环。节点和连线长什么样是 graph.js 用 canvas 画的，
+   CSS 管不到——想改节点颜色去改 JS 里的调色，别在这里找。
+   ============================================================ */
+
+/* 容器。canvas 是绝对定位的兄弟层，所以这里只需 relative。
+   高度由外部（.map-canvas-host）给，组件自己不决定多高——
+   组件知道该多高是越界：同一张图放进弹窗和放进整页，
+   高度肯定不一样。 */
+.cm-graph {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* 单独一层，让 tooltip 的 z-index 只在组件内部比较，
+     不用和页面其它浮层抢层级 */
+  isolation: isolate;
+}
+
+.cm-graph-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  /* 触屏上只接管纵向手势的默认行为：
+     单指拖动交给图（平移/拖节点），双指缩放交给页面。
+     touch-action: none 会让整页在这个区域完全无法滚动，
+     手机上用户就再也翻不到下面的内容了。 */
+  touch-action: pan-y;
+  /* 长按不要弹系统菜单，否则手机上拖节点会被打断 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* canvas 的焦点环浏览器默认画在 border 上，深色底下几乎看不见，
+     交给下面的 :focus-visible 自己画 */
+  outline: none;
+}
+
+/* 拖动时的抓手状态。分开写而不是 .cm-graph-canvas:active：
+   鼠标在画布上按下但没移动时不该立刻变形状，那会闪。 */
+.cm-graph-canvas.is-panning {
+  cursor: grabbing;
+}
+
+/* 键盘用户 Tab 进来必须看得见焦点。
+   canvas 没有边框，只能靠 outline-offset 往里画一圈。 */
+.cm-graph-canvas:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ------------------------------------------------------------ 浮动提示 */
+
+.cm-graph-tip {
+  position: absolute;
+  z-index: 5;
+  max-width: 230px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(21, 26, 35, .97);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .45);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.5;
+  /* 提示框不能吃指针事件：它贴在光标右上，一旦能命中就会
+     和自己的 hover 打架，出现「鼠标在提示框上→提示框消失→
+     指针又落回节点→提示框出现」的闪烁循环。 */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .1s ease;
+}
+
+.cm-graph-tip.show {
+  opacity: 1;
+}
+
+.cm-gtip-title {
+  color: var(--text);
+  font-weight: 500;
+  /* 长标题最多两行，再多就把提示框撑成一段文章 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cm-gtip-meta {
+  margin-top: 2px;
+  color: var(--text-mute);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 已读 / 未读在提示框里的强调。
+   用 b 而不是 span 是因为这里确实是在强调语义，
+   顺带借到浏览器的默认加粗。 */
+.cm-gtip-meta .is-done {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.cm-gtip-meta .is-todo {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------ 降级 */
+
+/* 没有 canvas 2D 上下文（极老的浏览器或隐私模式）时，
+   外壳会剩下一个空白块。给个底纹至少让人知道「这里本来有东西」。 */
+.cm-graph-canvas:not([width]) {
+  background:
+    repeating-linear-gradient(45deg,
+      transparent, transparent 9px,
+      rgba(255, 255, 255, .02) 9px, rgba(255, 255, 255, .02) 18px);
+}
+
+/* 减少动态效果：入场淡入归零（graph.js 读不到媒体查询，
+   所以这里不靠 CSS 关动画，只是把过渡时间压掉，避免
+   tooltip 在自己的淡入过程中和节点重绘不同步）。 */
+@media (prefers-reduced-motion: reduce) {
+  .cm-graph-tip {
+    transition: none;
+  }
+}

@@ -1,0 +1,287 @@
+/* ============================================================
+   CMaster —— 图表容器样式
+   ------------------------------------------------------------
+   这个文件只管 canvas 外面的那层壳：图例、tooltip、空态。
+   图形本身全在 chart.js 里用 canvas 画，CSS 管不到。
+
+   分工的理由：
+   · 图例和 tooltip 是文字，交给 DOM 才能被选中、被读屏器读到、
+     被主题变量接管，也不用每次重绘都重新排版。
+   · 坐标轴标签虽然也是文字，但必须和网格线严格对齐，
+     放 DOM 里做对齐等于重新实现一遍布局，不划算。
+
+   所有颜色走 style.css 的 CSS 变量，不写死色值——
+   后面要做多主题时，这里一行都不用改。
+   ============================================================ */
+
+.cm-chart {
+  position: relative;
+  width: 100%;
+  /* 图表里没有可选文本，禁掉长按选中，移动端拖动时才不会误选 */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.cm-chart-canvas {
+  display: block;
+  width: 100%;
+  /* touch-action 交给浏览器的横向滚动，纵向滑动仍然翻页。
+     设成 none 会把整个页面的滚动吃掉，那是最常见的移动端坑。 */
+  touch-action: pan-y;
+}
+
+.cm-chart[data-type="line"] .cm-chart-canvas,
+.cm-chart[data-type="area"] .cm-chart-canvas,
+.cm-chart[data-type="bar"] .cm-chart-canvas {
+  cursor: crosshair;
+}
+
+.cm-chart[data-type="donut"] .cm-chart-canvas {
+  cursor: default;
+}
+
+/* ------------------------------------------------------------ 图例 */
+
+.cm-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.cm-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  margin: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.6;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
+}
+
+.cm-chart-legend-item:hover {
+  background: var(--bg-elev-2);
+  color: var(--text);
+}
+
+.cm-chart-legend-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* 隐藏的系列：色点变空心、文字划线。不要用 opacity 0.3，
+   那样看起来像禁用了而不是「暂时不看」。 */
+.cm-chart-legend-item.is-off {
+  color: var(--text-mute);
+}
+
+.cm-chart-legend-item.is-off .cm-chart-dot {
+  background: transparent !important;
+  box-shadow: inset 0 0 0 1.5px var(--text-mute);
+}
+
+.cm-chart-legend-item.is-off span {
+  text-decoration: line-through;
+  text-decoration-color: var(--text-mute);
+}
+
+/* 值为 0 的扇区：环上占不到角度，点它不会有任何反应。
+   用 opacity 区分于「被用户隐藏」——那是灰但不是划掉的，
+   因为二者的含义完全不同：一个是「没有数据」，一个是「我不想看」。 */
+.cm-chart-legend-item.is-zero {
+  opacity: .45;
+  cursor: default;
+}
+
+.cm-chart-legend-item.is-zero:hover {
+  background: transparent;
+  color: inherit;
+}
+
+/* 禁用按钮在部分浏览器里会连 hover 一起锁掉，导致 tooltip 提示
+   看不到。用 pointer-events 保留 title 的显示能力。 */
+.cm-chart-legend-item:disabled {
+  pointer-events: auto;
+}
+
+.cm-chart-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  transition: background-color .15s ease;
+}
+
+/* ------------------------------------------------------------ tooltip */
+
+.cm-chart-tip {
+  position: absolute;
+  z-index: 20;
+  min-width: 96px;
+  max-width: 240px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(21, 26, 35, .97);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .45);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.55;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity .12s ease, transform .12s ease;
+  /* 浮层不该撑破容器 */
+  backdrop-filter: blur(4px);
+}
+
+.cm-chart-tip.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cm-tip-head {
+  margin-bottom: 5px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: .2px;
+}
+
+.cm-tip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.cm-tip-row + .cm-tip-row {
+  margin-top: 3px;
+}
+
+.cm-tip-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+}
+
+.cm-tip-name {
+  color: var(--text-dim);
+  /* 名字太长时截断，值永远要看得见 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cm-tip-val {
+  margin-left: auto;
+  padding-left: 10px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------ 图表卡片 */
+
+/* 把图表放进一个带标题的卡片里。仪表盘上会连着摆好几块，
+   统一结构比每处各写一遍省事。 */
+.chart-card {
+  padding: 16px 18px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+
+.chart-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.chart-card-head h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+.chart-card-head .hint {
+  color: var(--text-mute);
+  font-size: 11.5px;
+}
+
+.chart-card-body {
+  position: relative;
+}
+
+/* 图上叠一个大数字（比如「平均 42ms」）时用这个 */
+.chart-card-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.chart-card-figure b {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.5px;
+}
+
+.chart-card-figure span {
+  color: var(--text-mute);
+  font-size: 12px;
+}
+
+/* ------------------------------------------------------------ 图例网格 */
+
+/* 仪表盘用：两列自适应，窄屏自动堆成一列 */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.chart-grid .chart-card {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .chart-card {
+    padding: 13px 13px 11px;
+  }
+
+  .chart-card-figure b {
+    font-size: 19px;
+  }
+
+  .chart-card-head {
+    margin-bottom: 10px;
+  }
+}
+
+/* ------------------------------------------------------------ 无 JS 兜底 */
+
+/* canvas 拿不到尺寸时会是 0 高，整块塌掉。
+   给个最小高度，至少让用户知道这里本来有东西。 */
+.cm-chart-canvas:not([width]) {
+  min-height: 120px;
+}

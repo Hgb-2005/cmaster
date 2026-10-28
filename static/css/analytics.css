@@ -1,0 +1,312 @@
+/* ============================================================
+   CMaster —— 学习分析页样式
+   ------------------------------------------------------------
+   只放这一页独有的东西：页头、指标卡、网格布局、薄弱列表。
+   图表外壳（.chart-card / ..cm-chart-*）在 chart.css 里，
+   这里不重复定义——两处都写一遍，改一处忘另一处就是必然。
+   ============================================================ */
+
+.an-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 4px 0 22px;
+}
+
+.an-head h1 {
+  margin: 0 0 5px;
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: .2px;
+}
+
+.an-sub {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* ------------------------------------------------------------ 指标卡 */
+
+.an-stats {
+  display: grid;
+  /* auto-fit + minmax：五张卡在宽屏排一行，中等屏排三张两行，
+     手机上两张。不写死断点是因为卡片数量以后还会变。 */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.an-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 13px 15px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+  /* 数字和进度条都用等宽数字，否则宽度变化时整块会左右抖 */
+  font-variant-numeric: tabular-nums;
+}
+
+.an-stat-label {
+  color: var(--text-mute);
+  font-size: 11.5px;
+  letter-spacing: .3px;
+}
+
+.an-stat-value {
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -.6px;
+}
+
+.an-stat-value i {
+  margin-left: 3px;
+  color: var(--text-mute);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.an-stat-foot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-mute);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* ------------------------------------------------------------ 进度条 */
+
+.an-bar {
+  flex: 1 1 auto;
+  min-width: 24px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-code);
+  overflow: hidden;
+}
+
+.an-bar b {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  /* 宽度变化时滑过去。用 width 会触发重排，但这里元素极小、
+     变化频率也低（只在页面加载时一次），不值得为它上 transform。 */
+  transition: width .6s cubic-bezier(.22, .61, .36, 1);
+}
+
+.an-bar.sm {
+  height: 3px;
+  margin-top: 6px;
+}
+
+/* ------------------------------------------------------------ 网格 */
+
+.an-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.an-span-2 {
+  grid-column: span 2;
+}
+
+@media (max-width: 780px) {
+  .an-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .an-span-2 {
+    grid-column: span 1;
+  }
+
+  .an-head {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .an-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ------------------------------------------------------------ 薄弱环节 */
+
+.an-weak {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.an-weak a {
+  display: block;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-decoration: none;
+  transition: background-color .14s ease;
+}
+
+.an-weak a:hover {
+  background: var(--bg-elev-2);
+  text-decoration: none;
+}
+
+.an-weak a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.w-title {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.w-meta {
+  display: block;
+  margin-top: 1px;
+  color: var(--text-mute);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 薄弱列表里的进度条用暖色，和上面的蓝色指标卡区分开——
+   这一块是「需要你注意」的，不该和正常指标一个色调。 */
+.an-weak .an-bar b {
+  background: linear-gradient(90deg, var(--warn), var(--bad));
+}
+
+/* ------------------------------------------------------------ 空态 */
+
+.an-empty {
+  margin: 0;
+  padding: 26px 4px;
+  color: var(--text-mute);
+  font-size: 12.5px;
+  line-height: 1.7;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------ 打印 */
+
+/* 有人会把分析页打印出来存档（尤其面试前整理学习记录）。
+   深色背景打印出来是一整片黑，必须翻成白底黑字。 */
+/* ---------------------------------------------------------------
+   打印
+   有人会把分析页打印出来存档（面试前整理学习记录）。
+   深色主题直接打是一整片黑，既看不清又费墨，所以整页翻白。
+
+   关键的两步：
+   1) 覆盖 :root 变量，而不只是逐个元素写 background。canvas 里的
+      轴线、刻度、网格都是从这些变量取色的，只改元素属性的话，
+      画布还是按深色主题画出来的那套浅色线，落在白纸上就消失了。
+   2) 光改变量还不够——canvas 是位图，变量变了它不会自己重画。
+      analytics.js 里的 watchPrint() 在媒体切换时调 resize() 重画。
+   --------------------------------------------------------------- */
+@media print {
+  :root {
+    --bg:          #ffffff;
+    --bg-elev:     #ffffff;
+    --bg-elev-2:   #f4f5f7;
+    --bg-code:     #f4f5f7;
+    --border:      #c9ced6;
+    --border-soft: #e2e5ea;
+
+    --text:        #14181f;
+    --text-dim:    #414a57;
+    --text-mute:   #5c6675;
+
+    --accent:      #1f6feb;
+    --ok:          #1a7f37;
+    --bad:         #c9252d;
+    --warn:        #9a6700;
+    --cyan:        #0f6f76;
+    --purple:      #6f42c1;
+
+    --shadow: none;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: var(--text);
+  }
+
+  /* 导航、返回顶部、以及任何浮层在纸上都是噪音 */
+  .nav,
+  .topbar,
+  .ux-progress,
+  .ux-toast,
+  .backtop,
+  .cm-chart-tip,
+  .no-print {
+    display: none !important;
+  }
+
+  /* 卡片不要跨页断开：一张图被切成两半没法读 */
+  .an-stat,
+  .chart-card,
+  .an-weak li {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .an-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .an-grid {
+    display: block;
+  }
+
+  .chart-card {
+    margin-bottom: 10px;
+  }
+
+  .an-stat,
+  .chart-card {
+    border-color: var(--border);
+    background: #fff;
+    box-shadow: none;
+  }
+
+  .an-stat-value,
+  .chart-card-head h3,
+  .w-title {
+    color: #111;
+  }
+
+  .an-stat-label,
+  .an-stat-foot,
+  .w-meta,
+  .chart-card-head .hint {
+    color: #555;
+  }
+
+  .an-weak a {
+    color: #111;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+}

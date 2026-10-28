@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% block title %}系统管理 · {{ site_name }}{% endblock %}
+{% block wrap_class %}wrap-wide{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+{# 这一页的读者和维护者 /ops 是同一批人，但问题不同：
+   /ops 问「判题过程跑得怎样」，这一页问「这台机器和这个站点整体健不健康」。
+   所以这里的顺序是「结论 → 沙箱是否真生效 → 故障排查用的指标 → 环境事实」，
+   越往下越是排查时才看的东西。 #}
+<div class="adm-head">
+  <div>
+    <h1>系统管理</h1>
+    <p class="adm-sub">
+      沙箱状态、自检结果、判题指标与运行环境。指标部分和
+      <a href="{{ url_for('ops_page') }}">运行状态</a> 读的是同一份
+      <code>metrics.snapshot()</code>，两边数字永远一致。
+    </p>
+  </div>
+  <div class="adm-head-side">
+    <span class="adm-stamp" id="adm-stamp" title="最近一次刷新">{{ a.stamp }}</span>
+    <span class="adm-health is-{{ a.health.level }}" id="adm-health" title="{{ a.health.text }}">
+      <i class="dot"></i>{{ a.health.label }}
+    </span>
+    <button class="adm-btn" id="adm-selftest" type="button"
+            title="真编译五个程序、各跑一遍，验证沙箱是否真的挡住了越界">
+      重跑自检
+    </button>
+    <button class="adm-btn" id="adm-refresh" type="button" aria-pressed="false"
+            title="每 5 秒拉一次 /api/admin/panel">自动刷新</button>
+  </div>
+</div>
+
+<p class="adm-healthline" id="adm-healthline" role="status" aria-live="polite">{{ a.health.text }}</p>
+
+{# 没配 CMASTER_ADMIN 就把这件事写在页面上，而不是只在代码注释里。
+   这一页能看到本机目录、内存和进程参数；「没配白名单」是一个决定，
+   得让使用它的人看见。否则下一个人会以为这页本来就有权限控制，
+   把这条横幅删掉就当加固过了。 #}
+{% if admin_open %}
+<p class="adm-lede is-warn" id="adm-acl">
+  <b>这一页没有独立鉴权</b>：没配 <code>CMASTER_ADMIN</code>，所以任何登录账号
+  都能打开它，而它能看到本机的目录、内存和进程参数。单机自用没问题；
+  对外之前请设 <code>CMASTER_ADMIN=你的账号</code>（逗号分隔可写多个）。
+</p>
+{% else %}
+<p class="adm-lede" id="adm-acl">
+  鉴权：<code>CMASTER_ADMIN</code> 白名单生效中，只有名单里的账号能打开这一页。
+</p>
+{% endif %}
+
+{# ================= 一、沙箱 ================= #}
+{# 这一块是全页的主角：它是「我知道它不安全」和「我把它变安全了」之间的
+   那条界线。所以它排在最上面，而且把「后端是什么」和「这次到底有没有隔离」
+   分成两个独立的判断——一个说能力，一个说事实，混起来就会拿能力当事实。 #}
+<section class="adm-card adm-sandbox" id="adm-sandbox">
+  <div class="adm-card-head">
+    <h2>判题沙箱</h2>
+    <span class="adm-backend {{ 'is-ok' if a.sandbox.available.ok else 'is-warn' }}"
+          id="adm-backend">
+      {{ a.sandbox.available.backend }}
+    </span>
+  </div>
+
+  {% if a.sandbox.available.ok %}
+    <p class="adm-lede">
+      用户代码在独立的内核配额下执行：
+      {% if a.sandbox.available.backend == 'windows-job' %}
+        Job Object 强制内存 / 进程数 / CPU 配额，<code>ActiveProcessLimit=1</code>
+        让 <code>system()</code> 直接失败，<code>KILL_ON_JOB_CLOSE</code> 保证
+        runner 崩了也不留孤儿子进程。这一侧做的是<b>资源隔离</b>，不做 syscall 过滤。
+      {% else %}
+        setrlimit + 降权 65534 + <code>no_new_privs</code> + seccomp 黑名单，
+        把 execve / fork / socket / ptrace / mount / setuid 拦成 EPERM。
+        这是容器隔离的缩小版。
+      {% endif %}
+    </p>
+  {% else %}
+    <p class="adm-lede is-warn">
+      <b>当前是降级模式</b>：{{ a.sandbox.available.reason }}。
+      用户代码仍然会被执行，但只有墙钟超时，没有内存与进程数上限。
+      这条路径只适合本机可信环境，别拿它接公网。
+    </p>
+  {% endif %}
+
+  <div class="adm-grid" id="adm-limits">
+    <div class="adm-cell">
+      <span class="adm-cell-k">墙钟上限</span>
+      <span class="adm-cell-v" data-k="sandbox.limits.wall_ms">{{ a.sandbox.limits.wall_ms }}<i>ms</i></span>
+    </div>
+    <div class="adm-cell">
+      <span class="adm-cell-k">CPU 上限</span>
+      <span class="adm-cell-v" data-k="sandbox.limits.cpu_ms">{{ a.sandbox.limits.cpu_ms }}<i>ms</i></span>
+    </div>
+    <div class="adm-cell">
+      <span class="adm-cell-k">内存上限</span>
+      <span class="adm-cell-v" data-k-fmt="mb" data-k="sandbox.limits.mem">
+        {{ (a.sandbox.limits.mem // 1048576) }}<i>MB</i>
+      </span>
+    </div>
+    <div class="adm-cell">
+      <span class="adm-cell-k">进程数上限</span>
+      <span class="adm-cell-v" data-k="sandbox.limits.proc">{{ a.sandbox.limits.proc }}<i>个</i></span>
+      <span class="adm-cell-foot">=1 即禁止创建子进程</span>
+    </div>
+    <div class="adm-cell">
+      <span class="adm-cell-k">stdout 上限</span>
+      <span class="adm-cell-v" data-k-fmt="kb" data-k="sandbox.limits.out">
+        {{ (a.sandbox.limits.out // 1024) }}<i>KB</i>
+      </span>
+    </div>
+    <div class="adm-cell">
+      <span class="adm-cell-k">stderr 上限</span>
+      <span class="adm-cell-v" data-k-fmt="kb" data-k="sandbox.limits.err">
+        {{ (a.sandbox.limits.err // 1024) }}<i>KB</i>
+      </span>
+    </div>
+  </div>
+
+  {# 计数器。这六个数字回答的是「今天到底有多少次判题是从沙箱里过去的」，
+     以及「有没有出现本该可用却初始化失败」——后者是唯一需要立刻动手的信号。 #}
+  <div class="adm-counters" id="adm-counters">
+    <div class="adm-counter">
+      <b data-k="sandbox.stats.runs">{{ a.sandbox.stats.runs }}</b>
+      <span>总执行</span>
+    </div>
+    <div class="adm-counter is-ok">
+      <b data-k="sandbox.stats.sandboxed">{{ a.sandbox.stats.sandboxed }}</b>
+      <span>沙箱内</span>
+    </div>
+    <div class="adm-counter">
+      <b data-k="sandbox.stats.fallback">{{ a.sandbox.stats.fallback }}</b>
+      <span>降级</span>
+    </div>
+    <div class="adm-counter is-warm">
+      <b data-k="sandbox.stats.timeouts">{{ a.sandbox.stats.timeouts }}</b>
+      <span>超时</span>
+    </div>
+    <div class="adm-counter is-warm">
+      <b data-k="sandbox.stats.output_limited">{{ a.sandbox.stats.output_limited }}</b>
+      <span>输出截断</span>
+    </div>
+    <div class="adm-counter is-bad">
+      <b data-k="sandbox.stats.init_failed">{{ a.sandbox.stats.init_failed }}</b>
+      <span>初始化失败</span>
+    </div>
+  </div>
+  <p class="adm-note">
+    计数从进程启动（{{ a.uptime_s // 3600 }} 小时前）开始累计，重启归零；
+    它记的是沙箱自身的状态机，判题耗时分布仍然只看
+    <a href="{{ url_for('ops_page') }}">运行状态</a>。
+  </p>
+</section>
+
+{# ================= 二、自检 ================= #}
+<section class="adm-card" id="adm-selftest-card">
+  <div class="adm-card-head">
+    <h2>沙箱自检</h2>
+    <span class="adm-selftest-meta" id="adm-selftest-meta">
+      {# 注意这里必须用 ['items'] 而不是 .items：Jinja 取属性优先于取键，
+         而 dict 本身带一个 items() 方法，写成 .items 拿到的是绑定方法，
+         渲染时直接 TypeError: 'builtin_function_or_method' object is not iterable。
+         自检跑之前这段在 else 分支里，所以只有跑过一次之后才会炸——第一版就是这么挂的。 #}
+      {% if a.sandbox.selftest %}
+        {{ a.sandbox.selftest['items'] | selectattr('status', 'equalto', 'pass') | list | length }}/{{ a.sandbox.selftest['items'] | length }} 通过 ·
+        {{ a.sandbox.selftest['took_ms'] }}ms
+      {% else %}
+        还没跑过
+      {% endif %}
+    </span>
+  </div>
+
+  <p class="adm-lede">
+    四项越界（死循环 / 内存炸弹 / 命令逃逸 / 输出炸弹）加一个对照组，
+    <b>每次都是真编译、真跑、真读报告</b>。这不是「检查版本号」式的自检：
+    自检失败只有两种含义——沙箱没生效，或者这个文件在目标平台上不成立。
+  </p>
+
+  <div class="adm-selftest" id="adm-selftest-list">
+    {% if a.sandbox.selftest %}
+      {% for it in a.sandbox.selftest['items'] %}
+      <div class="adm-case is-{{ it.status }}">
+        <i class="dot"></i>
+        <div class="adm-case-main">
+          <div class="adm-case-head">
+            <b>{{ it.name }}</b>
+            <span class="adm-case-ms">{{ it.ms }}ms</span>
+          </div>
+          <p class="adm-case-desc">{{ it.desc }}</p>
+          <p class="adm-case-detail">{{ it.detail }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="adm-empty">还没跑过自检。点右上角「重跑自检」，或者等页面自动触发一次。</p>
+    {% endif %}
+  </div>
+</section>
+
+{# ================= 三、判题指标 ================= #}
+<section class="adm-card">
+  <div class="adm-card-head">
+    <h2>判题指标</h2>
+    <span class="adm-selftest-meta">最近 {{ a.ops.window.runs }} 次判题（环形缓冲 {{ a.ops.window.capacity }} 条）</span>
+  </div>
+
+  <div class="adm-stats" id="adm-stats">
+    <div class="adm-stat">
+      <span class="adm-stat-k">P95 判题耗时</span>
+      <span class="adm-stat-v" data-k="ops.latency.p95">{{ a.ops.latency.p95 }}<i>ms</i></span>
+      <span class="adm-stat-f">P50 {{ a.ops.latency.p50 }} · P99 {{ a.ops.latency.p99 }}</span>
+    </div>
+    <div class="adm-stat">
+      <span class="adm-stat-k">编译失败率</span>
+      <span class="adm-stat-v" data-k="ops.rates.ce">{{ a.ops.rates.ce }}<i>%</i></span>
+      <span class="adm-stat-f">{{ a.ops.counts.ce }} 次 CE / {{ a.ops.counts.total }} 次</span>
+    </div>
+    <div class="adm-stat">
+      <span class="adm-stat-k">队列占用</span>
+      <span class="adm-stat-v">
+        <span data-k="ops.queue.inflight">{{ a.ops.queue.inflight }}</span>/<span data-k="ops.queue.capacity">{{ a.ops.queue.capacity }}</span>
+      </span>
+      <span class="adm-stat-f">峰值 {{ a.ops.queue.peak }} · 平均等待 {{ a.ops.queue.avg_ms }}ms</span>
+    </div>
+    <div class="adm-stat">
+      <span class="adm-stat-k">AC 率</span>
+      <span class="adm-stat-v" data-k="ops.rates.ac">{{ a.ops.rates.ac }}<i>%</i></span>
+      <span class="adm-stat-f">WA {{ a.ops.counts.wa }} · TLE {{ a.ops.counts.tle }} · RE {{ a.ops.counts.re }}</span>
+    </div>
+  </div>
+
+  {# 三段构成。判题慢到底慢在哪，这一个条比十个数字都直观：
+     编译耗时高说明调用方式有问题（每次都重新编），
+     运行耗时高说明题目算法本身重，其余那一段高说明 IO/调度在拖。 #}
+  <div class="adm-phases" id="adm-phases">
+    <div class="adm-phase-bar">
+      <b class="ph-compile" style="width: {{ a.ops.phases.compile_pct }}%"
+         title="编译 {{ a.ops.phases.compile }}%"></b>
+      <b class="ph-run" style="width: {{ a.ops.phases.run_pct }}%"
+         title="运行 {{ a.ops.phases.run }}%"></b>
+      <b class="ph-other" style="width: {{ a.ops.phases.other_pct }}%"
+         title="其余 {{ a.ops.phases.other }}%"></b>
+    </div>
+    <div class="adm-phase-legend">
+      <span><i class="ph-compile"></i>编译 <b data-k="ops.phases.compile_pct">{{ a.ops.phases.compile_pct }}</b>%</span>
+      <span><i class="ph-run"></i>运行 <b data-k="ops.phases.run_pct">{{ a.ops.phases.run_pct }}</b>%</span>
+      <span><i class="ph-other"></i>其余 <b data-k="ops.phases.other_pct">{{ a.ops.phases.other_pct }}</b>%</span>
+    </div>
+  </div>
+
+  {# 耗时直方图。分桶是 metrics.py 里定好的非等距桶（0-50/50-100/…/3200+），
+     这里只画，不重新分桶——两页的分桶一旦不一致，图就再也对不上数了。 #}
+  <div class="adm-hist" id="adm-hist">
+    {% set hmax = (a.ops.histogram.counts | max) or 1 %}
+    {% for label in a.ops.histogram.labels %}
+      {% set c = a.ops.histogram.counts[loop.index0] %}
+      <div class="adm-hist-col" title="{{ label }} ms：{{ c }} 次">
+        <b style="height: {{ (c * 100 // hmax) if c else 0 }}%"></b>
+        <span>{{ label }}</span>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ================= 四、运行环境 ================= #}
+<section class="adm-card">
+  <div class="adm-card-head">
+    <h2>运行环境</h2>
+    <span class="adm-selftest-meta">进程已运行 {{ a.uptime_s // 3600 }}h{{ (a.uptime_s % 3600) // 60 }}m</span>
+  </div>
+
+  <div class="adm-env" id="adm-env">
+    <div><span>Python</span><b>{{ a.env.python }}</b></div>
+    <div><span>平台</span><b>{{ a.env.platform }}</b></div>
+    <div><span>CPU 核数</span><b>{{ a.env.cpu }}</b></div>
+    <div>
+      <span>内存</span>
+      <b>
+        {% if a.env.mem_total %}
+          {# 写「已用」就得给已用量。第一版这里放的是 mem_avail（可用），
+             后面却跟着「已用 96.4%」，同一行里两个数字互相矛盾——
+             运维面板上最不能犯的就是这种错：读者要么以为机器快满了，
+             要么以为面板算错了，两种反应都会让他不再相信这一页。 #}
+          已用 {{ ((a.env.mem_total - a.env.mem_avail) // 1048576) }} / {{ (a.env.mem_total // 1048576) }} MB
+          （{{ a.env.mem_used_pct }}%）
+        {% else %}未知{% endif %}
+      </b>
+    </div>
+    <div>
+      <span>磁盘</span>
+      <b>
+        {% if a.env.disk_free %}
+          {{ (a.env.disk_free // 1073741824) }} GB 可用 / {{ (a.env.disk_total // 1073741824) }} GB
+        {% else %}未知{% endif %}
+      </b>
+    </div>
+    <div><span>data 目录</span><b data-k="env.data_size_h">{{ a.env.data_size_h }}</b></div>
+    <div>
+      <span>编译器</span>
+      <b class="{{ 'ok' if a.env.compiler_ok else 'bad' }}">{{ a.env.compiler_version }}</b>
+    </div>
+    <div>
+      <span>并发闸门</span>
+      <b>{{ a.env.concurrency }} 路（CMASTER_CONCURRENCY）</b>
+    </div>
+    <div>
+      <span>沙箱开关</span>
+      <b>{{ ('CMASTER_SANDBOX=' + a.env.sandbox_env) if a.env.sandbox_env else '默认（启用）' }}</b>
+    </div>
+    <div>
+      <span>就绪探针</span>
+      <b><a href="{{ url_for('readyz') }}">/readyz</a> · <a href="{{ url_for('healthz') }}">/healthz</a></b>
+    </div>
+  </div>
+
+  <p class="adm-note">
+    容器化部署见仓库根目录的 <code>Dockerfile</code>：非 root 用户 + 只读根文件系统 +
+    网络关闭 + <code>--pids-limit</code>/<code>--memory</code>，和沙箱里的
+    <code>setrlimit</code> 是同一件事的两层。健康检查用
+    <code>/healthz</code>（存活）和 <code>/readyz</code>（就绪），两个不能混用。
+  </p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

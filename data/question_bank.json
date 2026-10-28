@@ -1,0 +1,1583 @@
+[
+ {
+  "id": "c001",
+  "chapter": 1,
+  "difficulty": "easy",
+  "tags": [
+   "输出"
+  ],
+  "title": "Hello, C",
+  "description_html": "<p>输出一行文本：</p>\n<pre class=\"md-code\" data-lang=\"text\"><code>Hello, C</code></pre>\n<p>这是你和编译器打的第一声招呼。注意大小写和逗号后的空格都要一致。</p>",
+  "description": "输出一行文本：\n\n```\nHello, C\n```\n\n这是你和编译器打的第一声招呼。注意大小写和逗号后的空格都要一致。",
+  "hint": "printf 里别忘了 \\n，它表示换行。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "",
+    "output": "Hello, C"
+   }
+  ]
+ },
+ {
+  "id": "c002",
+  "chapter": 1,
+  "difficulty": "easy",
+  "tags": [
+   "输出"
+  ],
+  "title": "三行自我介绍",
+  "description_html": "<p>按顺序输出三行，内容完全一致：</p>\n<pre class=\"md-code\" data-lang=\"text\"><code>name: cmaster\nlang: C\nlevel: 1</code></pre>",
+  "description": "按顺序输出三行，内容完全一致：\n\n```\nname: cmaster\nlang: C\nlevel: 1\n```",
+  "hint": "三次 printf，或者一次 printf 里放三个 \\n。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "",
+    "output": "name: cmaster\nlang: C\nlevel: 1"
+   }
+  ]
+ },
+ {
+  "id": "c003",
+  "chapter": 1,
+  "difficulty": "easy",
+  "tags": [
+   "输出",
+   "循环"
+  ],
+  "title": "星号三角形",
+  "description_html": "<p>读入一个整数 n（1≤n≤20），输出一个 n 行的直角三角形，第 i 行有 i 个 <code class=\"md-inline\">*</code>。</p>\n<p>输入 <code class=\"md-inline\">4</code> 时输出：</p>\n<pre class=\"md-code\" data-lang=\"text\"><code>*\n**\n***\n****</code></pre>",
+  "description": "读入一个整数 n（1≤n≤20），输出一个 n 行的直角三角形，第 i 行有 i 个 `*`。\n\n输入 `4` 时输出：\n\n```\n*\n**\n***\n****\n```",
+  "hint": "外层循环控制行，内层循环控制每行的星号数量。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "4\n",
+    "output": "*\n**\n***\n****"
+   },
+   {
+    "input": "1\n",
+    "output": "*"
+   },
+   {
+    "input": "3\n",
+    "output": "*\n**\n***"
+   }
+  ]
+ },
+ {
+  "id": "c004",
+  "chapter": 2,
+  "difficulty": "easy",
+  "tags": [
+   "输入输出",
+   "整数"
+  ],
+  "title": "A + B",
+  "description_html": "<p>读入两个整数 a 和 b，输出它们的和。</p>\n<p>输入保证 |a|, |b| ≤ 10^9，和不会超出 <code class=\"md-inline\">int</code> 范围。</p>",
+  "description": "读入两个整数 a 和 b，输出它们的和。\n\n输入保证 |a|, |b| ≤ 10^9，和不会超出 `int` 范围。",
+  "hint": "`scanf(\"%d %d\", &a, &b)` 一次读两个。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "1 2\n",
+    "output": "3"
+   },
+   {
+    "input": "-5 3\n",
+    "output": "-2"
+   },
+   {
+    "input": "1000000000 1000000000\n",
+    "output": "2000000000"
+   }
+  ]
+ },
+ {
+  "id": "c005",
+  "chapter": 2,
+  "difficulty": "easy",
+  "tags": [
+   "浮点",
+   "格式化"
+  ],
+  "title": "摄氏转华氏",
+  "description_html": "<p>读入一个摄氏温度（整数或小数），输出对应的华氏温度，保留 2 位小数。</p>\n<p>公式：<code class=\"md-inline\">F = C × 9 / 5 + 32</code></p>\n<p>例如输入 <code class=\"md-inline\">100</code>，输出 <code class=\"md-inline\">212.00</code>。</p>",
+  "description": "读入一个摄氏温度（整数或小数），输出对应的华氏温度，保留 2 位小数。\n\n公式：`F = C × 9 / 5 + 32`\n\n例如输入 `100`，输出 `212.00`。",
+  "hint": "注意 `9 / 5` 是整数除法得 1，要写成 `9.0 / 5` 或 `c * 9 / 5.0`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "100\n",
+    "output": "212.00"
+   },
+   {
+    "input": "0\n",
+    "output": "32.00"
+   },
+   {
+    "input": "-40\n",
+    "output": "-40.00"
+   }
+  ]
+ },
+ {
+  "id": "c006",
+  "chapter": 2,
+  "difficulty": "easy",
+  "tags": [
+   "浮点",
+   "常量"
+  ],
+  "title": "圆的面积与周长",
+  "description_html": "<p>读入半径 r（实数），输出面积和周长，各保留 3 位小数，用空格分隔。</p>\n<p>π 取 <code class=\"md-inline\">3.1415926</code>。</p>\n<p>输入 <code class=\"md-inline\">1</code> 时输出 <code class=\"md-inline\">3.142 6.283</code>。</p>",
+  "description": "读入半径 r（实数），输出面积和周长，各保留 3 位小数，用空格分隔。\n\nπ 取 `3.1415926`。\n\n输入 `1` 时输出 `3.142 6.283`。",
+  "hint": "别用 `scanf(\"%f\")` 读 double。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "1\n",
+    "output": "3.142 6.283"
+   },
+   {
+    "input": "2\n",
+    "output": "12.566 12.566"
+   }
+  ]
+ },
+ {
+  "id": "c007",
+  "chapter": 2,
+  "difficulty": "easy",
+  "tags": [
+   "变量",
+   "交换"
+  ],
+  "title": "交换两个整数",
+  "description_html": "<p>读入两个整数 a、b，交换它们的值后输出，用空格分隔。</p>\n<p>输入 <code class=\"md-inline\">3 5</code>，输出 <code class=\"md-inline\">5 3</code>。</p>\n<p><strong>要求：必须使用第三个临时变量完成交换。</strong></p>",
+  "description": "读入两个整数 a、b，交换它们的值后输出，用空格分隔。\n\n输入 `3 5`，输出 `5 3`。\n\n**要求：必须使用第三个临时变量完成交换。**",
+  "hint": "`int t = a; a = b; b = t;`",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "3 5\n",
+    "output": "5 3"
+   },
+   {
+    "input": "-1 0\n",
+    "output": "0 -1"
+   }
+  ]
+ },
+ {
+  "id": "c008",
+  "chapter": 2,
+  "difficulty": "medium",
+  "tags": [
+   "整数除法",
+   "陷阱"
+  ],
+  "title": "整数与浮点除法",
+  "description_html": "<p>读入两个整数 a、b（b ≠ 0），输出三行：</p>\n<ol>\n<li><code class=\"md-inline\">a / b</code> 的整数结果</li>\n<li><code class=\"md-inline\">a % b</code> 的余数</li>\n<li><code class=\"md-inline\">a / b</code> 的浮点结果，保留 4 位小数</li>\n</ol>\n<p>输入 <code class=\"md-inline\">7 2</code> 输出：</p>\n<pre class=\"md-code\" data-lang=\"text\"><code>3\n1\n3.5000</code></pre>",
+  "description": "读入两个整数 a、b（b ≠ 0），输出三行：\n\n1. `a / b` 的整数结果\n2. `a % b` 的余数\n3. `a / b` 的浮点结果，保留 4 位小数\n\n输入 `7 2` 输出：\n\n```\n3\n1\n3.5000\n```",
+  "hint": "第三行要先把 a 或 b 转成 double，否则会先做整数除法。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "7 2\n",
+    "output": "3\n1\n3.5000"
+   },
+   {
+    "input": "10 5\n",
+    "output": "2\n0\n2.0000"
+   },
+   {
+    "input": "-7 2\n",
+    "output": "-3\n-1\n-3.5000"
+   }
+  ]
+ },
+ {
+  "id": "c009",
+  "chapter": 2,
+  "difficulty": "medium",
+  "tags": [
+   "取模",
+   "数字拆分"
+  ],
+  "title": "各位数字之和",
+  "description_html": "<p>读入一个非负整数 n（n &lt; 10^9），输出它各位数字之和。</p>\n<p>输入 <code class=\"md-inline\">1234</code>，输出 <code class=\"md-inline\">10</code>。</p>\n<p><strong>不要用字符串，用取模运算。</strong></p>",
+  "description": "读入一个非负整数 n（n < 10^9），输出它各位数字之和。\n\n输入 `1234`，输出 `10`。\n\n**不要用字符串，用取模运算。**",
+  "hint": "`n % 10` 拿到个位，`n / 10` 去掉个位，循环直到 n 为 0。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "1234\n",
+    "output": "10"
+   },
+   {
+    "input": "0\n",
+    "output": "0"
+   },
+   {
+    "input": "999999999\n",
+    "output": "81"
+   }
+  ]
+ },
+ {
+  "id": "c010",
+  "chapter": 3,
+  "difficulty": "medium",
+  "tags": [
+   "逻辑运算",
+   "分支"
+  ],
+  "title": "闰年判断",
+  "description_html": "<p>读入年份 y，是闰年输出 <code class=\"md-inline\">yes</code>，否则输出 <code class=\"md-inline\">no</code>。</p>\n<p>规则：能被 4 整除但不能被 100 整除，或者能被 400 整除。</p>",
+  "description": "读入年份 y，是闰年输出 `yes`，否则输出 `no`。\n\n规则：能被 4 整除但不能被 100 整除，或者能被 400 整除。",
+  "hint": "`(y % 4 == 0 && y % 100 != 0) || y % 400 == 0`",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "2024\n",
+    "output": "yes"
+   },
+   {
+    "input": "1900\n",
+    "output": "no"
+   },
+   {
+    "input": "2000\n",
+    "output": "yes"
+   }
+  ]
+ },
+ {
+  "id": "c011",
+  "chapter": 3,
+  "difficulty": "easy",
+  "tags": [
+   "三元运算符"
+  ],
+  "title": "三个数的最大值",
+  "description_html": "<p>读入三个整数，输出其中最大的一个。</p>\n<p><strong>要求用三元运算符或 if 实现，不许用数组排序。</strong></p>",
+  "description": "读入三个整数，输出其中最大的一个。\n\n**要求用三元运算符或 if 实现，不许用数组排序。**",
+  "hint": "先求前两个的最大值，再和第三个比。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "3 9 5\n",
+    "output": "9"
+   },
+   {
+    "input": "-1 -5 -3\n",
+    "output": "-1"
+   }
+  ]
+ },
+ {
+  "id": "c012",
+  "chapter": 3,
+  "difficulty": "easy",
+  "tags": [
+   "位运算"
+  ],
+  "title": "奇偶判断（位运算）",
+  "description_html": "<p>读入整数 n，奇数输出 <code class=\"md-inline\">odd</code>，偶数输出 <code class=\"md-inline\">even</code>。</p>\n<p><strong>要求用位运算 <code class=\"md-inline\">&amp;</code> 判断，不许用 <code class=\"md-inline\">%</code>。</strong></p>",
+  "description": "读入整数 n，奇数输出 `odd`，偶数输出 `even`。\n\n**要求用位运算 `&` 判断，不许用 `%`。**",
+  "hint": "任何整数的二进制最低位为 1 就是奇数：`n & 1`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "7\n",
+    "output": "odd"
+   },
+   {
+    "input": "8\n",
+    "output": "even"
+   },
+   {
+    "input": "-3\n",
+    "output": "odd"
+   }
+  ]
+ },
+ {
+  "id": "c013",
+  "chapter": 3,
+  "difficulty": "medium",
+  "tags": [
+   "位运算"
+  ],
+  "title": "判断 2 的幂",
+  "description_html": "<p>读入正整数 n，如果它是 2 的整数次幂输出 <code class=\"md-inline\">yes</code>，否则 <code class=\"md-inline\">no</code>。</p>\n<p><strong>要求用位运算，时间复杂度 O(1)。</strong></p>\n<p>提示：2 的幂的二进制只有一个 1。</p>",
+  "description": "读入正整数 n，如果它是 2 的整数次幂输出 `yes`，否则 `no`。\n\n**要求用位运算，时间复杂度 O(1)。**\n\n提示：2 的幂的二进制只有一个 1。",
+  "hint": "`n & (n - 1)` 会消掉最低位的 1，结果为 0 就是 2 的幂。别忘了 n > 0。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "1\n",
+    "output": "yes"
+   },
+   {
+    "input": "1024\n",
+    "output": "yes"
+   },
+   {
+    "input": "6\n",
+    "output": "no"
+   },
+   {
+    "input": "0\n",
+    "output": "no"
+   }
+  ]
+ },
+ {
+  "id": "c014",
+  "chapter": 3,
+  "difficulty": "easy",
+  "tags": [
+   "取模",
+   "换算"
+  ],
+  "title": "秒数转时分秒",
+  "description_html": "<p>读入总秒数 t（0 ≤ t &lt; 10^9），输出 <code class=\"md-inline\">时:分:秒</code> 格式（不补零）。</p>\n<p>输入 <code class=\"md-inline\">3661</code> 输出 <code class=\"md-inline\">1:1:1</code>。</p>",
+  "description": "读入总秒数 t（0 ≤ t < 10^9），输出 `时:分:秒` 格式（不补零）。\n\n输入 `3661` 输出 `1:1:1`。",
+  "hint": "先 `t / 3600` 得小时，再对剩下的取模。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "3661\n",
+    "output": "1:1:1"
+   },
+   {
+    "input": "0\n",
+    "output": "0:0:0"
+   },
+   {
+    "input": "86399\n",
+    "output": "23:59:59"
+   }
+  ]
+ },
+ {
+  "id": "c015",
+  "chapter": 3,
+  "difficulty": "easy",
+  "tags": [
+   "三元运算符"
+  ],
+  "title": "绝对值",
+  "description_html": "<p>读入一个整数，输出它的绝对值。</p>\n<p><strong>不许调用 abs 函数。</strong></p>",
+  "description": "读入一个整数，输出它的绝对值。\n\n**不许调用 abs 函数。**",
+  "hint": "`x < 0 ? -x : x`",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "-42\n",
+    "output": "42"
+   },
+   {
+    "input": "7\n",
+    "output": "7"
+   },
+   {
+    "input": "0\n",
+    "output": "0"
+   }
+  ]
+ },
+ {
+  "id": "c016",
+  "chapter": 4,
+  "difficulty": "easy",
+  "tags": [
+   "分支"
+  ],
+  "title": "成绩等级",
+  "description_html": "<p>读入分数 s（0 ≤ s ≤ 100），按下列规则输出等级：</p>\n<ul>\n<li>s ≥ 90 → <code class=\"md-inline\">A</code></li>\n<li>80 ≤ s &lt; 90 → <code class=\"md-inline\">B</code></li>\n<li>70 ≤ s &lt; 80 → <code class=\"md-inline\">C</code></li>\n<li>60 ≤ s &lt; 70 → <code class=\"md-inline\">D</code></li>\n<li>s &lt; 60 → <code class=\"md-inline\">F</code></li>\n</ul>",
+  "description": "读入分数 s（0 ≤ s ≤ 100），按下列规则输出等级：\n\n- s ≥ 90 → `A`\n- 80 ≤ s < 90 → `B`\n- 70 ≤ s < 80 → `C`\n- 60 ≤ s < 70 → `D`\n- s < 60 → `F`",
+  "hint": "if-else if 链，从高到低判断。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "95\n",
+    "output": "A"
+   },
+   {
+    "input": "80\n",
+    "output": "B"
+   },
+   {
+    "input": "59\n",
+    "output": "F"
+   }
+  ]
+ },
+ {
+  "id": "c017",
+  "chapter": 4,
+  "difficulty": "easy",
+  "tags": [
+   "循环",
+   "累加"
+  ],
+  "title": "1 到 n 求和",
+  "description_html": "<p>读入 n（1 ≤ n ≤ 10^6），输出 1 + 2 + ... + n。</p>\n<p><strong>用循环实现，不要用求和公式。</strong></p>",
+  "description": "读入 n（1 ≤ n ≤ 10^6），输出 1 + 2 + ... + n。\n\n**用循环实现，不要用求和公式。**",
+  "hint": "累加变量要用 `long long`，n=10^6 时和约 5×10^11，超过 int。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "10\n",
+    "output": "55"
+   },
+   {
+    "input": "1\n",
+    "output": "1"
+   },
+   {
+    "input": "1000000\n",
+    "output": "500000500000"
+   }
+  ]
+ },
+ {
+  "id": "c018",
+  "chapter": 4,
+  "difficulty": "easy",
+  "tags": [
+   "嵌套循环"
+  ],
+  "title": "九九乘法表的一行",
+  "description_html": "<p>读入 n（1 ≤ n ≤ 9），输出乘法表的第 n 行，格式为 <code class=\"md-inline\">n*1=..n*2=..</code>，用空格分隔，末尾不带空格。</p>\n<p>输入 <code class=\"md-inline\">3</code> 输出 <code class=\"md-inline\">3*1=3 3*2=6 3*3=9</code>。</p>",
+  "description": "读入 n（1 ≤ n ≤ 9），输出乘法表的第 n 行，格式为 `n*1=..n*2=..`，用空格分隔，末尾不带空格。\n\n输入 `3` 输出 `3*1=3 3*2=6 3*3=9`。",
+  "hint": "注意最后一个元素后面不要多输出空格。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "3\n",
+    "output": "3*1=3 3*2=6 3*3=9"
+   },
+   {
+    "input": "1\n",
+    "output": "1*1=1"
+   }
+  ]
+ },
+ {
+  "id": "c019",
+  "chapter": 4,
+  "difficulty": "medium",
+  "tags": [
+   "素数",
+   "循环"
+  ],
+  "title": "素数判断",
+  "description_html": "<p>读入 n（n ≥ 1），是素数输出 <code class=\"md-inline\">yes</code>，否则 <code class=\"md-inline\">no</code>。</p>\n<p>注意：1 不是素数。</p>",
+  "description": "读入 n（n ≥ 1），是素数输出 `yes`，否则 `no`。\n\n注意：1 不是素数。",
+  "hint": "只需试除到 √n。写成 `i * i <= n` 避免开方函数。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "7\n",
+    "output": "yes"
+   },
+   {
+    "input": "1\n",
+    "output": "no"
+   },
+   {
+    "input": "97\n",
+    "output": "yes"
+   },
+   {
+    "input": "100\n",
+    "output": "no"
+   }
+  ]
+ },
+ {
+  "id": "c020",
+  "chapter": 4,
+  "difficulty": "easy",
+  "tags": [
+   "循环",
+   "continue"
+  ],
+  "title": "1 到 n 的偶数",
+  "description_html": "<p>读入 n，输出 1 到 n 之间所有偶数，用空格分隔，末尾不带空格。</p>\n<p>输入 <code class=\"md-inline\">6</code> 输出 <code class=\"md-inline\">2 4 6</code>。</p>",
+  "description": "读入 n，输出 1 到 n 之间所有偶数，用空格分隔，末尾不带空格。\n\n输入 `6` 输出 `2 4 6`。",
+  "hint": "可以用 `i += 2` 直接跳，也可以用 continue 练习。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "6\n",
+    "output": "2 4 6"
+   },
+   {
+    "input": "1\n",
+    "output": ""
+   },
+   {
+    "input": "2\n",
+    "output": "2"
+   }
+  ]
+ },
+ {
+  "id": "c021",
+  "chapter": 4,
+  "difficulty": "medium",
+  "tags": [
+   "循环",
+   "数字拆分"
+  ],
+  "title": "整数反转",
+  "description_html": "<p>读入一个整数 n，输出它反转后的结果。</p>\n<ul>\n<li>输入 <code class=\"md-inline\">1234</code> → <code class=\"md-inline\">4321</code></li>\n<li>输入 <code class=\"md-inline\">-120</code> → <code class=\"md-inline\">-21</code>（末尾的 0 消失）</li>\n<li>输入 <code class=\"md-inline\">0</code> → <code class=\"md-inline\">0</code></li>\n</ul>",
+  "description": "读入一个整数 n，输出它反转后的结果。\n\n- 输入 `1234` → `4321`\n- 输入 `-120` → `-21`（末尾的 0 消失）\n- 输入 `0` → `0`",
+  "hint": "先取绝对值处理，最后补符号。用 `rev * 10 + n % 10` 逐位构建。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "1234\n",
+    "output": "4321"
+   },
+   {
+    "input": "-120\n",
+    "output": "-21"
+   },
+   {
+    "input": "0\n",
+    "output": "0"
+   }
+  ]
+ },
+ {
+  "id": "c022",
+  "chapter": 4,
+  "difficulty": "medium",
+  "tags": [
+   "循环",
+   "最大公约数"
+  ],
+  "title": "最大公约数（辗转相除）",
+  "description_html": "<p>读入两个正整数 a、b，输出它们的最大公约数。</p>\n<p><strong>用辗转相除法（欧几里得算法）实现。</strong></p>",
+  "description": "读入两个正整数 a、b，输出它们的最大公约数。\n\n**用辗转相除法（欧几里得算法）实现。**",
+  "hint": "`while (b) { t = a % b; a = b; b = t; }` 循环结束时 a 就是答案。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "12 18\n",
+    "output": "6"
+   },
+   {
+    "input": "7 13\n",
+    "output": "1"
+   },
+   {
+    "input": "100 100\n",
+    "output": "100"
+   }
+  ]
+ },
+ {
+  "id": "c023",
+  "chapter": 5,
+  "difficulty": "easy",
+  "tags": [
+   "数组",
+   "遍历"
+  ],
+  "title": "最大值与最小值",
+  "description_html": "<p>第一行输入 n（1 ≤ n ≤ 1000），第二行输入 n 个整数。输出最大值和最小值，用空格分隔。</p>",
+  "description": "第一行输入 n（1 ≤ n ≤ 1000），第二行输入 n 个整数。输出最大值和最小值，用空格分隔。",
+  "hint": "初始化时把 min 设成第一个元素，不要设成 0。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5\n3 9 1 7 4\n",
+    "output": "9 1"
+   },
+   {
+    "input": "1\n-5\n",
+    "output": "-5 -5"
+   },
+   {
+    "input": "4\n-3 -9 -1 -7\n",
+    "output": "-1 -9"
+   }
+  ]
+ },
+ {
+  "id": "c024",
+  "chapter": 5,
+  "difficulty": "easy",
+  "tags": [
+   "数组",
+   "逆序"
+  ],
+  "title": "数组逆序输出",
+  "description_html": "<p>第一行输入 n，第二行输入 n 个整数。按逆序输出这些数，用空格分隔。</p>",
+  "description": "第一行输入 n，第二行输入 n 个整数。按逆序输出这些数，用空格分隔。",
+  "hint": "从 n-1 倒着遍历。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5\n1 2 3 4 5\n",
+    "output": "5 4 3 2 1"
+   },
+   {
+    "input": "1\n7\n",
+    "output": "7"
+   }
+  ]
+ },
+ {
+  "id": "c025",
+  "chapter": 5,
+  "difficulty": "easy",
+  "tags": [
+   "数组",
+   "统计"
+  ],
+  "title": "求和与平均值",
+  "description_html": "<p>第一行输入 n，第二行输入 n 个整数。输出它们的和与平均值，平均值保留 2 位小数，用空格分隔。</p>",
+  "description": "第一行输入 n，第二行输入 n 个整数。输出它们的和与平均值，平均值保留 2 位小数，用空格分隔。",
+  "hint": "平均值要用 `(double)sum / n`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "4\n1 2 3 4\n",
+    "output": "10 2.50"
+   },
+   {
+    "input": "3\n1 2 4\n",
+    "output": "7 2.33"
+   }
+  ]
+ },
+ {
+  "id": "c026",
+  "chapter": 5,
+  "difficulty": "medium",
+  "tags": [
+   "排序",
+   "冒泡"
+  ],
+  "title": "冒泡排序",
+  "description_html": "<p>第一行输入 n，第二行输入 n 个整数。将它们升序排序后输出，用空格分隔。</p>\n<p><strong>要求手写冒泡排序，不许用 qsort。</strong></p>",
+  "description": "第一行输入 n，第二行输入 n 个整数。将它们升序排序后输出，用空格分隔。\n\n**要求手写冒泡排序，不许用 qsort。**",
+  "hint": "两层循环，外层控制轮数，内层比较相邻元素。加 swapped 标志提前退出。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5\n5 1 4 2 8\n",
+    "output": "1 2 4 5 8"
+   },
+   {
+    "input": "3\n3 2 1\n",
+    "output": "1 2 3"
+   },
+   {
+    "input": "1\n9\n",
+    "output": "9"
+   }
+  ]
+ },
+ {
+  "id": "c027",
+  "chapter": 5,
+  "difficulty": "medium",
+  "tags": [
+   "二分查找"
+  ],
+  "title": "二分查找",
+  "description_html": "<p>第一行输入 n（升序排列），第二行输入 n 个整数，第三行输入待查找的 target。</p>\n<p>找到输出它的下标（从 0 开始），找不到输出 <code class=\"md-inline\">-1</code>。</p>\n<p><strong>要求用二分查找，O(log n)。</strong></p>",
+  "description": "第一行输入 n（升序排列），第二行输入 n 个整数，第三行输入待查找的 target。\n\n找到输出它的下标（从 0 开始），找不到输出 `-1`。\n\n**要求用二分查找，O(log n)。**",
+  "hint": "`mid = lo + (hi - lo) / 2` 防溢出。循环条件是 `lo <= hi`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5\n1 3 5 7 9\n7\n",
+    "output": "3"
+   },
+   {
+    "input": "5\n1 3 5 7 9\n2\n",
+    "output": "-1"
+   },
+   {
+    "input": "1\n42\n42\n",
+    "output": "0"
+   }
+  ]
+ },
+ {
+  "id": "c028",
+  "chapter": 5,
+  "difficulty": "easy",
+  "tags": [
+   "数组",
+   "统计"
+  ],
+  "title": "正负零统计",
+  "description_html": "<p>第一行输入 n，第二行输入 n 个整数。输出正数、负数、零的个数，用空格分隔。</p>",
+  "description": "第一行输入 n，第二行输入 n 个整数。输出正数、负数、零的个数，用空格分隔。",
+  "hint": "三个计数器，一次遍历。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "6\n1 -2 0 3 -4 0\n",
+    "output": "2 2 2"
+   },
+   {
+    "input": "3\n1 2 3\n",
+    "output": "3 0 0"
+   }
+  ]
+ },
+ {
+  "id": "c029",
+  "chapter": 5,
+  "difficulty": "medium",
+  "tags": [
+   "二维数组",
+   "矩阵"
+  ],
+  "title": "矩阵转置",
+  "description_html": "<p>第一行输入行数 m 和列数 n（均 ≤ 10），随后 m 行每行 n 个整数，输出转置后的矩阵（n 行，每行 m 个数，空格分隔）。</p>",
+  "description": "第一行输入行数 m 和列数 n（均 ≤ 10），随后 m 行每行 n 个整数，输出转置后的矩阵（n 行，每行 m 个数，空格分隔）。",
+  "hint": "新矩阵的第 i 行第 j 列 = 原矩阵的第 j 行第 i 列。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "2 3\n1 2 3\n4 5 6\n",
+    "output": "1 4\n2 5\n3 6"
+   },
+   {
+    "input": "1 1\n7\n",
+    "output": "7"
+   }
+  ]
+ },
+ {
+  "id": "c030",
+  "chapter": 6,
+  "difficulty": "medium",
+  "tags": [
+   "函数",
+   "递归"
+  ],
+  "title": "阶乘（递归）",
+  "description_html": "<p>读入 n（0 ≤ n ≤ 20），输出 n!。</p>\n<p><strong>要求用递归函数实现。</strong></p>\n<p>注意 20! = 2432902008176640000，需要 <code class=\"md-inline\">long long</code>。</p>",
+  "description": "读入 n（0 ≤ n ≤ 20），输出 n!。\n\n**要求用递归函数实现。**\n\n注意 20! = 2432902008176640000，需要 `long long`。",
+  "hint": "`if (n <= 1) return 1; return n * f(n - 1);`",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5\n",
+    "output": "120"
+   },
+   {
+    "input": "0\n",
+    "output": "1"
+   },
+   {
+    "input": "20\n",
+    "output": "2432902008176640000"
+   }
+  ]
+ },
+ {
+  "id": "c031",
+  "chapter": 6,
+  "difficulty": "medium",
+  "tags": [
+   "函数",
+   "递归",
+   "记忆化"
+  ],
+  "title": "斐波那契数列",
+  "description_html": "<p>读入 n（0 ≤ n ≤ 90），输出第 n 个斐波那契数。</p>\n<p>定义：F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2)。</p>\n<p><strong>提示：朴素递归在 n=45 时就要跑几秒，请用迭代或记忆化。</strong></p>",
+  "description": "读入 n（0 ≤ n ≤ 90），输出第 n 个斐波那契数。\n\n定义：F(0)=0, F(1)=1, F(n)=F(n-1)+F(n-2)。\n\n**提示：朴素递归在 n=45 时就要跑几秒，请用迭代或记忆化。**",
+  "hint": "迭代写法：`a=0, b=1; 循环 n 次 { t=a+b; a=b; b=t; }`。注意用 long long。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "10\n",
+    "output": "55"
+   },
+   {
+    "input": "0\n",
+    "output": "0"
+   },
+   {
+    "input": "90\n",
+    "output": "2880067194370816120"
+   }
+  ]
+ },
+ {
+  "id": "c032",
+  "chapter": 6,
+  "difficulty": "medium",
+  "tags": [
+   "函数",
+   "递归"
+  ],
+  "title": "汉诺塔步数",
+  "description_html": "<p>读入盘子数 n（1 ≤ n ≤ 30），输出把 n 个盘子从 A 移到 C 所需的最少步数。</p>\n<p>规律：h(n) = 2·h(n-1) + 1。</p>\n<p><strong>要求用递归实现。</strong></p>",
+  "description": "读入盘子数 n（1 ≤ n ≤ 30），输出把 n 个盘子从 A 移到 C 所需的最少步数。\n\n规律：h(n) = 2·h(n-1) + 1。\n\n**要求用递归实现。**",
+  "hint": "也可以用公式 2^n - 1，但本题要求递归。注意 2^30 超出 int。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "3\n",
+    "output": "7"
+   },
+   {
+    "input": "1\n",
+    "output": "1"
+   },
+   {
+    "input": "30\n",
+    "output": "1073741823"
+   }
+  ]
+ },
+ {
+  "id": "c033",
+  "chapter": 6,
+  "difficulty": "easy",
+  "tags": [
+   "函数",
+   "完全数"
+  ],
+  "title": "完全数判断",
+  "description_html": "<p>读入 n（2 ≤ n ≤ 10^5），如果 n 等于它所有真因子（不含自身）之和，输出 <code class=\"md-inline\">yes</code>，否则 <code class=\"md-inline\">no</code>。</p>\n<p>例如 6 = 1+2+3，是；28 = 1+2+4+7+14，是。</p>\n<p><strong>要求把因子求和封装成函数。</strong></p>",
+  "description": "读入 n（2 ≤ n ≤ 10^5），如果 n 等于它所有真因子（不含自身）之和，输出 `yes`，否则 `no`。\n\n例如 6 = 1+2+3，是；28 = 1+2+4+7+14，是。\n\n**要求把因子求和封装成函数。**",
+  "hint": "试除到 n/2 即可，或到 √n 时成对累加（更快）。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "6\n",
+    "output": "yes"
+   },
+   {
+    "input": "28\n",
+    "output": "yes"
+   },
+   {
+    "input": "10\n",
+    "output": "no"
+   }
+  ]
+ },
+ {
+  "id": "c034",
+  "chapter": 6,
+  "difficulty": "medium",
+  "tags": [
+   "函数",
+   "数组参数"
+  ],
+  "title": "数组排序（函数封装）",
+  "description_html": "<p>第一行输入 n（≤ 100），第二行输入 n 个整数。</p>\n<p><strong>要求写一个 <code class=\"md-inline\">void sort(int a[], int n)</code> 函数完成排序</strong>，主函数负责输入输出。输出升序结果。</p>",
+  "description": "第一行输入 n（≤ 100），第二行输入 n 个整数。\n\n**要求写一个 `void sort(int a[], int n)` 函数完成排序**，主函数负责输入输出。输出升序结果。",
+  "hint": "数组参数写成 `int a[]` 等价于 `int *a`，函数内 `sizeof(a)` 是 8，长度必须另传。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5\n5 3 8 1 9\n",
+    "output": "1 3 5 8 9"
+   },
+   {
+    "input": "2\n2 1\n",
+    "output": "1 2"
+   }
+  ]
+ },
+ {
+  "id": "c035",
+  "chapter": 7,
+  "difficulty": "medium",
+  "tags": [
+   "指针",
+   "参数"
+  ],
+  "title": "用指针交换（函数版）",
+  "description_html": "<p>读入两个整数，<strong>写一个 <code class=\"md-inline\">void swap(int *a, int *b)</code> 函数</strong>交换它们，然后输出。</p>\n<p>这一题的目的：亲眼看到「值传递」为什么会让普通函数交换失败。</p>",
+  "description": "读入两个整数，**写一个 `void swap(int *a, int *b)` 函数**交换它们，然后输出。\n\n这一题的目的：亲眼看到「值传递」为什么会让普通函数交换失败。",
+  "hint": "函数内用 `*a`、`*b` 操作，调用时传 `&x`、`&y`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "1 2\n",
+    "output": "2 1"
+   },
+   {
+    "input": "-5 5\n",
+    "output": "5 -5"
+   }
+  ]
+ },
+ {
+  "id": "c036",
+  "chapter": 7,
+  "difficulty": "medium",
+  "tags": [
+   "指针",
+   "遍历"
+  ],
+  "title": "用指针求数组和",
+  "description_html": "<p>第一行输入 n，第二行输入 n 个整数。</p>\n<p><strong>要求用指针遍历数组求和</strong>（不许用 <code class=\"md-inline\">a[i]</code> 下标写法），输出总和。</p>",
+  "description": "第一行输入 n，第二行输入 n 个整数。\n\n**要求用指针遍历数组求和**（不许用 `a[i]` 下标写法），输出总和。",
+  "hint": "`for (int *p = a; p < a + n; p++) sum += *p;`",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "4\n1 2 3 4\n",
+    "output": "10"
+   },
+   {
+    "input": "1\n100\n",
+    "output": "100"
+   }
+  ]
+ },
+ {
+  "id": "c037",
+  "chapter": 7,
+  "difficulty": "medium",
+  "tags": [
+   "指针",
+   "输出参数"
+  ],
+  "title": "minmax：一次遍历带回两个结果",
+  "description_html": "<p>第一行输入 n，第二行输入 n 个整数。</p>\n<p><strong>要求写 <code class=\"md-inline\">void minmax(const int *a, int n, int *mn, int *mx)</code></strong>，通过指针参数带回最小值和最大值，主函数输出 <code class=\"md-inline\">最小值 最大值</code>。</p>",
+  "description": "第一行输入 n，第二行输入 n 个整数。\n\n**要求写 `void minmax(const int *a, int n, int *mn, int *mx)`**，通过指针参数带回最小值和最大值，主函数输出 `最小值 最大值`。",
+  "hint": "`const int *a` 表示不修改数组内容。输出参数用 `if (mn) *mn = ...` 更健壮。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5\n4 -2 9 0 3\n",
+    "output": "-2 9"
+   },
+   {
+    "input": "1\n7\n",
+    "output": "7 7"
+   }
+  ]
+ },
+ {
+  "id": "c038",
+  "chapter": 8,
+  "difficulty": "medium",
+  "tags": [
+   "malloc",
+   "动态数组"
+  ],
+  "title": "动态数组求和",
+  "description_html": "<p>第一行输入 n（1 ≤ n ≤ 10^6），第二行输入 n 个整数。</p>\n<p><strong>要求用 <code class=\"md-inline\">malloc</code> 按实际大小分配数组</strong>（不许开固定大小的数组），求和后输出，并正确 <code class=\"md-inline\">free</code>。</p>",
+  "description": "第一行输入 n（1 ≤ n ≤ 10^6），第二行输入 n 个整数。\n\n**要求用 `malloc` 按实际大小分配数组**（不许开固定大小的数组），求和后输出，并正确 `free`。",
+  "hint": "`int *a = malloc(n * sizeof(*a)); if (!a) return 1; ... free(a);`",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "3\n1 2 3\n",
+    "output": "6"
+   },
+   {
+    "input": "1\n-100\n",
+    "output": "-100"
+   }
+  ]
+ },
+ {
+  "id": "c039",
+  "chapter": 8,
+  "difficulty": "hard",
+  "tags": [
+   "calloc",
+   "动态数组",
+   "逆序"
+  ],
+  "title": "动态数组原地逆序",
+  "description_html": "<p>第一行输入 n，第二行输入 n 个整数。</p>\n<p><strong>要求用 <code class=\"md-inline\">calloc</code> 分配数组</strong>，在原数组上原地逆序（不许开第二个数组），输出结果。</p>",
+  "description": "第一行输入 n，第二行输入 n 个整数。\n\n**要求用 `calloc` 分配数组**，在原数组上原地逆序（不许开第二个数组），输出结果。",
+  "hint": "双指针：`i` 从 0、`j` 从 n-1，交换后向中间收缩，直到 `i >= j`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5\n1 2 3 4 5\n",
+    "output": "5 4 3 2 1"
+   },
+   {
+    "input": "4\n1 2 3 4\n",
+    "output": "4 3 2 1"
+   }
+  ]
+ },
+ {
+  "id": "c040",
+  "chapter": 8,
+  "difficulty": "hard",
+  "tags": [
+   "模拟",
+   "数组"
+  ],
+  "title": "约瑟夫环",
+  "description_html": "<p>n 个人围成一圈，从第 1 个人开始报数，报到 m 的人出圈，下一个人重新从 1 报数。输出最后剩下的人的编号（1 开始）。</p>\n<p>输入 <code class=\"md-inline\">5 3</code>，输出 <code class=\"md-inline\">4</code>。</p>",
+  "description": "n 个人围成一圈，从第 1 个人开始报数，报到 m 的人出圈，下一个人重新从 1 报数。输出最后剩下的人的编号（1 开始）。\n\n输入 `5 3`，输出 `4`。",
+  "hint": "用数组标记出圈状态，模拟过程。或者用递推公式 `f(i) = (f(i-1) + m) % i`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5 3\n",
+    "output": "4"
+   },
+   {
+    "input": "1 1\n",
+    "output": "1"
+   },
+   {
+    "input": "7 2\n",
+    "output": "7"
+   }
+  ]
+ },
+ {
+  "id": "c041",
+  "chapter": 9,
+  "difficulty": "easy",
+  "tags": [
+   "字符串",
+   "指针"
+  ],
+  "title": "手写 strlen",
+  "description_html": "<p>读入一行不含空格的字符串（长度 ≤ 1000），输出它的长度。</p>\n<p><strong>不许用 <code class=\"md-inline\">strlen</code>，自己写一个 <code class=\"md-inline\">size_t my_strlen(const char *s)</code>。</strong></p>",
+  "description": "读入一行不含空格的字符串（长度 ≤ 1000），输出它的长度。\n\n**不许用 `strlen`，自己写一个 `size_t my_strlen(const char *s)`。**",
+  "hint": "`while (*s) s++;` 然后返回走过的字符数。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "hello\n",
+    "output": "5"
+   },
+   {
+    "input": "a\n",
+    "output": "1"
+   },
+   {
+    "input": "abcdefghij\n",
+    "output": "10"
+   }
+  ]
+ },
+ {
+  "id": "c042",
+  "chapter": 9,
+  "difficulty": "medium",
+  "tags": [
+   "字符串",
+   "双指针"
+  ],
+  "title": "字符串反转",
+  "description_html": "<p>读入一行不含空格的字符串，输出反转后的结果。</p>\n<p><strong>要求原地反转（双指针交换），不许用 strrev。</strong></p>",
+  "description": "读入一行不含空格的字符串，输出反转后的结果。\n\n**要求原地反转（双指针交换），不许用 strrev。**",
+  "hint": "`strlen` 求长度后，i 从 0、j 从 len-1 向中间交换。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "hello\n",
+    "output": "olleh"
+   },
+   {
+    "input": "ab\n",
+    "output": "ba"
+   },
+   {
+    "input": "x\n",
+    "output": "x"
+   }
+  ]
+ },
+ {
+  "id": "c043",
+  "chapter": 9,
+  "difficulty": "medium",
+  "tags": [
+   "字符串",
+   "双指针"
+  ],
+  "title": "回文串判断",
+  "description_html": "<p>读入一行不含空格的字符串，是回文输出 <code class=\"md-inline\">yes</code>，否则 <code class=\"md-inline\">no</code>。</p>\n<p><strong>要求用双指针从两端向中间比较，不许先反转再比较。</strong></p>",
+  "description": "读入一行不含空格的字符串，是回文输出 `yes`，否则 `no`。\n\n**要求用双指针从两端向中间比较，不许先反转再比较。**",
+  "hint": "`s[i] != s[j]` 就立刻判负。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "level\n",
+    "output": "yes"
+   },
+   {
+    "input": "abc\n",
+    "output": "no"
+   },
+   {
+    "input": "abba\n",
+    "output": "yes"
+   }
+  ]
+ },
+ {
+  "id": "c044",
+  "chapter": 9,
+  "difficulty": "easy",
+  "tags": [
+   "字符串",
+   "统计"
+  ],
+  "title": "统计元音字母",
+  "description_html": "<p>读入一行不含空格的字符串，统计其中元音字母 <code class=\"md-inline\">a e i o u</code> 的个数（不区分大小写）。</p>",
+  "description": "读入一行不含空格的字符串，统计其中元音字母 `a e i o u` 的个数（不区分大小写）。",
+  "hint": "遍历每个字符，先统一转小写再判断。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "hello\n",
+    "output": "2"
+   },
+   {
+    "input": "AEIOU\n",
+    "output": "5"
+   },
+   {
+    "input": "xyz\n",
+    "output": "0"
+   }
+  ]
+ },
+ {
+  "id": "c045",
+  "chapter": 9,
+  "difficulty": "medium",
+  "tags": [
+   "字符串",
+   "ASCII"
+  ],
+  "title": "大小写互换",
+  "description_html": "<p>读入一行不含空格的字符串，把大写字母转小写、小写转大写，其他字符不变，输出结果。</p>\n<p><strong>不许用 toupper / tolower。</strong></p>",
+  "description": "读入一行不含空格的字符串，把大写字母转小写、小写转大写，其他字符不变，输出结果。\n\n**不许用 toupper / tolower。**",
+  "hint": "`'a' - 'A'` 恒等于 32，大小写互转就是加减 32。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "Hello\n",
+    "output": "hELLO"
+   },
+   {
+    "input": "aBc123\n",
+    "output": "AbC123"
+   }
+  ]
+ },
+ {
+  "id": "c046",
+  "chapter": 9,
+  "difficulty": "medium",
+  "tags": [
+   "字符串",
+   "分割"
+  ],
+  "title": "单词计数",
+  "description_html": "<p>读入一整行（可能含多个空格），统计其中单词的个数。</p>\n<p>单词之间由空格分隔，可能有连续空格，行首行尾可能有空格。</p>\n<p>输入 <code class=\"md-inline\">  hello   world  </code> 输出 <code class=\"md-inline\">2</code>。</p>\n<p><strong>用 <code class=\"md-inline\">fgets</code> 读整行，不许用 <code class=\"md-inline\">scanf(\"%s\")</code>。</strong></p>",
+  "description": "读入一整行（可能含多个空格），统计其中单词的个数。\n\n单词之间由空格分隔，可能有连续空格，行首行尾可能有空格。\n\n输入 `  hello   world  ` 输出 `2`。\n\n**用 `fgets` 读整行，不许用 `scanf(\"%s\")`。**",
+  "hint": "核心逻辑：当前字符不是空格、前一个字符是空格（或位置 0）时，单词数 +1。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "hello world\n",
+    "output": "2"
+   },
+   {
+    "input": "  a  b   c  \n",
+    "output": "3"
+   },
+   {
+    "input": "one\n",
+    "output": "1"
+   }
+  ]
+ },
+ {
+  "id": "c047",
+  "chapter": 9,
+  "difficulty": "medium",
+  "tags": [
+   "字符串",
+   "拼接"
+  ],
+  "title": "手写字符串拼接",
+  "description_html": "<p>读入两个不含空格的字符串（各自长度 ≤ 100），输出拼接后的结果。</p>\n<p><strong>不许用 <code class=\"md-inline\">strcat</code>，自己遍历复制。</strong></p>",
+  "description": "读入两个不含空格的字符串（各自长度 ≤ 100），输出拼接后的结果。\n\n**不许用 `strcat`，自己遍历复制。**",
+  "hint": "先 `strlen(a)` 找到结尾位置，再从这里开始复制 b 的每个字符，最后补 `'\\0'`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "hello world\n",
+    "output": "helloworld"
+   },
+   {
+    "input": "a b\n",
+    "output": "ab"
+   }
+  ]
+ },
+ {
+  "id": "c048",
+  "chapter": 9,
+  "difficulty": "hard",
+  "tags": [
+   "字符串",
+   "哈希",
+   "统计"
+  ],
+  "title": "出现次数最多的字母",
+  "description_html": "<p>读入一行只含小写字母的字符串（可能含空格，长度 ≤ 1000），输出出现次数最多的字母及其次数，用空格分隔。</p>\n<p>如果并列，输出字典序最小的那个。</p>",
+  "description": "读入一行只含小写字母的字符串（可能含空格，长度 ≤ 1000），输出出现次数最多的字母及其次数，用空格分隔。\n\n如果并列，输出字典序最小的那个。",
+  "hint": "开一个 `int cnt[26] = {0}` 直接当哈希表，下标就是 `c - 'a'`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "hello world\n",
+    "output": "l 3"
+   },
+   {
+    "input": "aabbbcc\n",
+    "output": "b 3"
+   },
+   {
+    "input": "abc\n",
+    "output": "a 1"
+   }
+  ]
+ },
+ {
+  "id": "c049",
+  "chapter": 10,
+  "difficulty": "medium",
+  "tags": [
+   "结构体",
+   "排序"
+  ],
+  "title": "学生成绩排序",
+  "description_html": "<p>第一行输入 n（≤ 100），随后 n 行每行是 <code class=\"md-inline\">姓名 成绩</code>（姓名不含空格）。</p>\n<p>按成绩从高到低输出姓名，成绩相同则按输入顺序。每行一个。</p>",
+  "description": "第一行输入 n（≤ 100），随后 n 行每行是 `姓名 成绩`（姓名不含空格）。\n\n按成绩从高到低输出姓名，成绩相同则按输入顺序。每行一个。",
+  "hint": "定义 `struct Student { char name[32]; int score; }`，用稳定排序（冒泡）或记录原始下标。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "3\nTom 85\nAmy 92\nBob 78\n",
+    "output": "Amy\nTom\nBob"
+   },
+   {
+    "input": "2\na 100\nb 100\n",
+    "output": "a\nb"
+   }
+  ]
+ },
+ {
+  "id": "c050",
+  "chapter": 10,
+  "difficulty": "medium",
+  "tags": [
+   "结构体",
+   "指针"
+  ],
+  "title": "结构体指针求最高分",
+  "description_html": "<p>第一行输入 n，随后 n 行 <code class=\"md-inline\">学号 成绩</code>（学号是整数）。</p>\n<p><strong>要求写 <code class=\"md-inline\">Student *find_top(Student *arr, int n)</code> 返回最高分学生的指针</strong>，主函数输出该学生的学号。</p>",
+  "description": "第一行输入 n，随后 n 行 `学号 成绩`（学号是整数）。\n\n**要求写 `Student *find_top(Student *arr, int n)` 返回最高分学生的指针**，主函数输出该学生的学号。",
+  "hint": "函数返回 `&arr[i]`，用 `->` 访问成员。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "3\n101 88\n102 95\n103 70\n",
+    "output": "102"
+   },
+   {
+    "input": "1\n7 60\n",
+    "output": "7"
+   }
+  ]
+ },
+ {
+  "id": "c051",
+  "chapter": 10,
+  "difficulty": "medium",
+  "tags": [
+   "结构体",
+   "枚举"
+  ],
+  "title": "用枚举做简单计算器",
+  "description_html": "<p>读入形如 <code class=\"md-inline\">3 + 4</code> 的表达式（运算符为 + - * / 之一，两个整数），输出结果。</p>\n<p>除法按整数除法处理，保证除数不为 0。</p>\n<p><strong>要求用枚举表示运算符，用 switch 分派。</strong></p>",
+  "description": "读入形如 `3 + 4` 的表达式（运算符为 + - * / 之一，两个整数），输出结果。\n\n除法按整数除法处理，保证除数不为 0。\n\n**要求用枚举表示运算符，用 switch 分派。**",
+  "hint": "先读第一个数、运算符字符、第二个数：`scanf(\"%d %c %d\", &a, &op, &b)`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "3 + 4\n",
+    "output": "7"
+   },
+   {
+    "input": "10 - 3\n",
+    "output": "7"
+   },
+   {
+    "input": "7 * 6\n",
+    "output": "42"
+   },
+   {
+    "input": "9 / 2\n",
+    "output": "4"
+   }
+  ]
+ },
+ {
+  "id": "c052",
+  "chapter": 11,
+  "difficulty": "medium",
+  "tags": [
+   "EOF",
+   "循环读取"
+  ],
+  "title": "读到 EOF 为止求和",
+  "description_html": "<p>不断读入整数，直到输入结束（EOF），输出所有数之和。</p>\n<p>输入可能有多行，也可能一个数都没有（此时输出 0）。</p>",
+  "description": "不断读入整数，直到输入结束（EOF），输出所有数之和。\n\n输入可能有多行，也可能一个数都没有（此时输出 0）。",
+  "hint": "`while (scanf(\"%d\", &x) == 1)` 是读 EOF 的标准写法，不要用 `while (!feof(stdin))`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "1 2 3\n",
+    "output": "6"
+   },
+   {
+    "input": "1\n2\n3\n4\n5\n",
+    "output": "15"
+   },
+   {
+    "input": "",
+    "output": "0"
+   }
+  ]
+ },
+ {
+  "id": "c053",
+  "chapter": 11,
+  "difficulty": "medium",
+  "tags": [
+   "fgets",
+   "行处理"
+  ],
+  "title": "统计行数",
+  "description_html": "<p>不断读入多行文本（可能含空格），直到 EOF，输出总行数。</p>\n<p>最后一行如果没有换行符也要算一行。</p>",
+  "description": "不断读入多行文本（可能含空格），直到 EOF，输出总行数。\n\n最后一行如果没有换行符也要算一行。",
+  "hint": "`while (fgets(line, sizeof line, stdin)) lines++;` 这个写法天然处理了最后一行无换行的情况。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "a\nb\nc\n",
+    "output": "3"
+   },
+   {
+    "input": "only one line",
+    "output": "1"
+   },
+   {
+    "input": "",
+    "output": "0"
+   }
+  ]
+ },
+ {
+  "id": "c054",
+  "chapter": 11,
+  "difficulty": "hard",
+  "tags": [
+   "解析",
+   "sscanf"
+  ],
+  "title": "从文本中提取数字",
+  "description_html": "<p>读入一行文本，提取其中所有连续的整数（可能有正负号），输出它们的和。</p>\n<p>输入 <code class=\"md-inline\">abc12de-3f45</code> 输出 <code class=\"md-inline\">54</code>。</p>",
+  "description": "读入一行文本，提取其中所有连续的整数（可能有正负号），输出它们的和。\n\n输入 `abc12de-3f45` 输出 `54`。",
+  "hint": "遍历字符，遇到数字或符号就开始累积，用 `strtol` 一次解析更省事。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "abc12de-3f45\n",
+    "output": "54"
+   },
+   {
+    "input": "1 2 3\n",
+    "output": "6"
+   },
+   {
+    "input": "no digits\n",
+    "output": "0"
+   }
+  ]
+ },
+ {
+  "id": "c055",
+  "chapter": 12,
+  "difficulty": "easy",
+  "tags": [
+   "宏"
+  ],
+  "title": "用宏实现最大值",
+  "description_html": "<p>读入三个整数，输出最大值。</p>\n<p><strong>必须定义 <code class=\"md-inline\">#define MAX(a, b) ...</code> 宏，并在代码中调用它两次</strong>，不许直接写 if 比较三次。</p>\n<p>注意宏的每个参数都要加括号。</p>",
+  "description": "读入三个整数，输出最大值。\n\n**必须定义 `#define MAX(a, b) ...` 宏，并在代码中调用它两次**，不许直接写 if 比较三次。\n\n注意宏的每个参数都要加括号。",
+  "hint": "`#define MAX(a,b) ((a) > (b) ? (a) : (b))`",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "3 9 5\n",
+    "output": "9"
+   },
+   {
+    "input": "-1 -2 -3\n",
+    "output": "-1"
+   }
+  ]
+ },
+ {
+  "id": "c056",
+  "chapter": 12,
+  "difficulty": "medium",
+  "tags": [
+   "宏",
+   "字符串化"
+  ],
+  "title": "打印变量名与值",
+  "description_html": "<p>读入一个整数 n，输出两行：</p>\n<pre class=\"md-code\" data-lang=\"text\"><code>n = &lt;值&gt;</code></pre>\n<p><strong>要求用 <code class=\"md-inline\">#</code> 字符串化运算符实现一个 <code class=\"md-inline\">SHOW(x)</code> 宏</strong>，不许手写变量名。</p>",
+  "description": "读入一个整数 n，输出两行：\n\n```\nn = <值>\n```\n\n**要求用 `#` 字符串化运算符实现一个 `SHOW(x)` 宏**，不许手写变量名。",
+  "hint": "`#define SHOW(x) printf(\"%s = %d\\n\", #x, (x))`，`#x` 把参数变成字符串。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "42\n",
+    "output": "n = 42"
+   },
+   {
+    "input": "-7\n",
+    "output": "n = -7"
+   }
+  ]
+ },
+ {
+  "id": "c057",
+  "chapter": 12,
+  "difficulty": "medium",
+  "tags": [
+   "条件编译"
+  ],
+  "title": "条件编译：输出模式",
+  "description_html": "<p>同一份代码，通过 <code class=\"md-inline\">-D</code> 编译参数控制行为：</p>\n<ul>\n<li>定义了 <code class=\"md-inline\">VERBOSE</code> 时，输出 <code class=\"md-inline\">[debug] value=&lt;n&gt;</code></li>\n<li>未定义时，只输出 <code class=\"md-inline\">&lt;n&gt;</code></li>\n</ul>\n<p>读入一个整数 n。</p>\n<p><strong>本题的判题环境未定义 VERBOSE，所以实际输出只有数字。</strong> 但你必须用 <code class=\"md-inline\">#ifdef</code> 写出两个分支。</p>",
+  "description": "同一份代码，通过 `-D` 编译参数控制行为：\n\n- 定义了 `VERBOSE` 时，输出 `[debug] value=<n>`\n- 未定义时，只输出 `<n>`\n\n读入一个整数 n。\n\n**本题的判题环境未定义 VERBOSE，所以实际输出只有数字。** 但你必须用 `#ifdef` 写出两个分支。",
+  "hint": "`#ifdef VERBOSE ... #else ... #endif`。用 `scanf` 读 n，两个分支都要输出它。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5\n",
+    "output": "5"
+   },
+   {
+    "input": "-100\n",
+    "output": "-100"
+   }
+  ]
+ },
+ {
+  "id": "c058",
+  "chapter": 12,
+  "difficulty": "hard",
+  "tags": [
+   "综合",
+   "去重",
+   "排序"
+  ],
+  "title": "排序并去重",
+  "description_html": "<p>第一行输入 n（≤ 1000），第二行输入 n 个整数（可能有重复）。</p>\n<p>升序输出去重后的结果，用空格分隔。</p>",
+  "description": "第一行输入 n（≤ 1000），第二行输入 n 个整数（可能有重复）。\n\n升序输出去重后的结果，用空格分隔。",
+  "hint": "先排序，再输出时跳过与前一个相同的元素。也可以边输出边判断。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "6\n3 1 3 2 1 4\n",
+    "output": "1 2 3 4"
+   },
+   {
+    "input": "1\n5\n",
+    "output": "5"
+   },
+   {
+    "input": "4\n1 1 1 1\n",
+    "output": "1"
+   }
+  ]
+ },
+ {
+  "id": "c059",
+  "chapter": 12,
+  "difficulty": "hard",
+  "tags": [
+   "综合",
+   "矩阵乘法"
+  ],
+  "title": "矩阵乘法",
+  "description_html": "<p>第一行 <code class=\"md-inline\">m n p</code>，随后 m 行每行 n 个整数（矩阵 A），再随后 n 行每行 p 个整数（矩阵 B）。</p>\n<p>输出 A × B 的结果（m 行，每行 p 个数，空格分隔）。</p>\n<p>保证 m, n, p ≤ 20，元素绝对值 ≤ 100。</p>",
+  "description": "第一行 `m n p`，随后 m 行每行 n 个整数（矩阵 A），再随后 n 行每行 p 个整数（矩阵 B）。\n\n输出 A × B 的结果（m 行，每行 p 个数，空格分隔）。\n\n保证 m, n, p ≤ 20，元素绝对值 ≤ 100。",
+  "hint": "三重循环：`C[i][j] = Σ A[i][k] * B[k][j]`。中间那层循环放最里面缓存更友好。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "2 2 2\n1 2\n3 4\n5 6\n7 8\n",
+    "output": "19 22\n43 50"
+   },
+   {
+    "input": "1 1 1\n2\n3\n",
+    "output": "6"
+   }
+  ]
+ },
+ {
+  "id": "c060",
+  "chapter": 12,
+  "difficulty": "hard",
+  "tags": [
+   "综合",
+   "大数"
+  ],
+  "title": "大数阶乘",
+  "description_html": "<p>读入 n（1 ≤ n ≤ 200），输出 n! 的精确值。</p>\n<p>20! 已经超出 <code class=\"md-inline\">long long</code>，需要用数组模拟高精度乘法。</p>",
+  "description": "读入 n（1 ≤ n ≤ 200），输出 n! 的精确值。\n\n20! 已经超出 `long long`，需要用数组模拟高精度乘法。",
+  "hint": "用 `int d[1000]` 逆序存各位（d[0] 是个位），每次 `d[i] * k + carry`。",
+  "template": "#include <stdio.h>\n\nint main(void) {\n    /* 在这里写代码 */\n\n\n    return 0;\n}\n",
+  "cases": [
+   {
+    "input": "5\n",
+    "output": "120"
+   },
+   {
+    "input": "20\n",
+    "output": "2432902008176640000"
+   },
+   {
+    "input": "25\n",
+    "output": "15511210043330985984000000"
+   }
+  ]
+ }
+]

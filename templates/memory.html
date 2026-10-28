@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}内存演示 · CMaster{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/memory.css') }}">
+{% endblock %}
+
+{% block wrap_class %}wrap-wide{% endblock %}
+
+{% block content %}
+<div class="mem-page">
+
+  <header class="mem-head">
+    <div>
+      <h1>内存里到底长什么样</h1>
+      <p class="mem-sub">
+        指针、数组步长、字符串末尾的 <code>\0</code>、结构体的填充字节、递归的栈帧——
+        这些在代码里都只是一行，在内存里都是一块。一步一步看同一块内存怎么变。
+      </p>
+    </div>
+    <div class="mem-headstat">
+      <b>{{ d.scenarios|length }}</b>
+      <span>个场景</span>
+      <em>·</em>
+      <b>{{ steps_total }}</b>
+      <span>步</span>
+    </div>
+  </header>
+
+  <div class="mem-layout">
+
+    {# 场景列表由服务端渲染：它不会变，没必要等 JS 再画一遍，
+       那样首屏会先空一下再填上。 #}
+    <aside class="mem-side">
+      <div class="mem-side-head">换个场景</div>
+      <ul class="mem-list" id="mem-list">
+        {% for s in d.scenarios %}
+          <li>
+            <a href="#{{ s.id }}/1" data-sid="{{ s.id }}"
+               class="mem-item{{ ' on' if loop.first }}">
+              <span class="mem-item-tag">{{ s.tag }}</span>
+              <span class="mem-item-title">{{ s.title }}</span>
+              <span class="mem-item-meta">{{ s.steps|length }} 步</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <div class="mem-side-head">图例</div>
+      <ul class="mem-legend">
+        <li><i class="lg-cell lg-new"></i>这一步新出现</li>
+        <li><i class="lg-cell lg-chg"></i>这一步被改写</li>
+        <li><i class="lg-cell lg-read"></i>被指针指着</li>
+        <li><i class="lg-cell lg-pad"></i>填充字节</li>
+        <li><i class="lg-cell lg-bad"></i>有问题</li>
+      </ul>
+      <p class="mem-foot-note">
+        地址按 x86-64 计算，指针 8 字节。帧之间省略了返回地址和保存的
+        <code>rbp</code>，所以两帧并不真的紧挨着。
+      </p>
+    </aside>
+
+    <section class="mem-main">
+
+      <div class="mem-titlebar">
+        <h2 id="mem-title">—</h2>
+        <span class="mem-chip" id="mem-tag">—</span>
+        <div class="mem-spacer"></div>
+        <button type="button" class="mem-btn" id="mem-reset">重来</button>
+        <button type="button" class="mem-btn" id="mem-play" aria-pressed="false">
+          自动播放
+        </button>
+        <div class="mem-stepper">
+          <button type="button" class="mem-btn mem-btn-nav" id="mem-prev"
+                  aria-label="上一步">←</button>
+          <span class="mem-pos" id="mem-pos" role="status" aria-live="polite">1 / 1</span>
+          <button type="button" class="mem-btn mem-btn-nav" id="mem-next"
+                  aria-label="下一步">→</button>
+        </div>
+      </div>
+
+      <p class="mem-intro" id="mem-intro"></p>
+
+      <div class="mem-body">
+        <div class="mem-codepane">
+          <div class="mem-pane-head">代码</div>
+          <div class="mem-code" id="mem-code"></div>
+        </div>
+
+        <div class="mem-viewpane">
+          <div class="mem-pane-head">
+            内存
+            <span class="mem-pane-hint">箭头 = 指针里存的地址</span>
+          </div>
+          <div class="mem-scroll">
+            <div id="mem-stage"></div>
+          </div>
+        </div>
+      </div>
+
+      {# 说明行固定占位：文案长短不一，如果不留高度，整页会随每一步上下跳。 #}
+      <div class="mem-note-wrap">
+        <div class="mem-rail" id="mem-rail" role="tablist"
+             aria-label="跳到某一步"></div>
+        <p class="mem-note" id="mem-note" role="status" aria-live="polite"></p>
+      </div>
+
+      <p class="mem-keys">
+        <kbd>←</kbd> <kbd>→</kbd> 切换步骤 ·
+        <kbd>空格</kbd> 播放 / 暂停 ·
+        <kbd>Home</kbd> 回到第一步
+      </p>
+
+    </section>
+  </div>
+</div>
+
+{# 首屏就要画，走一次请求会先白一下。数据是 build_demos.py 生成的，
+   页面不做任何二次推算。 #}
+<script type="application/json" id="mem-data">{{ d | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/lib/memview.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/memory.js') }}"></script>
+{% endblock %}

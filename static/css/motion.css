@@ -1,0 +1,749 @@
+/* ============================================================
+   CMaster —— 动效与氛围层
+   单独成文件，只放「运动」「光影」「过渡」，不掺组件外观。
+   这样调动画不会碰到布局，删掉整个文件站点也能正常用。
+
+   三条原则：
+   1. 只用 transform / opacity —— 走合成层，不触发重排，低端机也不卡。
+   2. 任何动效都要能被打断 —— 用户快速滚动时不能有排队感。
+   3. prefers-reduced-motion 全量尊重 —— 前庭功能敏感的人不该被动画折磨。
+   ============================================================ */
+
+:root {
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+}
+
+/* ------------------------------------------------------------ 基础过渡 */
+
+body {
+  animation: cm-fade .4s ease both;
+}
+
+@keyframes cm-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* 页面离场：点站内链接时先淡出再跳，避免白屏硬切 */
+body.cm-leaving {
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+/* ------------------------------------------------------------ 滚动渐入 */
+
+/* .reveal 由 ux.js 在首屏以下动态加，JS 没跑或跑挂了元素就是普通可见状态，
+   不会出现「整页空白」这种最糟糕的降级。 */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity .6s var(--ease-out),
+    transform .6s var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 60ms);
+  will-change: opacity, transform;
+}
+
+.reveal.in {
+  opacity: 1;
+  transform: none;
+  will-change: auto;
+}
+
+/* 交错入场：一组同级元素按顺序浮现 */
+.stagger > .reveal { transition-delay: calc(var(--i, 0) * 55ms); }
+
+/* ------------------------------------------------------------ 首屏进场 */
+
+@keyframes cm-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes cm-slide-left {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.hero h1      { animation: cm-rise .7s var(--ease-out) both; }
+.hero-main > p { animation: cm-rise .7s var(--ease-out) .08s both; }
+.hero-stats   { animation: cm-rise .7s var(--ease-out) .16s both; }
+.hero-actions { animation: cm-rise .7s var(--ease-out) .24s both; }
+
+/* 首屏背景网格缓慢漂移。幅度极小、速度极慢，
+   目的是让静态页面看起来「在呼吸」，不是让人盯着看。
+   mask 让它从中心往外淡出，边缘不留硬切口。 */
+.hero::before {
+  content: "";
+  position: absolute; inset: -50px; z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(88, 166, 255, .05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(88, 166, 255, .05) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(620px 320px at 66% 34%, #000 0%, transparent 76%);
+  mask-image: radial-gradient(620px 320px at 66% 34%, #000 0%, transparent 76%);
+  animation: cm-grid-drift 26s linear infinite;
+  pointer-events: none;
+}
+@keyframes cm-grid-drift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 46px 46px, 46px 46px; }
+}
+
+/* ------------------------------------------------------------ 顶栏 */
+
+.topbar {
+  transition: box-shadow .3s ease, background .3s ease, border-color .3s ease;
+}
+.topbar.scrolled {
+  background: rgba(13, 16, 23, .96);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .42);
+  border-bottom-color: #2b374a;
+}
+
+/* 品牌字母在 hover 时轻微转一下，很轻，但让 logo 有回应 */
+.brand:hover .brand-mark {
+  transform: rotate(-6deg) scale(1.06);
+}
+.brand-mark { transition: transform .3s var(--ease-spring); }
+
+/* ------------------------------------------------------------ 阅读进度条 */
+
+.readbar {
+  position: fixed; top: 0; left: 0; z-index: 120;
+  height: 2px; width: 0;
+  background: linear-gradient(90deg, #58a6ff, #39c5cf 60%, #e3b341);
+  box-shadow: 0 0 10px rgba(88, 166, 255, .55);
+  /* 不做 transition：每帧都要跟着滚动位置走，加过渡反而拖尾 */
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ 卡片光影 */
+
+/* 鼠标位置驱动的柔光。--mx/--my 由 ux.js 写入，纯 CSS 算不出鼠标坐标。 */
+.chapter-card::after {
+  content: "";
+  position: absolute; inset: 0; z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 0%),
+    rgba(88, 166, 255, .16),
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity .35s ease;
+  pointer-events: none;
+}
+.chapter-card:hover::after { opacity: 1; }
+
+.chapter-card > * { position: relative; z-index: 1; }
+
+/* hover 时描边发光，比单纯换背景色更有「被点亮」的感觉 */
+.chapter-card:hover {
+  border-color: #40536f;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .34), 0 0 0 1px rgba(88, 166, 255, .12);
+}
+
+/* 图标在 hover 时轻微放大上浮 */
+.chapter-icon { transition: transform .3s var(--ease-spring), border-color .25s, color .25s; }
+.chapter-card:hover .chapter-icon {
+  transform: translateY(-1px) scale(1.07);
+  border-color: #3d4d66;
+}
+
+/* 进度条填充流光：满 100% 时才有，暗示「这一章完结了」 */
+@keyframes cm-shimmer {
+  0%   { background-position: -140% 0; }
+  100% { background-position: 240% 0; }
+}
+.bar.full > i {
+  background-image: linear-gradient(
+    100deg, #2ea043 30%, #7ee787 46%, #2ea043 62%
+  );
+  background-size: 240% 100%;
+  animation: cm-shimmer 2.6s linear infinite;
+}
+
+/* ------------------------------------------------------------ 按钮 */
+
+.btn { position: relative; overflow: hidden; }
+
+/* 主按钮掠过一道光。只在 hover 触发一次，不循环，避免廉价感 */
+.btn-primary::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .22) 50%, transparent 62%);
+  transform: translateX(-130%);
+  transition: transform .65s var(--ease-out);
+  pointer-events: none;
+}
+.btn-primary:hover::after { transform: translateX(130%); }
+
+/* 按下时给一点真实的「陷下去」 */
+.btn:active:not(:disabled) { transform: translateY(1px) scale(.99); }
+
+/* ------------------------------------------------------------ 导航 */
+
+.nav a {
+  position: relative;
+}
+/* 当前页底下一条短横线，滑动出现 */
+.nav a::after {
+  content: "";
+  position: absolute; left: 12px; right: 12px; bottom: 2px;
+  height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, #58a6ff, #39c5cf);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .28s var(--ease-out);
+}
+.nav a:hover::after { transform: scaleX(.55); }
+.nav a.on::after { transform: scaleX(1); }
+
+/* ------------------------------------------------------------ 侧边栏 */
+
+.side-link {
+  transition: background .18s ease, color .18s ease, border-color .18s ease, padding-left .18s ease;
+}
+.side-link:hover { padding-left: 13px; }
+.side-link.on { padding-left: 13px; }
+
+/* 已读点从「突然出现」改成「弹一下」 */
+.side-link .read-dot { animation: cm-dot-in .4s var(--ease-spring) both; }
+@keyframes cm-dot-in {
+  from { opacity: 0; transform: scale(0); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ------------------------------------------------------------ 正文排版精修 */
+
+.md {
+  /* 1.7 行高在长段落里偏挤，斜体/行内代码混排时更明显 */
+  line-height: 1.86;
+}
+
+/* 标题左侧竖线：扫读时眼睛有锚点，比纯字重区分有效得多 */
+.md h2, .md h3 {
+  position: relative;
+  padding-left: 14px;
+  border-left: 3px solid #1f6feb;
+}
+.md h2 { border-left-color: #58a6ff; }
+.md h3 { border-left-width: 2px; border-left-color: #39c5cf88; }
+.md h4 { padding-left: 14px; border-left: 2px solid var(--border); }
+
+/* 小标题出现时轻微左滑 */
+.md h2, .md h3 {
+  animation: cm-slide-left .45s var(--ease-out) both;
+}
+
+/* 表格：内容里有对照表，默认样式等于没有样式 */
+.md table {
+  width: 100%;
+  margin: 1.2em 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13.8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.md thead th {
+  background: var(--bg-elev-2);
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: .3px;
+  text-align: left;
+  padding: 9px 13px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.md tbody td {
+  padding: 9px 13px;
+  border-bottom: 1px solid var(--border-soft);
+  color: #c3cddb;
+}
+.md tbody tr:last-child td { border-bottom: 0; }
+.md tbody tr:hover td { background: rgba(255, 255, 255, .022); }
+
+.md tbody td code {
+  font-family: var(--mono);
+  font-size: .9em;
+  color: #ffa657;
+}
+
+/* 引用块：加个引号，视觉上更像「有人在说」 */
+.md blockquote {
+  position: relative;
+  padding-left: 40px;
+}
+.md blockquote::before {
+  content: "\201C";
+  position: absolute; left: 13px; top: 4px;
+  font-size: 34px; line-height: 1;
+  color: var(--warm);
+  opacity: .5;
+  font-family: Georgia, serif;
+}
+
+/* 分隔线加个中心菱形，不让页面出现一条干巴巴的灰线 */
+.md hr {
+  position: relative;
+  border: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 2.2em 0;
+  overflow: visible;
+}
+
+/* ------------------------------------------------------------ 代码块 */
+
+/* md2html 只产出 <pre class="md-code">，这里用 JS 包一层壳做顶栏。
+   不用改构建脚本 —— 改动构建脚本意味着要重跑 60 题门禁，
+   而这件事纯属前端表现，不值得付那个代价。 */
+.code-block {
+  margin: 1.25em 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-code);
+  overflow: hidden;
+  transition: border-color .25s ease, box-shadow .25s ease;
+}
+.code-block:hover {
+  border-color: #35435a;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .28);
+}
+.code-block > pre.md-code {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+/* 语言标已经搬到顶栏里了，原来右上角那个多余的去掉 */
+.code-block > pre.md-code::after { content: none; }
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 11px 6px 13px;
+  background: #121821;
+  border-bottom: 1px solid var(--border-soft);
+}
+.code-lang {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .9px;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.code-bar .spacer { flex: 1; }
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-mute);
+  font-family: var(--sans);
+  font-size: 11.5px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .2s, color .15s, border-color .15s, background .15s;
+}
+.code-block:hover .copy-btn,
+.copy-btn:focus-visible { opacity: 1; }
+.copy-btn:hover {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--bg-elev-2);
+}
+.copy-btn.done {
+  opacity: 1;
+  color: var(--ok);
+  border-color: #3fb95055;
+  background: #3fb95014;
+}
+
+/* 未标语言的块（ASCII 示意图 / 终端输出）单独一种气质：
+   它们不是代码，是图，给个更暗更平的底，别和真代码抢注意力 */
+.code-block.is-figure {
+  border-style: dashed;
+  border-color: #2c3849;
+  background: #0b0f16;
+}
+.code-block.is-figure .code-lang { color: #55637a; }
+.code-block.is-figure pre.md-code code { color: #93a1b3; }
+
+/* 判题页/游乐场里的 CodeMirror 焦点态 */
+.CodeMirror-focused {
+  box-shadow: inset 0 0 0 1px rgba(88, 166, 255, .35);
+}
+.CodeMirror {
+  transition: box-shadow .2s ease;
+}
+
+/* ------------------------------------------------------------ 判题结果 */
+
+/* 通过时整块弹一下 —— 这是全站最该有正反馈的时刻 */
+@keyframes cm-pop {
+  0%   { transform: scale(.92); opacity: 0; }
+  62%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.verdict.AC, .verdict.OK { animation: cm-pop .5s var(--ease-spring) both; }
+
+/* 通过时结果面板描一圈绿光，然后褪掉 */
+@keyframes cm-glow-pass {
+  0%   { box-shadow: 0 0 0 0 rgba(63, 185, 80, .55); }
+  100% { box-shadow: 0 0 0 14px rgba(63, 185, 80, 0); }
+}
+.result.is-pass { animation: cm-glow-pass .9s ease-out both; }
+
+/* 判题中：正在跑的那一行给个呼吸感 */
+@keyframes cm-breathe {
+  0%, 100% { opacity: .55; }
+  50%      { opacity: 1; }
+}
+.is-judging .result-msg { animation: cm-breathe 1.4s ease-in-out infinite; }
+
+/* 结果块依次浮现，逐用例看的节奏感 */
+.result-body .case-item {
+  animation: cm-rise .38s var(--ease-out) both;
+}
+.result-body .case-item:nth-child(2) { animation-delay: .05s; }
+.result-body .case-item:nth-child(3) { animation-delay: .1s; }
+.result-body .case-item:nth-child(4) { animation-delay: .15s; }
+.result-body .case-item:nth-child(n+5) { animation-delay: .2s; }
+
+/* 失败时的轻微抖动 —— 只抖 3px，再大就成弹窗广告了 */
+@keyframes cm-shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-3px); }
+  40%      { transform: translateX(3px); }
+  60%      { transform: translateX(-2px); }
+  80%      { transform: translateX(1px); }
+}
+.result.is-fail { animation: cm-shake .32s ease-in-out both; }
+
+/* ------------------------------------------------------------ 搜索浮层 */
+
+.cmdk-mask {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 14vh;
+  background: rgba(5, 8, 12, .66);
+  backdrop-filter: blur(5px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .18s ease;
+}
+.cmdk-mask.on { opacity: 1; pointer-events: auto; }
+
+.cmdk {
+  width: min(620px, 92vw);
+  background: var(--bg-elev);
+  border: 1px solid #2d3a4e;
+  border-radius: 13px;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, .62), 0 0 0 1px rgba(88, 166, 255, .08);
+  overflow: hidden;
+  transform: translateY(-10px) scale(.985);
+  transition: transform .22s var(--ease-out);
+}
+.cmdk-mask.on .cmdk { transform: none; }
+
+.cmdk-input-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.cmdk-input-row svg { flex: none; color: var(--text-mute); }
+.cmdk-input {
+  flex: 1; min-width: 0;
+  background: none; border: 0; outline: none;
+  color: var(--text); font-size: 15.5px; font-family: inherit;
+}
+.cmdk-input::placeholder { color: var(--text-mute); }
+.cmdk-esc {
+  flex: none;
+  font-family: var(--mono); font-size: 10.5px;
+  padding: 2px 6px; border-radius: 4px;
+  border: 1px solid var(--border); color: var(--text-mute);
+}
+
+.cmdk-results {
+  max-height: 52vh; overflow-y: auto;
+  padding: 6px;
+}
+.cmdk-group {
+  padding: 8px 10px 4px;
+  font-size: 10.5px; letter-spacing: .9px; text-transform: uppercase;
+  color: var(--text-mute); font-family: var(--mono);
+}
+.cmdk-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 11px; border-radius: 7px;
+  color: var(--text-dim); font-size: 13.5px;
+  cursor: pointer;
+  scroll-margin: 8px;
+}
+.cmdk-item .ci-icon {
+  flex: none; width: 22px; height: 22px;
+  display: grid; place-items: center;
+  border-radius: 5px;
+  background: var(--bg-elev-2);
+  font-size: 11px; color: var(--text-mute);
+  font-family: var(--mono);
+}
+.cmdk-item .ci-title {
+  flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text);
+}
+.cmdk-item .ci-title mark {
+  background: rgba(227, 179, 65, .22);
+  color: var(--warm);
+  border-radius: 3px;
+  padding: 0 1px;
+}
+.cmdk-item .ci-meta {
+  flex: none; font-size: 11px; color: var(--text-mute);
+  font-family: var(--mono);
+}
+.cmdk-item.sel {
+  background: linear-gradient(90deg, rgba(31, 111, 235, .2), rgba(31, 111, 235, .06));
+  color: var(--text);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.cmdk-item.sel .ci-icon { background: rgba(88, 166, 255, .16); color: var(--accent); }
+
+.cmdk-empty {
+  padding: 30px 16px; text-align: center;
+  color: var(--text-mute); font-size: 13px;
+}
+.cmdk-foot {
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 11px; color: var(--text-mute);
+  font-family: var(--mono);
+}
+.cmdk-foot kbd {
+  font-family: var(--mono); font-size: 10px;
+  padding: 1px 5px; border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+}
+.cmdk-foot .spacer { flex: 1; }
+
+/* 顶栏的搜索入口：做得像输入框而不是按钮，提示「这里能搜」 */
+.search-trigger {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 10px 5px 11px;
+  border-radius: 7px;
+  border: 1px solid var(--border-soft);
+  background: var(--bg-elev);
+  color: var(--text-mute);
+  font-size: 12.5px; font-family: inherit;
+  cursor: pointer;
+  transition: border-color .18s, color .18s, background .18s;
+}
+.search-trigger:hover {
+  border-color: #34435a;
+  color: var(--text-dim);
+  background: var(--bg-elev-2);
+}
+.search-trigger kbd {
+  font-family: var(--mono); font-size: 10px;
+  padding: 1px 5px; border-radius: 3px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--text-mute);
+}
+
+/* ------------------------------------------------------------ 快捷键面板 */
+
+.kbd-mask {
+  position: fixed; inset: 0; z-index: 310;
+  display: grid; place-items: center;
+  background: rgba(5, 8, 12, .66);
+  backdrop-filter: blur(5px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .18s ease;
+}
+.kbd-mask.on { opacity: 1; pointer-events: auto; }
+
+.kbd-panel {
+  width: min(460px, 92vw);
+  background: var(--bg-elev);
+  border: 1px solid #2d3a4e;
+  border-radius: 13px;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, .62);
+  overflow: hidden;
+  transform: translateY(-10px) scale(.985);
+  transition: transform .22s var(--ease-out);
+}
+.kbd-mask.on .kbd-panel { transform: none; }
+
+.kbd-panel h3 {
+  margin: 0; padding: 14px 18px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text);
+}
+.kbd-list { padding: 10px 12px 14px; }
+.kbd-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 7px 6px;
+  font-size: 13px; color: var(--text-dim);
+}
+.kbd-row .keys { display: flex; gap: 4px; flex: none; min-width: 104px; }
+.kbd-row kbd {
+  font-family: var(--mono); font-size: 10.5px;
+  padding: 2px 6px; border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--text-dim);
+  box-shadow: 0 1px 0 #00000066;
+}
+
+/* ------------------------------------------------------------ 回到顶部 */
+
+.to-top {
+  position: fixed; right: 26px; bottom: 26px; z-index: 90;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(21, 26, 35, .92);
+  backdrop-filter: blur(8px);
+  color: var(--text-dim);
+  cursor: pointer;
+  opacity: 0; transform: translateY(12px) scale(.9);
+  pointer-events: none;
+  transition: opacity .25s, transform .25s var(--ease-out), border-color .18s, color .18s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .4);
+}
+.to-top.on {
+  opacity: 1; transform: none; pointer-events: auto;
+}
+.to-top:hover {
+  border-color: #3d4d66;
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* ------------------------------------------------------------ 数字滚动 */
+
+/* 首页统计数字在滚动时不该有布局跳动，用等宽数字占位 */
+.hero-stat b { font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------ 空状态 */
+
+.empty {
+  position: relative;
+  overflow: hidden;
+}
+.empty::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(400px 120px at 50% 0%, rgba(88, 166, 255, .07), transparent 70%);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ 无障碍 */
+
+/* 键盘用户能看见焦点在哪。鼠标用户看不到，不干扰视觉 */
+:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.btn:focus-visible { outline-offset: 3px; }
+
+/* 屏幕阅读器专用文本 */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ------------------------------------------------------------ 成就墙 */
+
+/* 已解锁的徽章先「盖」下来再停在原位。用 scale + opacity，不碰布局；
+   锁定态完全不动——奖励不该给没拿到的人演一遍。 */
+.ach.on .ach-icon {
+  animation: cm-badge-in .5s var(--ease-spring) both;
+  animation-delay: calc(var(--i, 0) * 55ms + 120ms);
+}
+@keyframes cm-badge-in {
+  from { transform: scale(.5) rotate(-14deg); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* 悬停时徽章轻轻抬头，鼠标知道这一格是「实物」 */
+.ach { transition: border-color .25s ease, background-color .25s ease; }
+.ach.on:hover { border-color: #e3b34166; }
+.ach.on:hover .ach-icon { transform: translateY(-1px); }
+.ach-icon { transition: transform .25s var(--ease-out); }
+
+/* 连击条：今天那一格刚点亮时呼吸两下，提示「记上了」 */
+.sdot.today.on {
+  animation: cm-dot-pulse 2.4s ease-in-out .4s 2;
+}
+@keyframes cm-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px #3fb95066, 0 0 12px #3fb95033; }
+  50%      { box-shadow: 0 0 0 1px #3fb950aa, 0 0 18px #3fb95066; }
+}
+
+/* 热力图：悬停时那一格浮起来，配合原生 title 提示当天次数 */
+.heat-cell {
+  transition: transform .15s var(--ease-out), box-shadow .15s ease;
+}
+.heat-cell:not(.future):not(.lv0):hover {
+  transform: scale(1.22);
+  box-shadow: 0 0 0 1px #58a6ffaa, 0 2px 8px #00000055;
+}
+
+/* 连击数字每次进入页面滚一下，像计数器归位 */
+.streak-num { animation: cm-num-in .45s var(--ease-out) both; }
+@keyframes cm-num-in {
+  from { transform: translateY(6px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* ------------------------------------------------------------ 降低动效 */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* 淡入类动画如果被压到 0，opacity:0 的开头会留下空白，这里强制显形 */
+  .reveal,
+  .hero h1, .hero-main > p, .hero-stats, .hero-actions {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ------------------------------------------------------------ 窄屏 */
+
+@media (max-width: 720px) {
+  .to-top { right: 16px; bottom: 16px; width: 36px; height: 36px; }
+  .cmdk-mask { padding-top: 8vh; }
+  .cmdk-results { max-height: 64vh; }
+  .cmdk-foot { display: none; }
+  .search-trigger span.label,
+  .search-trigger kbd { display: none; }
+  .search-trigger { padding: 6px; }
+}

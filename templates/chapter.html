@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ kp.title }} · {{ chapter.title }} · CMaster{% endblock %}
+
+{% block content %}
+<div class="chapter-layout">
+
+  <aside class="side">
+    {% for stage in stages %}
+      <div class="side-group">
+        <h3>{{ stage.name }}</h3>
+        {% for item in stage.chapters %}
+          {% set ch = chapters[item.id] %}
+          {% set is_current_ch = (ch.id == chapter.id) %}
+          {% if is_current_ch %}
+            {# 当前章展开到知识点级 #}
+            {% for k in ch.knowledge_points %}
+              {% set kn = k.title.split(" ")[0] %}
+              {% set kkey = ch.id ~ "." ~ kn %}
+              <a class="side-link {{ 'on' if loop.index == kid }}"
+                 href="{{ url_for('chapter_kp', cid=ch.id, kid=loop.index) }}">
+                <span class="no">{{ kn }}</span>
+                <span>{{ k.title.split(" ")[1:] | join(" ") }}</span>
+                {% if kkey in read and loop.index != kid %}<span class="read-dot"></span>{% endif %}
+              </a>
+            {% endfor %}
+          {% else %}
+            <a class="side-link" href="{{ url_for('chapter_page', cid=ch.id) }}">
+              <span class="no">{{ ch.id }}</span>
+              <span>{{ ch.title }}</span>
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </aside>
+
+  <article class="content">
+    <div class="crumb">
+      <a href="{{ url_for('index') }}">课程</a>
+      <span class="sep">/</span>
+      <a href="{{ url_for('chapter_page', cid=chapter.id) }}">第 {{ chapter.id }} 章 {{ chapter.title }}</a>
+      <span class="sep">/</span>
+      <span>{{ key }}</span>
+    </div>
+
+    <header class="kp-head">
+      {% set kind_class = 'kind-practice' if kp.kind == 'practice' else ('kind-pitfall' if kp.kind == 'pitfall' else '') %}
+      {% set kind_label = {'concept': '概念', 'practice': '动手', 'pitfall': '坑'}.get(kp.kind, '概念') %}
+      <span class="kind {{ kind_class }}">{{ kind_label }}</span>
+      <h1>{{ kp.title }}</h1>
+    </header>
+
+    <div class="md">{{ kp.html|safe }}</div>
+
+    <nav class="kp-nav">
+      {% if kid > 1 %}
+        <a href="{{ url_for('chapter_kp', cid=chapter.id, kid=kid-1) }}">
+          <span>上一节</span>
+          <b>{{ chapter.knowledge_points[kid-2].title }}</b>
+        </a>
+      {% elif chapter.id > 1 %}
+        {% set pc = chapters[chapter.id - 1] %}
+        <a href="{{ url_for('chapter_page', cid=pc.id) }}">
+          <span>上一章</span>
+          <b>{{ pc.title }}</b>
+        </a>
+      {% endif %}
+
+      {% if kid < chapter.knowledge_points|length %}
+        <a class="next" href="{{ url_for('chapter_kp', cid=chapter.id, kid=kid+1) }}">
+          <span>下一节</span>
+          <b>{{ chapter.knowledge_points[kid].title }}</b>
+        </a>
+      {% elif chapters.get(chapter.id + 1) %}
+        {% set nc = chapters[chapter.id + 1] %}
+        <a class="next" href="{{ url_for('chapter_page', cid=nc.id) }}">
+          <span>下一章</span>
+          <b>{{ nc.title }}</b>
+        </a>
+      {% endif %}
+    </nav>
+
+    {% if questions %}
+      <section class="chapter-exercises">
+        <h2>本章练习 · {{ questions|length }} 题</h2>
+        {% for q in questions %}
+          <a class="q-row" href="{{ url_for('problem_page', qid=q.id) }}">
+            <span class="qid">{{ q.id }}</span>
+            <span class="qtitle">{{ q.title }}</span>
+            <span class="tag diff-{{ q.difficulty }}">
+              {{ {'easy':'简单','medium':'中等','hard':'较难'}.get(q.difficulty, q.difficulty) }}
+            </span>
+            {% if solved.get(q.id, {}).get('status') == 'AC' %}
+              <span class="status-ac">已通过</span>
+            {% endif %}
+          </a>
+        {% endfor %}
+      </section>
+    {% endif %}
+  </article>
+</div>
+{% endblock %}

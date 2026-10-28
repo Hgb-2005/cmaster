@@ -1,0 +1,659 @@
+/* ============================================================================
+   CMaster —— 系统管理台（/admin）
+   ----------------------------------------------------------------------------
+   和 /ops 是同一批读者的两个问题，版式上刻意做了区分：
+
+     /ops    是「仪表盘」——一堆等权的指标卡，扫一眼看趋势
+     /admin  是「体检报告」——有主次：沙箱在最上面且块头最大，
+             自检是逐项结论，指标和环境退到下面
+
+   所以这一页不用 /ops 的 .ops-* 类，另起一套 .adm-*。不是为了隔离而隔离：
+   两页的卡片密度和字号层级本来就不一样，共用一个类名会让改 A 页时顺手改坏 B 页。
+
+   颜色仍然只取 style.css 的语义变量（--ok / --warn / --bad / --warm），
+   不新造色值——否则换主题时这一页会留在旧配色里。
+   ============================================================================ */
+
+/* ---------------------------------------------------------------- 页头 */
+
+.adm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 0 0 12px;
+}
+
+.adm-head h1 {
+  margin: 0 0 6px;
+  font-size: 25px;
+  letter-spacing: -.015em;
+}
+
+.adm-sub {
+  margin: 0;
+  max-width: 64ch;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text-mute);
+}
+
+.adm-sub code,
+.adm-note code,
+.adm-lede code {
+  padding: 1px 5px;
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  background: var(--bg-code);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.adm-head-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* 数据时刻。等宽数字 + 表格数字，否则每刷新一次整排元素就会左右抖一格。 */
+.adm-stamp {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-mute);
+  cursor: default;
+}
+
+.adm-stamp.is-bad {
+  color: var(--bad);
+  font-family: var(--sans);
+}
+
+/* 健康结论徽标。三档颜色直接表达好坏，不做灰度处理——
+   这一格的存在意义就是「不用读字也知道正不正常」。 */
+.adm-health {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-elev);
+  font-size: 12.5px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.adm-health .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-mute);
+}
+
+.adm-health.is-ok   { border-color: #3fb95055; color: var(--ok); }
+.adm-health.is-ok   .dot { background: var(--ok); box-shadow: 0 0 0 3px #3fb95022; }
+.adm-health.is-warn { border-color: #d2992255; color: var(--warn); }
+.adm-health.is-warn .dot { background: var(--warn); box-shadow: 0 0 0 3px #d2992222; }
+.adm-health.is-bad  { border-color: #f8514955; color: var(--bad); }
+.adm-health.is-bad  .dot { background: var(--bad); box-shadow: 0 0 0 3px #f8514922; }
+
+.adm-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+.adm-btn:hover {
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border-color: #33405a;
+}
+
+.adm-btn:disabled {
+  opacity: .55;
+  cursor: progress;
+}
+
+.adm-btn[aria-pressed="true"] {
+  border-color: #1f6feb88;
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* 健康长句。徽标只给结论，这句给依据——「P95=629ms，并发 0/3」这种
+   才是维护者复述给别人时用得上的东西。 */
+.adm-healthline {
+  margin: 0 0 18px;
+  padding: 8px 12px;
+  border-left: 2px solid var(--border);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+/* ---------------------------------------------------------------- 卡片 */
+
+.adm-card {
+  margin: 0 0 16px;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  background: var(--bg-elev);
+}
+
+/* 沙箱卡是主角，给它一层更亮的边和一点内发光。
+   强度控制在「看得出来重要，但不至于像个弹窗」——
+   这是运维页，不是营销页。 */
+.adm-sandbox {
+  border-color: #2b3a52;
+  background: linear-gradient(180deg, #172030 0%, var(--bg-elev) 62%);
+  box-shadow: inset 0 1px 0 #ffffff08;
+}
+
+.adm-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+
+.adm-card-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: .01em;
+}
+
+/* 后端徽标。这是全页唯一一个「技术选型」直接示人的地方：
+   windows-job / linux-seccomp / subprocess 三个值对应三种能力。 */
+.adm-backend {
+  padding: 2px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-code);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
+
+.adm-backend.is-ok {
+  border-color: #3fb95055;
+  color: var(--ok);
+  background: #3fb95012;
+}
+
+.adm-backend.is-warn {
+  border-color: #d2992255;
+  color: var(--warn);
+  background: #d2992212;
+}
+
+.adm-lede {
+  margin: 0 0 14px;
+  max-width: 78ch;
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--text-dim);
+}
+
+.adm-lede b { color: var(--text); }
+
+/* 降级提示必须够显眼：它是「这台机器现在是裸跑的」的同义句。 */
+.adm-lede.is-warn {
+  padding: 10px 12px;
+  border: 1px solid #d2992244;
+  border-radius: var(--radius-sm);
+  background: #d299220f;
+  color: #e6c67a;
+}
+
+/* ---------------------------------------------------------------- 配额网格 */
+
+.adm-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0 0 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--border-soft);
+  overflow: hidden;
+}
+
+.adm-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: var(--bg-elev);
+}
+
+.adm-cell-k {
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
+
+.adm-cell-v {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.adm-cell-v i {
+  margin-left: 2px;
+  font-size: 10.5px;
+  font-style: normal;
+  color: var(--text-mute);
+}
+
+.adm-cell-foot {
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--text-mute);
+}
+
+/* ---------------------------------------------------------------- 计数器 */
+
+.adm-counters {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.adm-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-code);
+}
+
+.adm-counter b {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.adm-counter span {
+  font-size: 11px;
+  color: var(--text-mute);
+}
+
+.adm-counter.is-ok b   { color: var(--ok); }
+.adm-counter.is-warm b { color: var(--warm); }
+.adm-counter.is-bad b  { color: var(--bad); }
+
+/* 初始化失败计数为 0 时不该抢眼——红色只在真出事的时候出现。
+   这里用 :not 有点绕，直接让 JS 在值 > 0 时加 .is-hot 更直白。 */
+.adm-counter.is-bad:not(.is-hot) b {
+  color: var(--text-mute);
+}
+
+.adm-note {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-mute);
+}
+
+/* ---------------------------------------------------------------- 自检 */
+
+.adm-selftest-meta {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-mute);
+}
+
+.adm-selftest {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--border-soft);
+  overflow: hidden;
+}
+
+.adm-case {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+  background: var(--bg-elev);
+}
+
+.adm-case .dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--text-mute);
+}
+
+.adm-case.is-pass .dot {
+  background: var(--ok);
+  box-shadow: 0 0 0 3px #3fb95020;
+}
+
+/* 失败项整行都要看得出来，不能只换一个小圆点：
+   自检失败意味着沙箱没生效，这一页的其他数字都别再信了。 */
+.adm-case.is-fail {
+  background: linear-gradient(90deg, #f8514910, transparent 55%);
+  box-shadow: inset 2px 0 0 var(--bad);
+}
+
+.adm-case.is-fail .dot {
+  background: var(--bad);
+  box-shadow: 0 0 0 3px #f8514920;
+}
+
+.adm-case-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.adm-case-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.adm-case-head b {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.adm-case-ms {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-mute);
+}
+
+.adm-case-desc {
+  margin: 2px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-mute);
+}
+
+/* 实测结果用等宽字：里面全是数字和程序原文，
+   比例字会让 "wall=3585ms" 这种串读起来更费劲。 */
+.adm-case-detail {
+  margin: 5px 0 0;
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: var(--bg-code);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+  word-break: break-word;
+}
+
+.adm-case.is-fail .adm-case-detail {
+  color: #f0a6a1;
+  background: #f8514910;
+}
+
+.adm-empty {
+  margin: 0;
+  padding: 14px 13px;
+  background: var(--bg-elev);
+  font-size: 12.5px;
+  color: var(--text-mute);
+}
+
+/* ---------------------------------------------------------------- 指标 */
+
+.adm-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.adm-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 11px 13px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--bg-code);
+}
+
+.adm-stat-k {
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
+
+.adm-stat-v {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  color: var(--text);
+}
+
+.adm-stat-v i {
+  margin-left: 2px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--text-mute);
+}
+
+.adm-stat-f {
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
+
+/* ---------------------------------------------------------------- 三段构成 */
+
+.adm-phases {
+  margin: 0 0 16px;
+}
+
+/* 条本身要有一点高度才有「比例感」，2px 的进度条在三段构成里看不出来。
+   圆角 + 内阴影让它像一根实心条，而不是三个 div 拼的。 */
+.adm-phase-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--bg-code);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px var(--border-soft);
+}
+
+.adm-phase-bar b {
+  height: 100%;
+  transition: width .35s ease;
+}
+
+.adm-phase-bar .ph-compile { background: var(--purple); }
+.adm-phase-bar .ph-run     { background: var(--cyan); }
+.adm-phase-bar .ph-other   { background: var(--text-mute); }
+
+.adm-phase-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 7px;
+  font-size: 11.5px;
+  color: var(--text-mute);
+}
+
+.adm-phase-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.adm-phase-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.adm-phase-legend i.ph-compile { background: var(--purple); }
+.adm-phase-legend i.ph-run     { background: var(--cyan); }
+.adm-phase-legend i.ph-other   { background: var(--text-mute); }
+
+.adm-phase-legend b {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+/* ---------------------------------------------------------------- 直方图 */
+
+/* 非等距分桶的柱子**不能**等宽——等宽会让人以为每根柱子代表同样的区间，
+   而 0-50ms 和 3200+ms 的跨度差了两个数量级。
+   这里给每根柱子相同的 flex 份额（因为标签本身已经说明了区间），
+   但在 3200+ 那根加一点虚线边，暗示它是「开口区间」。 */
+.adm-hist {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 92px;
+  padding: 0 2px;
+}
+
+.adm-hist-col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  min-width: 0;
+}
+
+.adm-hist-col b {
+  width: 100%;
+  min-height: 1px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(180deg, var(--accent), #1f6feb66);
+  transition: height .35s ease;
+}
+
+.adm-hist-col:hover b {
+  background: linear-gradient(180deg, #7cb8ff, var(--accent));
+}
+
+.adm-hist-col span {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--text-mute);
+  white-space: nowrap;
+  transform: rotate(-24deg);
+  transform-origin: center;
+}
+
+.adm-hist-col:last-child b {
+  background: linear-gradient(180deg, var(--warm), #d2992244);
+}
+
+/* ---------------------------------------------------------------- 环境 */
+
+.adm-env {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--border-soft);
+  overflow: hidden;
+}
+
+.adm-env > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 13px;
+  background: var(--bg-elev);
+}
+
+.adm-env span {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+.adm-env b {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+  color: var(--text-dim);
+  word-break: break-all;
+}
+
+.adm-env b.ok  { color: var(--ok); }
+.adm-env b.bad { color: var(--bad); }
+
+/* ---------------------------------------------------------------- 响应式 */
+
+@media (max-width: 1080px) {
+  .adm-grid,
+  .adm-counters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .adm-stats    { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 760px) {
+  .adm-head {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .adm-head-side {
+    flex-wrap: wrap;
+  }
+
+  .adm-grid,
+  .adm-counters,
+  .adm-stats,
+  .adm-env { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .adm-card { padding: 14px; }
+
+  /* 直方图在窄屏上横着排不下十个标签，改成可横向滚动而不是压扁。
+     压扁会让柱子变成一根根线，比不能看更糟。 */
+  .adm-hist {
+    overflow-x: auto;
+    gap: 6px;
+  }
+
+  .adm-hist-col { flex: 0 0 42px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adm-phase-bar b,
+  .adm-hist-col b { transition: none; }
+}

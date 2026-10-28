@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}训练模式 · CMaster{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/training.css') }}">
+{% endblock %}
+
+{% block wrap_class %}wrap-wide{% endblock %}
+
+{% block content %}
+<div class="tr-page">
+
+  <header class="tr-head">
+    <div>
+      <h1>训练模式</h1>
+      <p class="tr-sub">
+        同样这批内容，换个问法：读完代码说输出、把挖掉的关键写法补回来、
+        翻开卡片自评记不记得。一轮十几张，两分钟，专门练「看懂了但写不出来」。
+      </p>
+    </div>
+    <div class="tr-headstat">
+      <b>{{ modes|length }}</b><span>种操练</span>
+      <em>·</em>
+      <b>{{ cards_total }}</b><span>张卡</span>
+    </div>
+  </header>
+
+  <div class="tr-layout">
+
+    {# 模式列表由服务端渲染：它不会变，没必要等 JS 再画一遍。 #}
+    <aside class="tr-side">
+      <div class="tr-side-head">选一种操练</div>
+      <ul class="tr-modes" id="tr-modes">
+        {% for m in modes %}
+          <li>
+            <button type="button" class="tr-mode{{ ' on' if loop.first }}"
+                    data-mode="{{ m.id }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">
+              <span class="tr-mode-top">
+                <span class="tr-mode-name">{{ m.name }}</span>
+                <span class="tr-mode-count">{{ counts[m.id] }}</span>
+              </span>
+              <span class="tr-mode-short">{{ m.short }}</span>
+            </button>
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="tr-mode-desc" id="tr-mode-desc">{{ modes[0].desc }}</p>
+
+      <div class="tr-side-head">一轮几张</div>
+      <div class="tr-sizes" id="tr-sizes">
+        {% for s in sizes %}
+          <button type="button" class="tr-size{{ ' on' if s == 12 }}"
+                  data-size="{{ s }}" aria-pressed="{{ 'true' if s == 12 else 'false' }}">{{ s }}</button>
+        {% endfor %}
+      </div>
+
+      <div class="tr-side-head">这一轮</div>
+      <dl class="tr-stats">
+        <div><dt>答对</dt><dd id="st-right">0</dd></div>
+        <div><dt>答错</dt><dd id="st-wrong">0</dd></div>
+        <div><dt>连击</dt><dd id="st-combo">0</dd></div>
+        <div><dt>最长连击</dt><dd id="st-max">0</dd></div>
+        <div><dt>XP</dt><dd id="st-xp">0</dd></div>
+        <div><dt>用时</dt><dd id="st-time">0:00</dd></div>
+      </dl>
+
+      <div class="tr-side-head">累计</div>
+      <div class="tr-cum" id="tr-cum">
+        {% if stats and stats.totals %}
+          <p>共 <b>{{ stats.totals.sessions }}</b> 轮 ·
+             <b>{{ stats.totals.xp }}</b> XP</p>
+          {% if stats.modes %}
+            {% for m in modes %}
+              {% set ms = stats.modes.get(m.id) %}
+              {% if ms %}
+                <p class="tr-cum-row">
+                  <span>{{ m.name }}</span>
+                  <span>最长 {{ ms.bestCombo }} 连 · {{ ms.xp }} XP</span>
+                </p>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        {% else %}
+          <p class="tr-cum-empty">还没练过。做完一轮就会记在这里。</p>
+        {% endif %}
+      </div>
+    </aside>
+
+    <section class="tr-main">
+
+      <div class="tr-bar">
+        <span class="tr-pos" id="tr-pos" role="status" aria-live="polite">准备中</span>
+        <div class="tr-dots" id="tr-dots" aria-hidden="true"></div>
+        <div class="tr-spacer"></div>
+        <span class="tr-combo" id="tr-combo" title="连击越高，XP 倍率越高">连击 ×0</span>
+        <span class="tr-xp" id="tr-xp">0 XP</span>
+        <button type="button" class="tr-btn" id="tr-quit">结束这一轮</button>
+      </div>
+
+      {# 计时条单独一行：它要横贯整张卡，又不能被上面的按钮挤变形。
+         归零不等于判错（见 training.js 里 <code>TIME_LIMIT</code> 那段）。 #}
+      <div class="tr-timer" aria-hidden="true"><i id="tr-timer-fill"></i></div>
+
+      <div class="tr-stage" id="tr-stage">
+        <div class="tr-loading" id="tr-loading">正在准备卡片…</div>
+      </div>
+
+      <div class="tr-actions" id="tr-actions"></div>
+
+      <div class="tr-feedback" id="tr-feedback" role="status" aria-live="polite"></div>
+
+      <p class="tr-keys">
+        <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交 ·
+        <kbd>Enter</kbd> 下一张 ·
+        <kbd>Tab</kbd> 跳到下一个空 ·
+        <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 翻卡自评 ·
+        <kbd>Esc</kbd> 结束这一轮
+      </p>
+
+    </section>
+  </div>
+</div>
+
+{# 会话总结。做成覆盖层而不是新页面：总结里的数字要能一眼和刚才的
+   连击对上，跳到另一页去就断了。 #}
+<div class="tr-summary" id="tr-summary" hidden>
+  <div class="tr-summary-card" role="dialog" aria-modal="true" aria-labelledby="tr-sum-title">
+    <h2 id="tr-sum-title">这一轮结束了</h2>
+    <div class="tr-sum-grid">
+      <div class="tr-sum-ring" id="tr-sum-ring">
+        <b id="tr-sum-pct">0%</b>
+        <span>正确率</span>
+      </div>
+      <dl class="tr-sum-nums">
+        <div><dt>做对</dt><dd id="sum-right">0</dd></div>
+        <div><dt>做错</dt><dd id="sum-wrong">0</dd></div>
+        <div><dt>最长连击</dt><dd id="sum-max">0</dd></div>
+        <div><dt>XP</dt><dd id="sum-xp">0</dd></div>
+        <div><dt>用时</dt><dd id="sum-time">0:00</dd></div>
+        <div><dt>平均每题</dt><dd id="sum-avg">0s</dd></div>
+      </dl>
+    </div>
+    <div class="tr-sum-missed" id="sum-missed"></div>
+    <div class="tr-sum-actions">
+      <button type="button" class="tr-btn tr-btn-primary" id="sum-again">再来一轮</button>
+      <button type="button" class="tr-btn" id="sum-close">回去看看</button>
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="tr-boot">{{ {
+  "modes": modes,
+  "counts": counts,
+  "sizes": sizes,
+  "stats": stats or {}
+} | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/training.js') }}"></script>
+{% endblock %}

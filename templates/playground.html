@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}游乐场 · CMaster{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/lib/codemirror.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/theme/material-darker.min.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>游乐场</h1>
+  <p>随便写，随便跑。没有测试用例，只看输出——验证想法最快的地方。</p>
+</div>
+
+<div class="play-layout">
+  <section class="pane">
+    <div class="pane-head">
+      <h2>main.c</h2>
+      <span class="spacer"></span>
+      <span style="font-size:11.5px;color:var(--text-mute);font-family:var(--mono)">Ctrl+Enter 运行</span>
+    </div>
+    <div class="editor-wrap">
+      <textarea id="code">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(void) {
+    printf("Hello, C!\n");
+
+    /* 想试试指针？把下面几行取消注释 */
+    // int x = 42;
+    // int *p = &amp;x;
+    // printf("x = %d, *p = %d, &amp;x = %p\n", x, *p, (void *)&amp;x);
+
+    return 0;
+}</textarea>
+    </div>
+    <div class="toolbar">
+      <button class="btn btn-primary btn-sm" id="btn-run">运行</button>
+      <button class="btn btn-ghost btn-sm" id="btn-clear">清空</button>
+      <span class="spacer"></span>
+      <span class="meta" id="run-meta"></span>
+    </div>
+  </section>
+
+  <section class="pane">
+    <div class="pane-head"><h2>标准输入</h2></div>
+    <div class="pane-body">
+      <label class="field-label" for="stdin">程序会从这个框里读 stdin</label>
+      <textarea id="stdin" class="stdin-box" placeholder="比如：&#10;3 5&#10;（scanf 会按顺序读走）"></textarea>
+      <p style="font-size:12px;color:var(--text-mute);margin:10px 0 0">
+        判题时有 3 秒 CPU 时间上限，死循环会被强制杀掉。
+      </p>
+    </div>
+  </section>
+</div>
+
+<div id="result-area"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/codemirror/lib/codemirror.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/mode/clike/clike.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/addon/edit/closebrackets.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/addon/selection/active-line.min.js') }}"></script>
+<script>
+(function () {
+  "use strict";
+
+  var STORE = "cmaster:playground";
+
+  var cm = CMaster.createEditor(document.getElementById("code"), {
+    onRun: function () { run(); }
+  });
+
+  var stdinEl = document.getElementById("stdin");
+  var resultArea = document.getElementById("result-area");
+  var btnRun = document.getElementById("btn-run");
+  var meta = document.getElementById("run-meta");
+
+  try {
+    var saved = localStorage.getItem(STORE);
+    if (saved != null) cm.setValue(saved);
+  } catch (e) {}
+
+  var timer = null;
+  cm.on("change", function () {
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      try { localStorage.setItem(STORE, cm.getValue()); } catch (e) {}
+    }, 600);
+  });
+
+  function run() {
+    var code = cm.getValue();
+    if (!code.trim()) { CMaster.toast("先写点代码", "bad"); return; }
+
+    CMaster.setBusy(btnRun, true, "运行中");
+    meta.textContent = "";
+    CMaster.setJudging(resultArea, true, "运行中");
+
+    CMaster.api("/api/run", { code: code, stdin: stdinEl.value })
+      .then(function (d) {
+        if (!d.ok) { CMaster.toast(d.error || "运行失败", "bad"); return; }
+        CMaster.renderRunResult(d.result, resultArea);
+        meta.textContent = d.result.time_ms != null ? d.result.time_ms + " ms" : "";
+      })
+      .catch(function (e) { CMaster.toast(e.message || "网络错误", "bad"); })
+      .finally(function () {
+        CMaster.setBusy(btnRun, false);
+        CMaster.setJudging(resultArea, false);
+      });
+  }
+
+  btnRun.addEventListener("click", run);
+
+  document.getElementById("btn-clear").addEventListener("click", function () {
+    if (!confirm("清空编辑器？")) return;
+    cm.setValue("#include <stdio.h>\n\nint main(void) {\n    \n    return 0;\n}\n");
+    try { localStorage.removeItem(STORE); } catch (e) {}
+    cm.focus();
+  });
+
+  // 浏览器里按 Tab 会被拿去做焦点切换，编辑器里已经接管；这里补一下
+  // Ctrl+Enter 在编辑器外也能触发
+  document.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      run();
+    }
+  });
+})();
+</script>
+{% endblock %}

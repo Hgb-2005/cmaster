@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+{% block title %}运行状态 · {{ site_name }}{% endblock %}
+{% block wrap_class %}wrap-wide{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ops.css') }}">
+{% endblock %}
+
+{% block content %}
+{# 这一页的读者不是学 C 的人，是维护它的人。所以措辞和另外两页不一样：
+   少解释概念，多给判断依据——「高不高」比「是多少」重要。 #}
+<div class="ops-head">
+  <div>
+    <h1>运行状态</h1>
+    <p class="ops-sub">
+      判题机的延迟、并发和失败率。数据来自最近 {{ o.window.capacity }} 次判题的环形缓冲，
+      落盘在 <code>data/metrics.json</code>。
+    </p>
+  </div>
+  <div class="ops-head-side">
+    {# 数据生成时刻。开了自动刷新之后，用户需要知道眼前这屏是几点的，
+       否则「面板上是 30 秒前的数」这件事永远不会被意识到。 #}
+    <span class="ops-stamp" id="ops-stamp" title="{{ o.saved_label }}">{{ o.saved_label[11:] }}</span>
+    <span class="ops-health is-{{ o.health.level }}" id="ops-health" title="{{ o.health.text }}">
+      <i class="dot"></i>{{ o.health.label }}
+    </span>
+    <button class="ops-btn" id="ops-refresh" type="button" aria-pressed="false"
+            title="每 5 秒拉一次 /api/ops">自动刷新</button>
+  </div>
+</div>
+
+<p class="ops-healthline" id="ops-healthline" role="status" aria-live="polite">{{ o.health.text }}</p>
+
+{# ---------- 指标卡 ---------- #}
+{# 每个会变的数字都挂了 data-k="a.b.c"，值就是快照里的路径。
+   这样刷新时 JS 只需要遍历 [data-k] 按路径取值，不用给六张卡
+   各写一段更新代码——加一张卡只改 HTML，不改 JS。 #}
+<div class="ops-stats" id="ops-stats">
+  <div class="ops-stat">
+    <span class="ops-stat-label">判题总次数</span>
+    <span class="ops-stat-value" data-k="counts.total">{{ o.counts.total }}</span>
+    <span class="ops-stat-foot">窗口内 <span data-k="counts.window_total">{{ o.counts.window_total }}</span> 次</span>
+  </div>
+
+  <div class="ops-stat">
+    <span class="ops-stat-label">P95 延迟</span>
+    <span class="ops-stat-value" data-k="latency.p95">{{ o.latency.p95 }}<i>ms</i></span>
+    <span class="ops-stat-foot">
+      P50 <span data-k="latency.p50">{{ o.latency.p50 }}</span> ·
+      P99 <span data-k="latency.p99">{{ o.latency.p99 }}</span>
+    </span>
+  </div>
+
+  <div class="ops-stat">
+    <span class="ops-stat-label">AC 率</span>
+    <span class="ops-stat-value" data-k="rates.ac">{{ o.rates.ac }}<i>%</i></span>
+    <span class="ops-stat-foot">
+      <span class="ops-bar"><b data-bar="rates.ac" style="width: {{ o.rates.ac }}%"></b></span>
+      {# 分母写出来。以前这行是「含游乐场运行为 X 次」，等于承认分母是错的
+         还照着算——游乐场跑通叫 OK，不叫 AC，混进来会稀释这个数。 #}
+      分母 <span data-k="rates.denom">{{ o.rates.denom }}</span> 次有对错的判题
+      （游乐场 <span data-k="counts.sandbox">{{ o.counts.sandbox }}</span> 次不计入）
+    </span>
+  </div>
+
+  <div class="ops-stat">
+    <span class="ops-stat-label">编译失败率</span>
+    <span class="ops-stat-value" data-k="rates.ce">{{ o.rates.ce }}<i>%</i></span>
+    <span class="ops-stat-foot">
+      编译平均 <span data-k="latency.compile_avg">{{ o.latency.compile_avg }}</span> ms ·
+      P95 <span data-k="latency.compile_p95">{{ o.latency.compile_p95 }}</span> ms
+    </span>
+  </div>
+
+  <div class="ops-stat">
+    <span class="ops-stat-label">并发占用</span>
+    <span class="ops-stat-value" data-k="queue.inflight">
+      {{ o.queue.inflight }}<i>/{{ o.queue.capacity }}</i>
+    </span>
+    <span class="ops-stat-foot">
+      <span class="ops-bar">
+        <b data-bar="queue.inflight"
+           style="width: {{ (100 * o.queue.inflight / o.queue.capacity) | round | int }}%"></b>
+      </span>
+      历史峰值 <span data-k="queue.peak">{{ o.queue.peak }}</span>
+    </span>
+  </div>
+
+  <div class="ops-stat">
+    <span class="ops-stat-label">排队时长</span>
+    <span class="ops-stat-value" data-k="latency.queue_avg">{{ o.latency.queue_avg }}<i>ms</i></span>
+    <span class="ops-stat-foot">
+      最长一次 <span data-k="latency.queue_max">{{ o.latency.queue_max }}</span> ms
+    </span>
+  </div>
+</div>
+
+{# ---------- 故障归属 ---------- #}
+{# 这张卡的唯一目的：把「谁的责任」从「多少失败」里拆出来。
+   借自 judge0 的一个安排——它把 Internal Error 和 Accepted 平级放进
+   同一张状态表，逼着实现方回答「这次是谁的错」。
+   如果只有一个失败率，判题机故障会淹进「学生写错」里，
+   而这两件事要叫醒的人根本不是同一个。 #}
+<section class="ops-card ops-blame" id="ops-blame">
+  <div class="ops-card-head">
+    <h3>故障归属</h3>
+    <span class="hint">失败分两堆：用户写错的不该算进机器可用性</span>
+  </div>
+
+  <div class="ops-blame-grid">
+    <div class="ops-blame-cell is-ok">
+      <span class="ops-blame-k">判题可用性</span>
+      <span class="ops-blame-v" data-k="reliability.availability">{{ o.reliability.availability }}<i>%</i></span>
+      <span class="ops-blame-n">1 − 系统错误率。低于 99% 就该去 <a href="{{ url_for('admin_page') }}">/admin</a></span>
+    </div>
+    <div class="ops-blame-cell {% if o.reliability.system %}is-bad{% endif %}">
+      <span class="ops-blame-k">系统错误 SE</span>
+      <span class="ops-blame-v" data-k="reliability.system">{{ o.reliability.system }}<i>次</i></span>
+      <span class="ops-blame-n">沙箱没就绪 / 用例没配 / 编译器丢了 —— 我们的锅</span>
+    </div>
+    <div class="ops-blame-cell is-user">
+      <span class="ops-blame-k">用户侧失败</span>
+      <span class="ops-blame-v" data-k="reliability.user_fail">{{ o.reliability.user_fail }}<i>次</i></span>
+      <span class="ops-blame-n">
+        WA + TLE + RE + CE，占
+        <span data-k="reliability.user_fail_rate">{{ o.reliability.user_fail_rate }}</span>%
+      </span>
+    </div>
+  </div>
+
+  {# 超时归因。三种 TLE 的改法完全不同，所以它们必须在同一张条上分开：
+     「超时占 15%」追不下去，「其中 9 次是在等输入」直接指向题面没写清。 #}
+  <div class="ops-tle">
+    <div class="ops-card-head">
+      <h4>超时归因</h4>
+      <span class="hint">窗口内 <b data-k="tle.total">{{ o.tle.total }}</b> 次 TLE</span>
+    </div>
+    {% if o.tle.total %}
+    <div class="ops-tle-bar" id="ops-tle">
+      {% for k in ('cpu', 'wall', 'wait', 'unknown') %}
+        {% if o.tle[k + '_pct'] %}
+        <span class="tle tle-{{ k }}" style="width: {{ o.tle[k + '_pct'] }}%"
+              data-tle="{{ k }}" title="{{ vk[k]['name'] }} {{ o.tle[k + '_pct'] }}%">
+          <b>{{ vk[k]['name'] }}</b><i>{{ o.tle[k + '_pct'] }}%</i>
+        </span>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <ul class="ops-tle-legend">
+      {% for k in ('cpu', 'wall', 'wait', 'unknown') %}
+      <li>
+        <i class="sw sw-{{ k }}"></i>{{ vk[k]['name'] }}
+        <b><span data-k="tle.{{ k }}">{{ o.tle[k] }}</span> 次</b>
+        <span class="ops-tle-note">{{ vk[k]['note'] }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="ops-empty">窗口里没有超时，三种归因（算得慢 / 算等参半 / 在等）都无从谈起。</p>
+    {% endif %}
+  </div>
+
+  {# 裁决码表。数字借的是 judge0 的公开状态码，owner 这一列才是重点：
+     它等于把「这次失败该谁处理」写进协议里，而不是留给人脑补。 #}
+  <div class="ops-vtable">
+    {% for v in vtable %}
+    <span class="ops-vc is-{{ v['owner'] }}" title="{{ v['desc'] }}">
+      <b>{{ v['code'] }}</b> {{ v['name'] }}<i>{{ v['owner'] }}</i>
+    </span>
+    {% endfor %}
+  </div>
+</section>
+
+{# ---------- 三阶段占比 ---------- #}
+{# 这个横向条不用 canvas：它是「一个总数怎么切成三块」，
+   用 DOM 的 flex 加个宽度百分比就够了。上 canvas 反而拿不到
+   「窗口变窄时自动换行」这种行为。 #}
+<section class="ops-card ops-phase">
+  <div class="ops-card-head">
+    <h3>判题耗时构成</h3>
+    {# 「不含排队」不是废话：P95 那张卡里的延迟是含排队的，这张图不是。
+       两个数都叫「耗时」，不说清就会被拿去做减法然后对不上。 #}
+    <span class="hint">判题累计 <span data-k="phases.total">{{ o.phases.total }}</span> 秒（不含排队），切分如下</span>
+  </div>
+  <div class="ops-phase-bar" id="ops-phase"
+       data-compile="{{ o.phases.compile_pct }}"
+       data-run="{{ o.phases.run_pct }}"
+       data-other="{{ o.phases.other_pct }}">
+    <span class="ph ph-compile" style="width: {{ o.phases.compile_pct }}%"
+          title="编译 {{ o.phases.compile_pct }}%">
+      <b>编译</b><i>{{ o.phases.compile_pct }}%</i>
+    </span>
+    <span class="ph ph-run" style="width: {{ o.phases.run_pct }}%"
+          title="运行 {{ o.phases.run_pct }}%">
+      <b>运行</b><i>{{ o.phases.run_pct }}%</i>
+    </span>
+    <span class="ph ph-other" style="width: {{ o.phases.other_pct }}%"
+          title="建目录与比对 {{ o.phases.other_pct }}%">
+      <b>建目录与比对</b><i>{{ o.phases.other_pct }}%</i>
+    </span>
+  </div>
+  <ul class="ops-phase-legend">
+    <li><i class="sw sw-compile"></i>编译 <b><span data-k="phases.compile">{{ o.phases.compile }}</span>s</b></li>
+    <li><i class="sw sw-run"></i>运行 <b><span data-k="phases.run">{{ o.phases.run }}</span>s</b></li>
+    <li>
+      <i class="sw sw-other"></i>建临时目录 + 读输出 + 比对
+      <b><span data-k="phases.other">{{ o.phases.other }}</span>s</b>
+    </li>
+  </ul>
+</section>
+
+{# ---------- 图表 ---------- #}
+<div class="ops-grid">
+  <section class="ops-card ops-span-2">
+    <div class="ops-card-head">
+      <h3>最近 {{ o.window.series }} 次判题耗时</h3>
+      <span class="hint">总耗时 / 编译 / 运行，单位毫秒</span>
+    </div>
+    <div class="ops-card-body" id="chart-latency"></div>
+  </section>
+
+  <section class="ops-card">
+    <div class="ops-card-head">
+      <h3>裁决分布</h3>
+      <span class="hint">累计 {{ o.counts.total }} 次</span>
+    </div>
+    <div class="ops-card-body" id="chart-verdict"></div>
+  </section>
+
+  <section class="ops-card ops-span-2">
+    <div class="ops-card-head">
+      <h3>耗时分布</h3>
+      <span class="hint">分桶边界不等距，长尾才看得见</span>
+    </div>
+    <div class="ops-card-body" id="chart-hist"></div>
+  </section>
+
+  <section class="ops-card">
+    <div class="ops-card-head">
+      <h3>近 14 天判题量</h3>
+      <span class="hint">按天累计</span>
+    </div>
+    <div class="ops-card-body" id="chart-days"></div>
+  </section>
+</div>
+
+{# ---------- 最慢的几次 ---------- #}
+{# id 挂在 section 上：刷新时 JS 要整块换掉这里的内容（表格 ↔ 空态），
+   而卡片标题不动。 #}
+<section class="ops-card ops-slow" id="ops-slow">
+  <div class="ops-card-head">
+    <h3>最慢的几次</h3>
+    <span class="hint">用来回答「是什么把 P95 拉上去的」</span>
+  </div>
+  <div id="ops-slow-host">
+    {% if o.slowest %}
+  <div class="ops-table-wrap">
+    <table class="ops-table">
+      <thead>
+        <tr>
+          <th>时间</th>
+          <th>题目</th>
+          <th>裁决</th>
+          <th class="num">总耗时</th>
+          <th class="num">编译</th>
+          <th class="num">运行</th>
+          <th class="num" title="排队 + 起进程 + 读输出 + 逐行比对">其余</th>
+          <th>逐用例</th>
+        </tr>
+      </thead>
+      <tbody id="ops-slow-body">
+        {% for r in o.slowest %}
+        <tr>
+          <td class="mono">{{ r.label }}</td>
+          <td class="mono">{{ r.qid }}</td>
+          <td><span class="ops-v is-{{ r.verdict | lower }}">{{ r.verdict }}</span></td>
+          <td class="num">{{ r.total_ms }}</td>
+          <td class="num">{{ r.compile_ms }}</td>
+          <td class="num">{{ r.run_ms }}</td>
+          <td class="num">{{ r.other_ms }}</td>
+          <td class="ops-cases">
+            {# 逐用例耗时画成一排小竖条。宽度按该次最慢的用例归一，
+               这样同一个行内能横向比较，跨行不比较（跨行比没意义，
+               不同题的用例根本不是一个量级）。 #}
+            {% if r.case_ms %}
+              {% set peak = r.case_ms | max %}
+              {% for ms in r.case_ms %}
+              <i style="height: {{ (4 + 14 * (ms / peak)) | round | int }}px"
+                 title="用例 {{ loop.index }} · {{ ms }} ms"></i>
+              {% endfor %}
+            {% else %}
+              <span class="ops-dim">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  {# 这段空态在 ops.js 里有一份等价的字符串（刷新后数据清空时要用）。
+     两边改一处就得改另一处——文案只有一句，重复的成本比在 JS 里
+     再实现一遍 url_for 低。 #}
+  <p class="ops-empty">
+    还没有判题记录。去<a href="{{ url_for('problems_page') }}">做一道题</a>，
+    或者跑 <code>python tools/loadtest.py</code> 造一批真实流量。
+  </p>
+  {% endif %}
+  </div>
+</section>
+
+{# ---------- 说明 ---------- #}
+<section class="ops-card ops-notes">
+  <div class="ops-card-head">
+    <h3>这些数字怎么读</h3>
+  </div>
+  <dl class="ops-dl">
+    <dt>为什么看 P95 而不是平均值</dt>
+    <dd>
+      平均值会被大量的快请求稀释。一次 TLE 能把平均值抬高几十毫秒，
+      但把 P95 抬高一整个量级——**用户抱怨的永远是慢的那几次**，不是平均。
+    </dd>
+
+    <dt>「建目录与比对」为什么只有 1%</dt>
+    <dd>
+      它原本是留给「总耗时减掉编译和运行之后剩下的那点」：建临时目录、写输入
+      文件、读输出、逐行归一化比对。实测每次只有 1–7 毫秒，因为计时器套在
+      <code>subprocess</code> 外面，<b>起进程的时间被算进了「运行」</b>。
+      于是结论反过来了：一次 480ms 的判题里「运行」占 240ms，而那 240ms
+      几乎全是进程启动和 C 运行时初始化——程序本身算 <code>x+1</code>
+      用不到 1ms。这一段留着不是因为它大，是因为它<b>让账能平</b>：
+      三段加起来正好等于墙钟，少一段就永远有个说不清去向的差额。
+    </dd>
+
+    <dt>为什么 AC 率不是 100% 的默认值</dt>
+    <dd>
+      编译失败和超时会被算进分母。一个新用户在编辑器里少写一个分号，
+      对「这台机器健不健康」没有参考价值——所以健康判据看的是
+      **聚集性**（编译失败率 &gt; 40% 才提醒），不是绝对值。
+    </dd>
+
+    <dt>告警没有接出去，是有意的</dt>
+    <dd>
+      现在只在页面上给结论。真接告警要先回答三个问题：谁收、多久内收、
+      收到之后做什么。没有这三个答案的告警只会培养「看到就点掉」的习惯，
+      比没有告警更糟。
+    </dd>
+  </dl>
+
+  <p class="ops-warn">
+    <b>部署提醒：</b>这个页面在真实部署里必须挂在管理员鉴权后面。
+    现在只要求登录，是因为项目是本地单机、账号只有你自己用。
+  </p>
+</section>
+
+<script type="application/json" id="ops-data">{{ o | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/lib/tween.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/chart.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ops.js') }}"></script>
+{% endblock %}

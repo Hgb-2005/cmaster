@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}题库 · CMaster{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>题库</h1>
+  <p>{{ questions|length }} 道题，覆盖全部 12 章。提交后按测试用例逐条判分。</p>
+</div>
+
+<div class="filters" id="chapter-filters">
+  <button class="filter on" data-ch="all">全部章节</button>
+  {% for cid, ch in chapters.items() %}
+    {% if qcounts.get(cid) %}
+      <button class="filter" data-ch="{{ cid }}">第{{ cid }}章 {{ ch.title }}</button>
+    {% endif %}
+  {% endfor %}
+</div>
+
+<div class="filters" id="difficulty-filters">
+  <button class="filter on" data-diff="all">全部难度</button>
+  <button class="filter" data-diff="easy">简单</button>
+  <button class="filter" data-diff="medium">中等</button>
+  <button class="filter" data-diff="hard">较难</button>
+  {% if current_user %}
+    <button class="filter" data-diff="todo">未通过</button>
+    <button class="filter" data-diff="done">已通过</button>
+  {% endif %}
+</div>
+
+<table class="q-table">
+  <thead>
+    <tr>
+      <th>编号</th>
+      <th>题目</th>
+      <th>所属章节</th>
+      <th>难度</th>
+      <th>状态</th>
+    </tr>
+  </thead>
+  <tbody id="q-body">
+    {% for q in questions %}
+      <tr data-ch="{{ q.chapter }}" data-diff="{{ q.difficulty }}"
+          data-done="{{ '1' if solved.get(q.id, {}).get('status') == 'AC' else '0' }}">
+        <td class="qid">{{ q.id }}</td>
+        <td class="qtitle"><a href="{{ url_for('problem_page', qid=q.id) }}">{{ q.title }}</a></td>
+        <td class="qch">{{ chapters[q.chapter].title }}</td>
+        <td class="qdiff">
+          <span class="tag diff-{{ q.difficulty }}">
+            {{ {'easy':'简单','medium':'中等','hard':'较难'}.get(q.difficulty, q.difficulty) }}
+          </span>
+        </td>
+        <td class="qstat">
+          {% if solved.get(q.id, {}).get('status') == 'AC' %}
+            <span class="status-ac">✓</span>
+          {% elif q.id in solved %}
+            <span class="status-wa">·</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="empty" id="q-empty" style="display:none">没有符合筛选条件的题目</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#q-body tr'));
+  var state = { ch: 'all', diff: 'all' };
+
+  function apply() {
+    var shown = 0;
+    rows.forEach(function (tr) {
+      var okCh = state.ch === 'all' || tr.dataset.ch === state.ch;
+      var okDiff;
+      if (state.diff === 'all') okDiff = true;
+      else if (state.diff === 'todo') okDiff = tr.dataset.done === '0';
+      else if (state.diff === 'done') okDiff = tr.dataset.done === '1';
+      else okDiff = tr.dataset.diff === state.diff;
+      var show = okCh && okDiff;
+      tr.style.display = show ? '' : 'none';
+      if (show) shown++;
+    });
+    document.getElementById('q-empty').style.display = shown ? 'none' : '';
+  }
+
+  function bind(id, key) {
+    document.querySelectorAll('#' + id + ' .filter').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('#' + id + ' .filter').forEach(function (x) {
+          x.classList.remove('on');
+        });
+        b.classList.add('on');
+        state[key] = b.dataset[key];
+        apply();
+      });
+    });
+  }
+
+  bind('chapter-filters', 'ch');
+  bind('difficulty-filters', 'diff');
+})();
+</script>
+{% endblock %}
