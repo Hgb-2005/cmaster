@@ -75,7 +75,7 @@ docker compose --env-file deploy/.env -f deploy/compose.yml up -d --force-recrea
 mkdir -p deploy/backups
 chmod 700 deploy/backups
 docker compose --env-file deploy/.env -f deploy/compose.yml stop web
-docker compose --env-file deploy/.env -f deploy/compose.yml run --rm --no-deps --user 0:0 -v "$PWD/deploy/backups:/backup" web sh -c 'umask 077; tar czf /backup/learning-data.tar.gz -C /var/lib/cmaster .'
+(umask 077; docker compose --env-file deploy/.env -f deploy/compose.yml run --rm --no-deps -T web tar czf - -C /var/lib/cmaster . > deploy/backups/learning-data.tar.gz)
 docker compose --env-file deploy/.env -f deploy/compose.yml start web
 ```
 
