@@ -86,8 +86,9 @@ def main():
     path.parent.mkdir(parents=True, exist_ok=True)
     path.unlink(missing_ok=True)
     with Server(str(path), Handler) as server:
-        os.chown(path, 10001, 10001)
+        # chmod while still the owner; CHOWN alone does not grant FOWNER.
         os.chmod(path, 0o600)
+        os.chown(path, 10001, 10001)
         print("CMaster isolated judge broker ready", flush=True)
         server.serve_forever()
 
