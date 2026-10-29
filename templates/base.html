@@ -37,11 +37,13 @@
       <a href="{{ url_for('memory_page') }}" class="{{ 'on' if request.endpoint == 'memory_page' }}">内存</a>
       {# 「状态」是给维护者看的，和前面五个面向学习者的入口不是一类。
          单独放最后，不参与「学习动线」的强调色。 #}
+      {% if not cloud_mode %}
       <a href="{{ url_for('ops_page') }}" class="{{ 'on' if request.endpoint == 'ops_page' }}">状态</a>
       {# 「管理」和「状态」都是维护者视角，但回答的不是同一个问题：
          状态看「判题过程跑得怎样」，管理看「这台机器和沙箱本身好不好」。
          两个都放最后、都叫「状态」会让人以为是一个页面。 #}
       <a href="{{ url_for('admin_page') }}" class="{{ 'on' if request.endpoint == 'admin_page' }}">管理</a>
+      {% endif %}
     {% endif %}
   </nav>
 
@@ -77,6 +79,11 @@
 {% endblock %}
 
 <footer class="footer">
+  {% if cloud_mode %}
+  <span>{{ site_name }} · 在线 C 语言学习平台</span>
+  <span class="dot">·</span><span>课程 · 练习 · 私人学习记录</span>
+  <span class="dot">·</span><span>按 <kbd class="footer-kbd">?</kbd> 看快捷键</span>
+  {% else %}
   <span>{{ site_name }} · 本地运行的 C 语言学习平台</span>
   <span class="dot">·</span>
   {# 这句原话是「判题为子进程执行，无系统级沙箱，请勿暴露到公网」。
@@ -88,6 +95,7 @@
   <span>公网部署仍建议加外层隔离</span>
   <span class="dot">·</span>
   <span>按 <kbd class="footer-kbd">?</kbd> 看快捷键</span>
+  {% endif %}
 </footer>
 
 {# editor.js 必须排在 app.js 前面：app.js 要用它导出的 CMaster 去查编译器状态。

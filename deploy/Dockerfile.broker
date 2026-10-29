@@ -1,0 +1,5 @@
+FROM docker:28-cli
+RUN apk add --no-cache python3
+WORKDIR /app
+COPY deploy/__init__.py deploy/client.py deploy/broker.py ./deploy/
+CMD ["python3", "-m", "deploy.broker"]

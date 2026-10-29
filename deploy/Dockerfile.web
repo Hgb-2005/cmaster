@@ -1,0 +1,18 @@
+FROM python:3.12-slim-bookworm
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_NO_CACHE_DIR=1 \
+    CMASTER_DATA=/var/lib/cmaster CMASTER_CONCURRENCY=1
+WORKDIR /app
+COPY deploy/requirements.txt /app/deploy/requirements.txt
+RUN pip install -r deploy/requirements.txt
+COPY app.py judge.py sandbox.py verdicts.py metrics.py ./
+COPY templates ./templates
+COPY static ./static
+COPY tools ./tools
+COPY data ./data
+COPY deploy ./deploy
+RUN groupadd -g 10001 cmaster \
+ && useradd -u 10001 -g cmaster -M -s /usr/sbin/nologin cmaster \
+ && mkdir -p /var/lib/cmaster && chown 10001:10001 /var/lib/cmaster
+USER 10001:10001
+EXPOSE 8080
+CMD ["gunicorn", "-c", "deploy/gunicorn.conf.py", "deploy.web:create_app()"]

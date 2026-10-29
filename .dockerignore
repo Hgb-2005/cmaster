@@ -48,6 +48,10 @@ __pycache__/
 
 # 本地临时文件（截图、比对用的一次性输出）
 .tmpcheck/
+.tmp/
+.env
+deploy/.env
+deploy/backups/
 .shots_*.png
 *.log
 

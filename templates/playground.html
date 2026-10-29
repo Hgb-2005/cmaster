@@ -10,6 +10,9 @@
 <div class="page-head">
   <h1>游乐场</h1>
   <p>随便写，随便跑。没有测试用例，只看输出——验证想法最快的地方。</p>
+  {% if cloud_mode and not current_user %}
+  <p><a href="{{ url_for('login_page', next='/playground') }}">登录或注册</a>后即可运行代码，编辑器会在当前浏览器保存草稿。</p>
+  {% endif %}
 </div>
 
 <div class="play-layout">

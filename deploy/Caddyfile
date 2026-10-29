@@ -1,0 +1,12 @@
+{$SITE_HOST} {
+    encode zstd gzip
+    request_body {
+        max_size 1MB
+    }
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy same-origin
+        Strict-Transport-Security "max-age=31536000"
+    }
+    reverse_proxy web:8080
+}

@@ -1,0 +1,10 @@
+FROM python:3.12-slim-bookworm
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev \
+ && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+# No data directory, website, sessions, account records, answers or secrets.
+COPY judge.py sandbox.py verdicts.py ./
+COPY deploy/__init__.py deploy/client.py deploy/job.py deploy/job_sandbox.py ./deploy/
+USER 10001:10001
+CMD ["timeout", "--signal=KILL", "55", "python", "-m", "deploy.job"]

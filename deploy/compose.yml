@@ -1,0 +1,75 @@
+name: cmaster-online
+services:
+  gateway:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      SITE_HOST: ${SITE_HOST:?Set SITE_HOST in deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on: [web]
+    mem_limit: 128m
+    logging: &logs
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
+  web:
+    build: {context: .., dockerfile: deploy/Dockerfile.web}
+    image: cmaster-web:online
+    restart: unless-stopped
+    environment:
+      CMASTER_ORIGIN: https://${SITE_HOST:?Set SITE_HOST}
+      CMASTER_DATA: /var/lib/cmaster
+      CMASTER_CONCURRENCY: "1"
+      CMASTER_JUDGE_SOCKET: /run/cmaster/judge.sock
+    volumes:
+      - learning-data:/var/lib/cmaster
+      - judge-socket:/run/cmaster:ro
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,nodev,noexec,size=32m"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 384m
+    pids_limit: 64
+    depends_on: [broker]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2)"]
+      interval: 30s
+      timeout: 3s
+      start_period: 20s
+    logging: *logs
+
+  broker:
+    build: {context: .., dockerfile: deploy/Dockerfile.broker}
+    image: cmaster-broker:online
+    restart: unless-stopped
+    # The broker speaks only through a Unix socket and has no public port.
+    network_mode: none
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - judge-socket:/run/cmaster
+    read_only: true
+    tmpfs: ["/tmp:rw,nosuid,nodev,noexec,size=16m"]
+    cap_drop: [ALL]
+    cap_add: [CHOWN]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    pids_limit: 64
+    logging: *logs
+
+  judge-image:
+    profiles: [build]
+    build: {context: .., dockerfile: deploy/Dockerfile.judge}
+    image: cmaster-judge:online
+    network_mode: none
+    # Image build target only. Per-submission jobs are created by the broker.
+    entrypoint: [python, -c, "print('Judge image built; jobs are started by the broker')"]
+
+volumes:
+  learning-data:
+  judge-socket:
+  caddy-data:
+  caddy-config:
