@@ -82,9 +82,9 @@ def _candidates():
 _compiler_cache = {"path": None, "checked": False}
 
 
-def find_compiler():
-    """返回可用的 gcc 路径；没有则返回 None。结果缓存。"""
-    if _compiler_cache["checked"]:
+def find_compiler(refresh=False):
+    """缓存存在的 gcc 路径；缺失时重查，以支持安装后直接重试。"""
+    if not refresh and _compiler_cache["path"] and os.path.isfile(_compiler_cache["path"]):
         return _compiler_cache["path"]
     found = None
     for c in _candidates():
@@ -98,16 +98,21 @@ def find_compiler():
 
 def compiler_info():
     """给前端用的编译器状态信息。"""
-    path = find_compiler()
+    path = find_compiler(refresh=True)
     if not path:
         return {"ok": False, "path": None, "version": None,
                 "hint": "未找到 C 编译器。请把 w64devkit 解压到 runtime/w64devkit/，或安装 MinGW 后加入 PATH。"}
     try:
         r = subprocess.run([path, "--version"], capture_output=True, text=True,
                            timeout=10, encoding="utf-8", errors="replace")
-        version = (r.stdout or "").splitlines()[0].strip()
-    except Exception as e:  # noqa: BLE001
-        version = "gcc (版本读取失败: %s)" % e
+        lines = (r.stdout or "").splitlines()
+        if r.returncode or not lines:
+            return {"ok": False, "path": path, "version": None,
+                    "hint": "找到了编译器文件，但无法运行。请重新安装完整工具链后点击重新检测。"}
+        version = lines[0].strip()
+    except (OSError, subprocess.SubprocessError):
+        return {"ok": False, "path": path, "version": None,
+                "hint": "编译器启动失败。请检查工具链是否完整，并点击重新检测。"}
     return {"ok": True, "path": path, "version": version, "hint": ""}
 
 

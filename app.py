@@ -723,7 +723,38 @@ def index():
                            streak=learning_streak(data) if data else 0)
 
 
-def study_plan(data):
+REVIEW_DAY = 24 * 60 * 60
+REVIEW_INTERVALS = (1, 3, 7, 14, 30)
+
+
+def _review_schedule(record):
+    """Read the stored schedule, or derive the first due date for older progress."""
+    interval = record.get("review_interval_days", 1)
+    if type(interval) is not int or interval not in REVIEW_INTERVALS:
+        interval = 1
+    due = record.get("next_review_at")
+    if type(due) is not int or due < 0:
+        accepted = record.get("ts")
+        if type(accepted) is not int or accepted < 0:
+            return None
+        due = accepted + interval * REVIEW_DAY
+    return interval, due
+
+
+def _next_review_schedule(previous, now, first=False):
+    """Return the next spaced-review interval after an accepted attempt."""
+    if first:
+        interval = REVIEW_INTERVALS[0]
+    else:
+        schedule = _review_schedule(previous)
+        interval, due = schedule or (REVIEW_INTERVALS[0], now)
+        if now < due:
+            return interval, due
+        interval = next((value for value in REVIEW_INTERVALS if value > interval), interval)
+    return interval, now + interval * REVIEW_DAY
+
+
+def study_plan(data, now=None):
     """继续阅读、配套练习、错题复习，共用真实学习记录。"""
     lessons = [(cid, kid, kp) for cid, ch in sorted(CHAPTERS.items())
                for kid, kp in enumerate(ch["knowledge_points"], 1)]
@@ -765,7 +796,27 @@ def study_plan(data):
                              else "做错的题会留在这里，通过后自动移出。",
               "url": url_for("problem_page", qid=wrong[0][0]) if wrong else url_for("training_page"),
               "action": "再试一次" if wrong else "做一轮巩固"}
-    return [learn, practice, review]
+    plan = [learn, practice, review]
+    now = int(time.time()) if now is None else int(now)
+    due_reviews = []
+    for qid, record in solved.items():
+        if qid not in QMAP or record.get("status") != "AC":
+            continue
+        schedule = _review_schedule(record)
+        if schedule and schedule[1] <= now:
+            due_reviews.append((schedule[1], qid, schedule[0]))
+    due_reviews.sort()
+    if due_reviews:
+        due_at, qid, interval = due_reviews[0]
+        plan.append({
+            "kind": "spaced-review", "label": "间隔复习",
+            "title": QMAP[qid]["title"],
+            "description": "%d 道已通过题到期；回忆成功后会逐步延长复习间隔。" % len(due_reviews),
+            "url": url_for("problem_page", qid=qid),
+            "action": "先不看答案，再写一遍",
+        })
+        plan.insert(0, plan.pop())
+    return plan
 
 
 @app.route("/chapter/<int:cid>")
@@ -1465,6 +1516,7 @@ def api_admin_selftest():
 @app.route("/healthz")
 def healthz():
     return "ok\n", 200, {"Content-Type": "text/plain; charset=utf-8",
+                         "X-CMaster-App": "CMaster",
                          "Cache-Control": "no-store"}
 
 
@@ -1969,8 +2021,14 @@ def _record_attempt(q, code, result):
         if result["status"] == "AC":
             first = qid not in data["solved"]
             previous = data["solved"].get(qid, {})
-            data["solved"][qid] = {"status": "AC", "ts": previous.get("ts", now),
-                                   "attempts": previous.get("attempts", data["attempts"][qid])}
+            interval, next_review = _next_review_schedule(previous, now, first)
+            data["solved"][qid] = {
+                "status": "AC", "ts": previous.get("ts", now),
+                "attempts": previous.get("attempts", data["attempts"][qid]),
+                "review_interval_days": interval,
+                "last_review_at": now,
+                "next_review_at": next_review,
+            }
             # 做对了就从错题本移走——错题本的意义是「还没弄懂的」
             data["wrong"].pop(qid, None)
             if first:

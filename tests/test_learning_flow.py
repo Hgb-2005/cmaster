@@ -196,6 +196,32 @@ class LearningFlowTests(unittest.TestCase):
         with cm.app.test_request_context("/"):
             self.assertEqual(cm.study_plan(cm.load_progress("learner"))[2]["url"], "/training")
 
+    def test_accepted_problems_enter_a_spaced_review_cycle(self):
+        self.submit("AC")
+        accepted = cm.load_progress("learner")["solved"]["c001"]
+        base = accepted["last_review_at"]
+        self.assertEqual(accepted["next_review_at"], base + cm.REVIEW_DAY)
+        with cm.app.test_request_context("/"):
+            plan = cm.study_plan(cm.load_progress("learner"), now=base + cm.REVIEW_DAY - 1)
+        self.assertEqual(len(plan), 3)
+        with cm.app.test_request_context("/"):
+            due = cm.study_plan(cm.load_progress("learner"), now=base + cm.REVIEW_DAY)
+        self.assertEqual(due[0]["kind"], "spaced-review")
+        self.assertEqual(due[0]["url"], "/problem/c001")
+        interval, next_review = cm._next_review_schedule(accepted, base + cm.REVIEW_DAY)
+        self.assertEqual(interval, 3)
+        self.assertEqual(next_review, base + 4 * cm.REVIEW_DAY)
+        early_interval, unchanged_due = cm._next_review_schedule(accepted, base + 60)
+        self.assertEqual((early_interval, unchanged_due), (1, base + cm.REVIEW_DAY))
+        with cm.app.test_request_context("/"):
+            self.assertEqual(len(cm.study_plan(cm.load_progress("learner"), now=base)), 3)
+
+    def test_old_accepted_records_can_be_reviewed_without_rewriting_them(self):
+        data = {"solved": {"c001": {"status": "AC", "ts": 1000}}, "read": [], "wrong": {}, "attempts": {}}
+        with cm.app.test_request_context("/"):
+            plan = cm.study_plan(data, now=1000 + 2 * cm.REVIEW_DAY)
+        self.assertEqual(plan[0]["kind"], "spaced-review")
+
     def test_submit_rejects_malformed_payloads(self):
         for payload in ([], "text", {"qid": [], "code": "x"}, {"qid": "c001", "code": 12}):
             self.assertEqual(self.client.post("/api/submit", json=payload).status_code, 400)

@@ -101,6 +101,7 @@
 {# editor.js 必须排在 app.js 前面：app.js 要用它导出的 CMaster 去查编译器状态。
    这个文件顶层只有定义，不依赖 CodeMirror，所以全站引入是安全的（用不到编辑器的
    页面只是白拿一个 checkCompiler）。 #}
+<script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
 <script src="{{ url_for('static', filename='js/editor.js') }}"></script>
 <script src="{{ url_for('static', filename='js/ux.js') }}"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}"></script>

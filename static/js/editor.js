@@ -127,6 +127,15 @@
     return box;
   }
 
+  function appendFeedback(body, result) {
+    var hint = global.CMasterFeedback && global.CMasterFeedback.explain(result);
+    if (!hint) return;
+    var card = el("aside", "learning-feedback");
+    card.appendChild(el("strong", "", hint.title));
+    card.appendChild(el("p", "", hint.text));
+    body.appendChild(card);
+  }
+
   function renderResult(result, target) {
     target.innerHTML = "";
 
@@ -147,6 +156,7 @@
     box.appendChild(head);
 
     var body = el("div", "result-body");
+    appendFeedback(body, result);
 
     if (result.message) {
       body.appendChild(el("div", "result-msg", result.message));
@@ -202,6 +212,7 @@
     box.appendChild(head);
 
     var body = el("div", "result-body");
+    appendFeedback(body, result);
     if (result.status === "CE") {
       var ce = el("pre", "stderr");
       ce.textContent = result.compile_msg || result.message || "编译失败";
@@ -230,24 +241,23 @@
 
   function checkCompiler() {
     var badge = document.getElementById("compiler-badge");
-    if (!badge) return;
-    fetch("/api/compiler", { credentials: "same-origin" })
-      .then(function (r) { return r.json(); })
-      .then(function (d) {
-        if (d.ok) {
-          badge.className = "badge badge-ok";
-          badge.textContent = "GCC 就绪";
-          badge.title = d.version;
-        } else {
-          badge.className = "badge badge-bad";
-          badge.textContent = "编译器缺失";
-          badge.title = d.hint || "找不到 gcc，判题不可用";
-        }
+    var detail = document.getElementById("compiler-detail"), help = document.getElementById("compiler-help"), retry = document.getElementById("compiler-retry");
+    if (!badge || retry && retry.disabled) return;
+    if (retry) retry.disabled = true;
+    badge.textContent = "检测中…";
+    if (detail) detail.textContent = "正在检测编译器…";
+    var controller = new AbortController(), timer = setTimeout(function(){controller.abort();},12000);
+    return fetch("/api/compiler", {credentials:"same-origin", cache:"no-store", signal:controller.signal})
+      .then(function(r){if (!r.ok) throw Error("检测失败");return r.json();})
+      .then(function(d){
+        badge.className = "badge " + (d.ok ? "badge-ok" : "badge-bad");
+        badge.textContent = d.ok ? "GCC 就绪" : "编译器待修复";
+        badge.title = d.version || d.hint || "";
+        if(detail) detail.textContent = d.ok ? "编译器已就绪，可以运行代码和提交判题。" : (d.hint || "当前编译器不可用。");
+        if(help) help.hidden = !!d.ok;
       })
-      .catch(function () {
-        badge.className = "badge badge-bad";
-        badge.textContent = "状态未知";
-      });
+      .catch(function(){badge.className="badge badge-bad";badge.textContent="状态未知";if(detail)detail.textContent="暂时连不上运行服务，请确认 start.cmd 已启动，再重新检测。";if(help)help.hidden=true;})
+      .finally(function(){clearTimeout(timer);if(retry)retry.disabled=false;});
   }
 
   /* 判题/运行期间占位：让等待有个看得见的东西，而不是只变按钮文字。
