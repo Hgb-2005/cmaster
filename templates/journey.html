@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}{{ journey_meta.title }} · CMaster{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/journey.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set ns = namespace(current=none) %}
+{% for item in journey["items"] %}
+  {% if item.state == "current" %}{% set ns.current = item %}{% endif %}
+{% endfor %}
+
+<section class="journey-hub-hero">
+  <div class="journey-hub-copy">
+    <span class="journey-kicker">BUILD ONE THING / 7 DAYS</span>
+    <h1>{{ journey_meta.title }}</h1>
+    <p>{{ journey_meta.promise }}</p>
+    <div class="journey-hero-actions">
+      {% if journey.all_complete %}
+        <a class="btn btn-ok" href="{{ url_for('journey_finish_page') }}">查看项目交付</a>
+      {% elif current_user and ns.current %}
+        <a class="btn btn-primary" href="{{ url_for('journey_day_page', day=ns.current.day) }}">
+          开始第 {{ ns.current.day }} 天 · {{ ns.current.title }}
+        </a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('journey_day_page', day=1) }}">预览第 1 天</a>
+      {% endif %}
+      {% if not current_user %}
+        <a class="btn" href="{{ url_for('login_page', next=request.path) }}">登录后保存进度</a>
+      {% endif %}
+    </div>
+    <div class="journey-hero-facts">
+      <span><b>7</b> 天</span>
+      <span><b>20–30</b> 分钟 / 天</span>
+      <span><b>1</b> 个持续迭代的 C 项目</span>
+    </div>
+  </div>
+
+  <aside class="journey-contract" aria-labelledby="contract-title">
+    <div class="journey-contract-head">
+      <span>FINAL DELIVERY</span>
+      <b id="contract-title">{{ journey_meta.final_project.title }}</b>
+    </div>
+    <p>{{ journey_meta.final_project.summary }}</p>
+    <div class="journey-terminal">
+      <span class="journey-terminal-bar"><i></i><i></i><i></i><b>gradebook</b></span>
+      <pre>{{ journey_meta.final_project.input_example if journey_meta.final_project.input_example is defined else journey_meta.final_project.run_example }}</pre>
+      <span class="journey-terminal-arrow">↓</span>
+      <pre class="is-output">{{ journey_meta.final_project.output_example }}</pre>
+    </div>
+  </aside>
+</section>
+
+<section class="journey-progress-panel" aria-label="项目完成进度">
+  <div class="journey-progress-copy">
+    {% if current_user %}
+      <strong>{{ journey.complete_count }} / {{ journey.total }}</strong>
+      <span>天已交付</span>
+      <div class="journey-progress-track"><i style="width:{{ journey.percent }}%"></i></div>
+    {% else %}
+      <strong>0 / {{ journey.total }}</strong>
+      <span>访客预览模式</span>
+      <div class="journey-progress-track"><i style="width:0%"></i></div>
+    {% endif %}
+  </div>
+  <div class="journey-rail">
+    {% for item in journey["items"] %}
+      <a class="journey-rail-step is-{{ item.state }}" href="{{ url_for('journey_day_page', day=item.day) }}"
+         aria-label="第 {{ item.day }} 天，{{ item.title }}，{{ {'completed':'已完成','current':'今天','available':'可预览','locked':'未解锁'}.get(item.state, item.state) }}">
+        <span>{{ "%02d"|format(item.day) }}</span>
+        <i>{{ "✓" if item.completed else item.day }}</i>
+        <b>{{ item.phase }}</b>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="journey-outcome">
+  <div class="journey-section-head">
+    <span>WHY THIS EXISTS</span>
+    <h2>七天不是七个练习，而是一次完整交付</h2>
+    <p>每天只增加一个能力。前一天能跑的代码，就是下一天的起点。</p>
+  </div>
+  <div class="journey-outcome-grid">
+    <article>
+      <span>01</span>
+      <b>先跑通</b>
+      <p>输入、输出、条件与循环。让程序真的接收数据并作出反应。</p>
+    </article>
+    <article>
+      <span>02</span>
+      <b>再组织</b>
+      <p>数组、函数、字符串和结构体。把越写越长的 main 拆成可理解的小步骤。</p>
+    </article>
+    <article>
+      <span>03</span>
+      <b>最后验收</b>
+      <p>统计、等级报告和异常输入。用一个固定 I/O 契约证明项目真的可用。</p>
+    </article>
+  </div>
+</section>
+
+<section class="journey-roadmap">
+  <div class="journey-section-head compact">
+    <span>SEVEN-DAY ROADMAP</span>
+    <h2>每天 20–30 分钟，只推进这一件事</h2>
+  </div>
+  <div class="journey-day-grid">
+    {% for item in journey["items"] %}
+      <a class="journey-day-card is-{{ item.state }}" href="{{ url_for('journey_day_page', day=item.day) }}">
+        <div class="journey-day-card-top">
+          <span>DAY {{ "%02d"|format(item.day) }}</span>
+          <b>{{ {'completed':'已交付','current':'今天','available':'可开始','locked':'完成前一天解锁'}.get(item.state, item.state) }}</b>
+        </div>
+        <div class="journey-day-index">{{ item.day }}</div>
+        <span class="journey-day-phase">{{ item.phase }} · {{ item.kicker }}</span>
+        <h3>{{ item.title }}</h3>
+        <p>{{ item.goal }}</p>
+        <div class="journey-day-card-meta">
+          <span>{{ item.minutes }} 分钟</span>
+          <span>{{ item.visible_test_count }} 个可见用例</span>
+          {% if item.attempts %}<span>已尝试 {{ item.attempts }} 次</span>{% endif %}
+        </div>
+        <div class="journey-day-card-foot">
+          <span>{{ "查看交付记录" if item.completed else ("继续今天的项目" if item.state == "current" else "查看当天任务") }}</span>
+          <b aria-hidden="true">→</b>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+
+{% if not current_user %}
+<aside class="journey-guest-callout">
+  <div>
+    <strong>访客可以先写、先运行，正式提交时再登录</strong>
+    <p>运行可见用例不会保存进度；登录提交后才会执行隐藏边界用例，并从第 1 天开始逐日解锁。</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('journey_day_page', day=1) }}">先试第 1 天</a>
+</aside>
+{% endif %}
+{% endblock %}

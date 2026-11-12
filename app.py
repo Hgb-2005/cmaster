@@ -160,6 +160,8 @@ def _load_content(name, default):
 COURSES = _load_content("courses.json", {"stages": [], "chapters": []})
 QUESTIONS = _load_content("question_bank.json", [])
 ANSWERS = _load_content("answers.json", {})
+LABS = _load_content("labs.json", [])
+JOURNEY = _load_content("journey.json", {"days": []})
 
 # 内存演示的布局数据由 tools/build_demos.py 生成（偏移、填充、字节全在那边算完）。
 # 这里只负责整份读进来：71KB，一次读完常驻，不为每次请求再解一遍 JSON。
@@ -168,6 +170,8 @@ MEMORY_DEMOS = _load_content("memory_demos.json", {"scenarios": []})
 
 CHAPTERS = {c["id"]: c for c in COURSES["chapters"]}
 QMAP = {q["id"]: q for q in QUESTIONS}
+LABMAP = {lab["id"]: lab for lab in LABS}
+JOURNEY_DAYS = {item["day"]: item for item in JOURNEY.get("days", [])}
 
 # 题目按章节分组，章节页底部直接挂「本章练习」
 QS_BY_CHAPTER = {}
@@ -290,7 +294,8 @@ def _legacy_progress(username):
 def load_progress(username=None):
     username = username or current_user()
     if not username:
-        return {"read": [], "solved": {}, "attempts": {}, "wrong": {}}
+        return {"read": [], "solved": {}, "attempts": {}, "wrong": {},
+                "labs": {}, "journey": {}}
     with _progress_lock:
         path = _progress_path(username)
         if os.path.isfile(path):
@@ -302,6 +307,8 @@ def load_progress(username=None):
         data.setdefault("solved", {})
         data.setdefault("attempts", {})
         data.setdefault("wrong", {})
+        data.setdefault("labs", {})
+        data.setdefault("journey", {})
         dirty = False
         for qid, rec in list(data["wrong"].items()):
             if verdicts.owner(rec.get("status")) != "system":
@@ -322,6 +329,67 @@ def save_progress(data, username=None):
         return
     with _progress_lock:
         _atomic_json(_progress_path(username), data)
+
+
+# ---------------------------------------------------------------- 项目闯关
+
+def _journey_completed(record):
+    """完成是单向状态；之后重做失败不能收回已经解锁的关卡。"""
+    return bool(record.get("completed_at")) or record.get("status") == "AC"
+
+
+def _journey_unlocked(day, data):
+    if day == 1:
+        return True
+    previous = data.get("journey", {}).get(str(day - 1), {})
+    return _journey_completed(previous)
+
+
+def _journey_current_day(data):
+    """返回今天该写的关卡；全部交付后返回 None。"""
+    for day in sorted(JOURNEY_DAYS):
+        record = data.get("journey", {}).get(str(day), {})
+        if not _journey_completed(record):
+            return day
+    return None
+
+
+def _journey_overview(data=None):
+    """把内容、账号记录和顺序解锁合成页面所需的单一视图。"""
+    data = data or {}
+    records = data.get("journey", {})
+    current = _journey_current_day(data)
+    items = []
+    for day in sorted(JOURNEY_DAYS):
+        item = dict(JOURNEY_DAYS[day])
+        record = records.get(str(day), {})
+        completed = _journey_completed(record)
+        unlocked = current_user() is None or _journey_unlocked(day, data)
+        if completed:
+            state = "completed"
+        elif unlocked:
+            state = "current" if current == day else "available"
+        else:
+            state = "locked"
+        item.update({
+            "state": state,
+            "completed": completed,
+            "unlocked": unlocked,
+            "attempts": int(record.get("attempts", 0)),
+            "completed_at": record.get("completed_at"),
+            "last_status": record.get("last_status") or (
+                "AC" if completed else record.get("status", "")),
+        })
+        items.append(item)
+    complete_count = sum(1 for item in items if item["completed"])
+    return {
+        "items": items,
+        "current_day": current,
+        "complete_count": complete_count,
+        "total": len(items),
+        "all_complete": bool(items) and complete_count == len(items),
+        "percent": int(round(100.0 * complete_count / max(1, len(items)))),
+    }
 
 
 # ---------------------------------------------------------------- 收藏与笔记
@@ -709,6 +777,7 @@ def index():
     # 总进度把「读过的知识点」和「通过的题」按等权算，权重怎么分都能吵，
     # 不如就用最直白的口径，用户自己一眼能对上
     overall = int(round(100.0 * (read_kp + solved_q) / max(1, TOTAL_KP + TOTAL_Q)))
+    journey = _journey_overview(data)
     return render_template("index.html",
                            stages=COURSES["stages"],
                            chapters=CHAPTERS,
@@ -720,7 +789,9 @@ def index():
                            overall=overall,
                            study_plan=study_plan(data) if current_user() else [],
                            migration_notice=data.get("migration_notice"),
-                           streak=learning_streak(data) if data else 0)
+                           streak=learning_streak(data) if data else 0,
+                           journey=journey,
+                           journey_meta=JOURNEY)
 
 
 REVIEW_DAY = 24 * 60 * 60
@@ -827,6 +898,97 @@ def chapter_page(cid):
     return redirect(url_for("chapter_kp", cid=cid, kid=1))
 
 
+def _plain_markdown_excerpt(markdown, limit=180):
+    """把课程 Markdown 压成播放器字幕，不把 HTML 塞进前端 JSON。"""
+    text = re.sub(r"```.*?```", " ", markdown or "", flags=re.DOTALL)
+    text = re.sub(r"^\s*\|.*\|\s*$", " ", text, flags=re.MULTILINE)
+    text = re.sub(r"^\s*(?:#+|>|[-*+]\s+|\d+\.\s+)", "", text, flags=re.MULTILINE)
+    text = re.sub(r"!\[([^\]]*)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
+    text = re.sub(r"[*_`]", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    end = max(cut.rfind(mark) for mark in ("。", "！", "？", ". ", "；"))
+    if end < limit * 0.55:
+        end = limit - 1
+    return cut[:end + 1].rstrip() + "…"
+
+
+def _lecture_takeaway(markdown, title):
+    quotes = re.findall(r"^\s*>\s?(.+)$", markdown or "", flags=re.MULTILINE)
+    if quotes:
+        quote = _plain_markdown_excerpt(" ".join(quotes), 150)
+        if quote:
+            return quote
+    clean_title = re.sub(r"^\s*\d+\.\d+\s*", "", title).strip()
+    return "先抓住「%s」，再回到代码里找出支撑这个结论的具体行。" % clean_title
+
+
+@app.route("/chapter/<int:cid>/lecture")
+def chapter_lecture(cid):
+    ch = CHAPTERS.get(cid)
+    if not ch:
+        abort(404)
+
+    data = load_progress() if current_user() else {}
+    read = set(data.get("read", []))
+    chapter_keys = {
+        _kp_key(cid, kp)
+        for kp in ch["knowledge_points"]
+    }
+    chapter_read_count = len(read & chapter_keys)
+
+    scenes = []
+    for kid, kp in enumerate(ch["knowledge_points"], start=1):
+        narration = _plain_markdown_excerpt(kp.get("md", ""), 190)
+        duration = max(24, min(38, 20 + round(len(narration) / 11)))
+        scenes.append({
+            "kid": kid,
+            "title": kp["title"],
+            "kind": kp.get("kind", "concept"),
+            "html": kp.get("html", ""),
+            "narration": narration or "这一节围绕「%s」展开。" % kp["title"],
+            "takeaway": _lecture_takeaway(kp.get("md", ""), kp["title"]),
+            "duration": duration,
+        })
+
+    description_lines = ch.get("description", "").splitlines()
+    intro_parts = []
+    outcomes = []
+    for line in description_lines:
+        stripped = line.strip()
+        if stripped.startswith("- "):
+            outcomes.append(_plain_markdown_excerpt(stripped[2:], 120))
+        elif stripped and not stripped.startswith(("#", "-")):
+            intro_parts.append(stripped)
+    lecture_intro = _plain_markdown_excerpt(" ".join(intro_parts), 240)
+    lecture_data = {
+        "cid": cid,
+        "sceneTitles": [scene["title"] for scene in scenes],
+        "durations": [scene["duration"] for scene in scenes],
+        "readKids": [
+            kid for kid, kp in enumerate(ch["knowledge_points"], start=1)
+            if _kp_key(cid, kp) in read
+        ],
+    }
+    previous_ch = CHAPTERS.get(cid - 1)
+    next_ch = CHAPTERS.get(cid + 1)
+    return render_template(
+        "lecture.html",
+        chapter=ch,
+        scenes=scenes,
+        outcomes=outcomes,
+        lecture_intro=lecture_intro,
+        lecture_data=lecture_data,
+        chapter_read_count=chapter_read_count,
+        storage_id=user_storage_id(current_user()) if current_user() else "guest",
+        previous_ch=previous_ch,
+        next_ch=next_ch,
+    )
+
+
 @app.route("/chapter/<int:cid>/<int:kid>")
 def chapter_kp(cid, kid):
     ch = CHAPTERS.get(cid)
@@ -851,6 +1013,10 @@ def chapter_kp(cid, kid):
     next_ch = CHAPTERS.get(cid + 1)
     return render_template("chapter.html",
                            chapter=ch, kp=kps[kid - 1], kid=kid,
+                           chapter_read_count=len(read & {
+                               _kp_key(cid, item)
+                               for item in kps
+                           }),
                            study_ref="lesson:%d:%d" % (cid, kid),
                            study_record=notebook_record(data, "lesson:%d:%d" % (cid, kid)),
                            key=key, read=read,
@@ -866,7 +1032,8 @@ def problems_page():
     return render_template("problems.html",
                            questions=QUESTIONS,
                            chapters=CHAPTERS,
-                           solved=data.get("solved", {}))
+                           solved=data.get("solved", {}),
+                           labcount=len(LABS))
 
 
 @app.route("/problem/<qid>")
@@ -888,6 +1055,286 @@ def problem_page(qid):
                                or (data.get("solved", {}).get(qid) or {}).get("code"),
                            solution=solution, allow_legacy_draft=allow_legacy_draft,
                            chapters=CHAPTERS)
+
+
+@app.route("/labs")
+def labs_page():
+    data = load_progress() if current_user() else {}
+    records = data.get("labs", {})
+    accepted = sum(record.get("status") == "AC" for record in records.values())
+    response = app.make_response(render_template(
+        "labs.html", labs=LABS, records=records,
+        accepted=accepted, total=len(LABS)))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/lab/<lab_id>")
+def lab_page(lab_id):
+    lab = LABMAP.get(lab_id)
+    if not lab:
+        abort(404)
+    data = load_progress() if current_user() else {}
+    record = data.get("labs", {}).get(lab_id, {})
+    index = LABS.index(lab)
+    visible_cases = lab.get("tests", [])[:lab.get("visible_test_count", 0)]
+    lab_boot = {
+        "id": lab_id,
+        "starter": lab["starter"],
+        "loggedIn": current_user() is not None,
+        "storageId": user_storage_id(current_user()) if current_user() else "guest",
+        "record": record,
+        "visibleTotal": len(visible_cases),
+        "hiddenTotal": max(0, len(lab.get("tests", [])) - len(visible_cases)),
+        "maxChangedLines": lab.get("max_changed_lines", 1),
+    }
+    response = app.make_response(render_template(
+        "lab.html",
+        lab=lab,
+        lab_boot=lab_boot,
+        chapter=CHAPTERS.get(lab.get("chapter")),
+        visible_cases=visible_cases,
+        record=record,
+        previous_lab=LABS[index - 1] if index > 0 else None,
+        next_lab=LABS[index + 1] if index + 1 < len(LABS) else None,
+    ))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/journey")
+def journey_page():
+    data = load_progress() if current_user() else {}
+    overview = _journey_overview(data)
+    response = app.make_response(render_template(
+        "journey.html",
+        journey=overview,
+        journey_meta=JOURNEY,
+    ))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/journey/day/<int:day>")
+def journey_day_page(day):
+    item = JOURNEY_DAYS.get(day)
+    if not item:
+        abort(404)
+
+    data = load_progress() if current_user() else {}
+    record = data.get("journey", {}).get(str(day), {})
+    unlocked = (not current_user()) or _journey_unlocked(day, data)
+    visible_count = max(0, min(int(item.get("visible_test_count", 0)),
+                               len(item.get("tests", []))))
+    visible_cases = item.get("tests", [])[:visible_count]
+    public_record = {
+        "attempts": max(0, int(record.get("attempts", 0))),
+        "status": record.get("status", ""),
+        "last_status": record.get("last_status") or record.get("status", ""),
+        "completed_at": record.get("completed_at"),
+        "completed": _journey_completed(record),
+        "last_code": record.get("last_code", ""),
+    }
+    overview = _journey_overview(data)
+    boot = {
+        "day": day,
+        "starter": item["starter"],
+        "loggedIn": current_user() is not None,
+        "storageId": user_storage_id(current_user()) if current_user() else "guest",
+        "record": public_record,
+        "outcome": item.get("outcome", ""),
+        "codeFocus": item.get("code_focus", []),
+        "completeCount": overview["complete_count"],
+        "visibleTotal": visible_count,
+        "hiddenTotal": max(0, len(item.get("tests", [])) - visible_count),
+        "locked": not unlocked,
+        "finalDay": day == max(JOURNEY_DAYS) if JOURNEY_DAYS else False,
+    }
+    response = app.make_response(render_template(
+        "journey_day.html",
+        item=item,
+        journey=overview,
+        journey_boot=boot,
+        visible_cases=visible_cases,
+        locked=not unlocked,
+        previous_day=JOURNEY_DAYS.get(day - 1),
+        next_day=JOURNEY_DAYS.get(day + 1),
+        record=public_record,
+    ))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/journey/finish")
+@login_required
+def journey_finish_page():
+    data = load_progress()
+    overview = _journey_overview(data)
+    if not overview["all_complete"]:
+        return redirect(url_for("journey_page"))
+    final_record = data.get("journey", {}).get("7", {})
+    response = app.make_response(render_template(
+        "journey_finish.html",
+        journey=overview,
+        journey_meta=JOURNEY,
+        final_code=final_record.get("last_code", ""),
+    ))
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+def _lab_judge_question(lab, visible_only=False):
+    tests = lab.get("tests", [])
+    if visible_only:
+        tests = tests[:lab.get("visible_test_count", 0)]
+    return {
+        "cases": [
+            {
+                "name": case.get("name") or "用例 %d" % (index + 1),
+                "input": case.get("input", ""),
+                "output": case.get("output", ""),
+            }
+            for index, case in enumerate(tests)
+        ]
+    }
+
+
+def _lab_restriction(lab, code):
+    """校验「只改一行」任务，不依赖前端提交的修改标记。"""
+    def lines(text):
+        value = (text or "").replace("\r\n", "\n").replace("\r", "\n")
+        return value.splitlines()
+
+    original = lines(lab.get("starter", ""))
+    submitted = lines(code)
+    start = 0
+    while (start < len(original) and start < len(submitted)
+           and original[start] == submitted[start]):
+        start += 1
+    end_original = len(original) - 1
+    end_submitted = len(submitted) - 1
+    while (end_original >= start and end_submitted >= start
+           and original[end_original] == submitted[end_submitted]):
+        end_original -= 1
+        end_submitted -= 1
+    changed = max(end_original - start + 1, end_submitted - start + 1)
+    allowed = lab.get("max_changed_lines", 1)
+    if changed <= allowed:
+        return None
+    return {
+        "changed_lines": changed,
+        "max_changed_lines": allowed,
+        "message": "这轮要求最多修改 %d 行；按保留上下文后的差异计算，共修改了 %d 行。请重置后只修关键一行。" % (
+            allowed, changed),
+    }
+
+
+def _safe_lab_result(result, visible_count):
+    """提交结果只保留可见用例细节，隐藏用例仅返回裁决。"""
+    safe = {}
+    for key in ("status", "passed", "total", "message", "compile_msg",
+                "compile_ms", "time_ms", "judge_ms", "owner",
+                "verdict_code", "verdict_name", "tle_kind", "executed"):
+        if key in result:
+            safe[key] = result[key]
+    cases = []
+    for index, case in enumerate(result.get("cases") or []):
+        if index < visible_count:
+            cases.append({
+                key: case.get(key)
+                for key in ("idx", "name", "status", "input", "expected", "actual",
+                            "stderr", "time_ms", "cpu_ms")
+                if key in case
+            })
+        else:
+            cases.append({
+                "idx": case.get("idx", index + 1),
+                "name": "隐藏用例 %d" % (index - visible_count + 1),
+                "status": case.get("status", "SE"),
+                "hidden": True,
+            })
+    safe["cases"] = cases
+    return safe
+
+
+def _record_lab_attempt(lab_id, code, result):
+    """账号内记录实验室进度；系统错误不增加尝试次数。"""
+    with _progress_lock:
+        data = load_progress()
+        labs = data.setdefault("labs", {})
+        previous = labs.get(lab_id, {})
+        now = int(time.time())
+        status = result.get("status") or "SE"
+        if verdicts.owner(status) == "system":
+            if code:
+                previous["last_code"] = code
+                previous["last_seen_ts"] = now
+                labs[lab_id] = previous
+                save_progress(data)
+            return previous
+
+        record = dict(previous)
+        record["attempts"] = max(0, int(record.get("attempts", 0))) + 1
+        record["status"] = status
+        record["ts"] = now
+        record["last_code"] = code
+        if status == "AC":
+            record["first_ac"] = record.get("first_ac", now)
+            _touch_day(data)
+        labs[lab_id] = record
+        save_progress(data)
+        return record
+
+
+def _journey_judge_question(item, visible_only=False):
+    tests = item.get("tests", [])
+    if visible_only:
+        tests = tests[:item.get("visible_test_count", 0)]
+    return {
+        "cases": [
+            {
+                "name": case.get("name") or "用例 %d" % (index + 1),
+                "input": case.get("input", ""),
+                "output": case.get("output", ""),
+            }
+            for index, case in enumerate(tests)
+        ]
+    }
+
+
+def _record_journey_attempt(day, code, result):
+    """项目进度只在用户代码得到最终裁决时推进，SE 永不消耗尝试。"""
+    with _progress_lock:
+        data = load_progress()
+        records = data.setdefault("journey", {})
+        key = str(day)
+        previous = records.get(key, {})
+        now = int(time.time())
+        status = result.get("status") or "SE"
+
+        if verdicts.owner(status) == "system":
+            if code:
+                updated = dict(previous)
+                updated["last_code"] = code
+                updated["last_seen_ts"] = now
+                records[key] = updated
+                save_progress(data)
+                return updated
+            return previous
+
+        record = dict(previous)
+        record["attempts"] = max(0, int(record.get("attempts", 0))) + 1
+        record["last_status"] = status
+        record["status"] = record.get("status", "")
+        record["ts"] = now
+        record["last_code"] = code
+        if status == "AC":
+            record["status"] = "AC"
+            record["completed_at"] = record.get("completed_at") or now
+            _touch_day(data)
+        records[key] = record
+        save_progress(data)
+        return record
 
 
 @app.route("/playground")
@@ -1853,11 +2300,43 @@ def _build_search_index():
             "extra": "%s %s" % (q.get("hint") or "",
                                 _strip_tags(q.get("description_html", ""))[:220]),
         })
+    for lab in LABS:
+        items.append({
+            "group": "修复实验室",
+            "icon": "修",
+            "title": lab["title"],
+            "url": "/lab/%s" % lab["id"],
+            "meta": "第 %d 章 · %s" % (
+                lab.get("chapter", 0),
+                {"easy": "简单", "medium": "中等", "hard": "较难"}.get(
+                    lab.get("difficulty"), lab.get("difficulty", "")),
+            ),
+            "extra": "%s %s %s" % (
+                lab.get("concept") or "",
+                lab.get("summary") or "",
+                lab.get("mission") or "",
+            ),
+        })
+    for day in sorted(JOURNEY_DAYS):
+        item = JOURNEY_DAYS[day]
+        items.append({
+            "group": "项目闯关",
+            "icon": "闯",
+            "title": "第 %d 天 · %s" % (day, item["title"]),
+            "url": "/journey/day/%d" % day,
+            "meta": "%d 分钟 · %s" % (item.get("minutes", 0), item.get("phase", "")),
+            "extra": "%s %s %s" % (
+                item.get("kicker") or "",
+                item.get("goal") or "",
+                item.get("outcome") or "",
+            ),
+        })
     return items
 
 
 SEARCH_INDEX = _build_search_index()
-_GROUP_ORDER = {"课程章节": 0, "知识点": 1, "练习题": 2}
+_GROUP_ORDER = {"项目闯关": 0, "课程章节": 1, "知识点": 2,
+                "练习题": 3, "修复实验室": 4}
 
 
 @app.route("/api/search")
@@ -1944,6 +2423,232 @@ def api_run():
         tle_kind=result.get("tle_kind") or "",
     )
     return jsonify({"ok": True, "result": result})
+
+
+@app.route("/api/journey/<int:day>/run", methods=["POST"])
+def api_journey_run(day):
+    """访客与登录用户都可试跑当天的可见用例。"""
+    item = JOURNEY_DAYS.get(day)
+    if not item:
+        return jsonify({"ok": False, "error": "项目关卡不存在"}), 404
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"ok": False, "error": "请求格式不对，需要 JSON"}), 400
+    code = payload.get("code", "")
+    if not isinstance(code, str):
+        return jsonify({"ok": False, "error": "代码需要是文本"}), 400
+    if not code.strip():
+        return jsonify({"ok": False, "error": "代码是空的"}), 400
+    if len(code) > 100_000:
+        return jsonify({"ok": False, "error": "代码太长"}), 400
+
+    question = _journey_judge_question(item, visible_only=True)
+    t_want = metrics.enter()
+    if not _judge_sem.acquire(timeout=30):
+        metrics.leave()
+        return jsonify({"ok": False, "error": "判题机忙，稍后再试"}), 503
+    t_got = time.time()
+    try:
+        result = judge.judge(question, code)
+    finally:
+        _judge_sem.release()
+        metrics.leave()
+    metrics.record(
+        kind="journey_run",
+        verdict=result.get("status") or "SE",
+        queue_ms=int((t_got - t_want) * 1000),
+        compile_ms=result.get("compile_ms", 0),
+        run_ms=result.get("time_ms", 0),
+        judge_ms=result.get("judge_ms", 0),
+        cases=result.get("total", 0),
+        passed=result.get("passed", 0),
+        qid="journey:%d" % day,
+        tle_kind=result.get("tle_kind") or "",
+    )
+    return jsonify({
+        "ok": True,
+        "result": _safe_lab_result(result, len(question["cases"])),
+    })
+
+
+@app.route("/api/journey/<int:day>/submit", methods=["POST"])
+@login_required
+def api_journey_submit(day):
+    """顺序解锁的正式提交；隐藏用例只在服务端执行并脱敏返回。"""
+    item = JOURNEY_DAYS.get(day)
+    if not item:
+        return jsonify({"ok": False, "error": "项目关卡不存在"}), 404
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"ok": False, "error": "请求格式不对，需要 JSON"}), 400
+    expected_account = user_storage_id(current_user())
+    if payload.get("accountId") != expected_account:
+        return jsonify({
+            "ok": False,
+            "error": "账号已切换，请刷新页面后再提交。",
+        }), 409
+    code = payload.get("code", "")
+    if not isinstance(code, str):
+        return jsonify({"ok": False, "error": "代码需要是文本"}), 400
+    if not code.strip():
+        return jsonify({"ok": False, "error": "代码是空的"}), 400
+    if len(code) > 100_000:
+        return jsonify({"ok": False, "error": "代码太长"}), 400
+
+    with _progress_lock:
+        data = load_progress()
+        if not _journey_unlocked(day, data):
+            return jsonify({
+                "ok": False,
+                "locked": True,
+                "error": "先完成前一天，才能提交今天的项目。",
+            }), 403
+
+    question = _journey_judge_question(item)
+    t_want = metrics.enter()
+    if not _judge_sem.acquire(timeout=60):
+        metrics.leave()
+        return jsonify({"ok": False, "error": "判题机忙，稍后再试"}), 503
+    t_got = time.time()
+    try:
+        result = judge.judge(question, code)
+    finally:
+        _judge_sem.release()
+        metrics.leave()
+    metrics.record(
+        kind="journey_submit",
+        verdict=result.get("status") or "SE",
+        queue_ms=int((t_got - t_want) * 1000),
+        compile_ms=result.get("compile_ms", 0),
+        run_ms=result.get("time_ms", 0),
+        judge_ms=result.get("judge_ms", 0),
+        cases=result.get("total", 0),
+        passed=result.get("passed", 0),
+        case_ms=[case.get("time_ms", 0) for case in (result.get("cases") or [])],
+        qid="journey:%d" % day,
+        tle_kind=result.get("tle_kind") or "",
+    )
+    record = _record_journey_attempt(day, code, result)
+    completed = _journey_completed(record)
+    overview = _journey_overview(load_progress())
+    return jsonify({
+        "ok": True,
+        "result": _safe_lab_result(result, item.get("visible_test_count", 0)),
+        "record": record,
+        "progress_recorded": verdicts.owner(result.get("status")) != "system",
+        "completed": completed,
+        "complete_count": overview["complete_count"],
+        "final_delivery": completed and day == max(JOURNEY_DAYS),
+        "next_url": (
+            url_for("journey_finish_page") if day == max(JOURNEY_DAYS)
+            else url_for("journey_day_page", day=day + 1)
+        ),
+    })
+
+
+@app.route("/api/lab/<lab_id>/run", methods=["POST"])
+def api_lab_run(lab_id):
+    """访客可试运行可见用例；隐藏用例只在登录提交时执行。"""
+    lab = LABMAP.get(lab_id)
+    if not lab:
+        return jsonify({"ok": False, "error": "实验不存在"}), 404
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"ok": False, "error": "请求格式不对，需要 JSON"}), 400
+    code = payload.get("code", "")
+    if not isinstance(code, str):
+        return jsonify({"ok": False, "error": "代码需要是文本"}), 400
+    if not code.strip():
+        return jsonify({"ok": False, "error": "代码是空的"}), 400
+    if len(code) > 100_000:
+        return jsonify({"ok": False, "error": "代码太长"}), 400
+    restriction = _lab_restriction(lab, code)
+    if restriction:
+        return jsonify({"ok": False, "error": restriction["message"],
+                        "restriction": restriction}), 422
+
+    question = _lab_judge_question(lab, visible_only=True)
+    t_want = metrics.enter()
+    if not _judge_sem.acquire(timeout=30):
+        metrics.leave()
+        return jsonify({"ok": False, "error": "判题机忙，稍后再试"}), 503
+    t_got = time.time()
+    try:
+        result = judge.judge(question, code)
+    finally:
+        _judge_sem.release()
+        metrics.leave()
+    metrics.record(
+        kind="lab_run",
+        verdict=result.get("status") or "SE",
+        queue_ms=int((t_got - t_want) * 1000),
+        compile_ms=result.get("compile_ms", 0),
+        run_ms=result.get("time_ms", 0),
+        judge_ms=result.get("judge_ms", 0),
+        cases=result.get("total", 0),
+        passed=result.get("passed", 0),
+        qid="lab:" + lab_id,
+        tle_kind=result.get("tle_kind") or "",
+    )
+    return jsonify({"ok": True, "result": _safe_lab_result(result, len(question["cases"]))})
+
+
+@app.route("/api/lab/<lab_id>/submit", methods=["POST"])
+@login_required
+def api_lab_submit(lab_id):
+    """完整提交：校验修改约束、运行全部用例并保存账号进度。"""
+    lab = LABMAP.get(lab_id)
+    if not lab:
+        return jsonify({"ok": False, "error": "实验不存在"}), 404
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({"ok": False, "error": "请求格式不对，需要 JSON"}), 400
+    if payload.get("accountId") and payload["accountId"] != user_storage_id(current_user()):
+        return jsonify({"ok": False, "error": "账号已切换，请刷新页面后再提交。"}), 409
+    code = payload.get("code", "")
+    if not isinstance(code, str):
+        return jsonify({"ok": False, "error": "代码需要是文本"}), 400
+    if not code.strip():
+        return jsonify({"ok": False, "error": "代码是空的"}), 400
+    if len(code) > 100_000:
+        return jsonify({"ok": False, "error": "代码太长"}), 400
+    restriction = _lab_restriction(lab, code)
+    if restriction:
+        return jsonify({"ok": False, "error": restriction["message"],
+                        "restriction": restriction}), 422
+
+    question = _lab_judge_question(lab)
+    t_want = metrics.enter()
+    if not _judge_sem.acquire(timeout=60):
+        metrics.leave()
+        return jsonify({"ok": False, "error": "判题机忙，稍后再试"}), 503
+    t_got = time.time()
+    try:
+        result = judge.judge(question, code)
+    finally:
+        _judge_sem.release()
+        metrics.leave()
+    metrics.record(
+        kind="lab_submit",
+        verdict=result.get("status") or "SE",
+        queue_ms=int((t_got - t_want) * 1000),
+        compile_ms=result.get("compile_ms", 0),
+        run_ms=result.get("time_ms", 0),
+        judge_ms=result.get("judge_ms", 0),
+        cases=result.get("total", 0),
+        passed=result.get("passed", 0),
+        case_ms=[case.get("time_ms", 0) for case in (result.get("cases") or [])],
+        qid="lab:" + lab_id,
+        tle_kind=result.get("tle_kind") or "",
+    )
+    record = _record_lab_attempt(lab_id, code, result)
+    visible_count = lab.get("visible_test_count", 0)
+    return jsonify({
+        "ok": True,
+        "result": _safe_lab_result(result, visible_count),
+        "record": record,
+        "progress_recorded": verdicts.owner(result.get("status")) != "system",
+    })
 
 
 @app.route("/api/submit", methods=["POST"])
@@ -2098,7 +2803,10 @@ def inject_globals():
             "site_name": "CMaster",
             "chapters": CHAPTERS,
             "stages": COURSES["stages"],
-            "qcounts": {cid: len(v) for cid, v in QS_BY_CHAPTER.items()}}
+            "qcounts": {cid: len(v) for cid, v in QS_BY_CHAPTER.items()},
+            "labcount": len(LABS),
+            "journey_count": len(JOURNEY_DAYS),
+            "cloud_mode": os.environ.get("CMASTER_CLOUD") == "1"}
 
 
 if __name__ == "__main__":

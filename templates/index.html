@@ -1,15 +1,102 @@
 {% extends "base.html" %}
 {% block title %}CMaster · 从零把 C 语言写进手里{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/journey.css') }}">
+{% endblock %}
+
 {% block content %}
+{% set ns = namespace(today=none) %}
+{% for item in journey["items"] %}
+  {% if item.state == "current" %}{% set ns.today = item %}{% endif %}
+{% endfor %}
+
+<section class="project-home-hero">
+  <div class="project-home-copy">
+    <span class="journey-kicker">START WITH A PROJECT / NOT A SYLLABUS</span>
+    {% if current_user and journey.all_complete %}
+      <h1>七天结束了，<em>程序留下来了</em></h1>
+      <p>你已经交付一个能读取学生记录、校验边界、计算统计并输出等级报告的 C 项目。现在可以查看完整源码，或继续用课程、题库和实验室扩展它。</p>
+    {% elif current_user and ns.today %}
+      <h1>今天写第 {{ ns.today.day }} 天：<em>{{ ns.today.title }}</em></h1>
+      <p>{{ ns.today.goal }} 这一轮会接在前一天的代码上，不需要重新开始。</p>
+    {% else %}
+      <h1>七天，做出一个<em>真正能用的 C 程序</em></h1>
+      <p>每天 20–30 分钟，持续迭代同一个成绩管理器。先跑通输入输出，再补齐校验、数组、函数和结构体，最后按固定契约交付。</p>
+    {% endif %}
+
+    <div class="project-today-meta">
+      {% if current_user and ns.today %}
+        <span>DAY {{ "%02d"|format(ns.today.day) }} · {{ ns.today.phase }}</span>
+        <span>{{ ns.today.minutes }} 分钟</span>
+        <span>新增：{{ ns.today.code_focus|join(" / ") }}</span>
+      {% elif current_user and journey.all_complete %}
+        <span>7 / 7 已交付</span>
+        <span>完整源码已保存</span>
+        <span>可继续扩展</span>
+      {% else %}
+        <span>7 天路线</span>
+        <span>20–30 分钟 / 天</span>
+        <span>1 个持续迭代项目</span>
+      {% endif %}
+    </div>
+
+    <div class="project-home-actions">
+      {% if current_user and journey.all_complete %}
+        <a class="btn btn-ok" href="{{ url_for('journey_finish_page') }}">打开项目交付</a>
+        <a class="btn" href="{{ url_for('journey_day_page', day=7) }}">查看最终代码</a>
+      {% elif current_user and ns.today %}
+        <a class="btn btn-primary" href="{{ url_for('journey_day_page', day=ns.today.day) }}">进入今天的工位</a>
+        <a class="btn" href="{{ url_for('journey_page') }}">查看七天路线</a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('journey_day_page', day=1) }}">预览并运行第 1 天</a>
+        <a class="btn" href="{{ url_for('journey_page') }}">先看最终成果</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <aside class="project-home-contract" aria-labelledby="home-contract-title">
+    <div class="project-home-contract-top">
+      <span>FINAL PROJECT</span>
+      <b id="home-contract-title">{{ journey_meta.final_project.title }}</b>
+    </div>
+    <div class="project-home-terminal">
+      <div class="project-home-terminal-bar"><i></i><i></i><i></i></div>
+      <pre>{{ journey_meta.final_project.run_example }}</pre>
+      <pre>{{ journey_meta.final_project.output_example }}</pre>
+    </div>
+    <div class="project-home-week" aria-label="七天项目进度">
+      {% for item in journey["items"] %}
+        <a class="is-{{ item.state }}" href="{{ url_for('journey_day_page', day=item.day) }}"
+           title="第 {{ item.day }} 天 · {{ item.title }}">
+          <i>{{ "✓" if item.completed else item.day }}</i>
+          <span>{{ item.phase }}</span>
+        </a>
+      {% endfor %}
+    </div>
+    {% if not current_user %}
+      <p class="hint-box">访客可以运行第 1 天的可见用例；登录后才会保存代码、执行隐藏边界用例并按顺序解锁。</p>
+    {% endif %}
+  </aside>
+</section>
+
 <section class="environment-card" aria-labelledby="environment-title">
   <div><h2 id="environment-title">练习环境</h2><p id="compiler-detail" role="status">正在检测编译器…</p>
   <p id="compiler-help" hidden>本机版需要先安装 C 编译器。双击 install-compiler.cmd 安装，完成后点击重新检测。课程阅读和学习记录可继续使用。</p></div>
   <button class="btn" type="button" id="compiler-retry" onclick="CMaster.checkCompiler()">重新检测</button>
 </section>
+
+<div class="home-support-head">
+  <div>
+    <h2>项目遇到问题时，再打开配套资源</h2>
+    <p>课程、题库、Bug 修复实验室、训练与知识图谱负责解释卡点；七天项目负责把知识连成可运行的结果。</p>
+  </div>
+  <a class="btn btn-sm" href="{{ url_for('problems_page') }}">按知识点查题</a>
+</div>
+
 <section class="hero">
   <div class="hero-main">
-    <h1>把 C 语言<em>写进手里</em>，不只是看懂</h1>
+    <h2>把 C 语言学进手里的配套路线</h2>
     <p>
       {{ chapters|length }} 章系统课程，{{ total_kp }} 个知识点，{{ total_q }} 道可在线判题的练习。
       每一段代码都能在这里编译、运行、拿到逐用例反馈——
@@ -35,8 +122,9 @@
       {% else %}
         <a class="btn btn-primary" href="{{ url_for('chapter_page', cid=1) }}">从第 1 章开始</a>
       {% endif %}
-      <a class="btn" href="{{ url_for('problems_page') }}">直接刷题</a>
-      <a class="btn btn-ghost" href="{{ url_for('playground_page') }}">打开游乐场</a>
+      <a class="btn" href="{{ url_for('problems_page') }}">题库</a>
+      <a class="btn" href="{{ url_for('labs_page') }}">Bug 修复实验室</a>
+      <a class="btn btn-ghost" href="{{ url_for('playground_page') }}">游乐场</a>
     </div>
   </div>
 

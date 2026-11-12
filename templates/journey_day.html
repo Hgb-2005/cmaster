@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}第 {{ item.day }} 天 · {{ item.title }} · CMaster{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/lib/codemirror.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/theme/material-darker.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/journey.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="crumb journey-crumb">
+  <a href="{{ url_for('journey_page') }}">项目闯关</a>
+  <span class="sep">/</span>
+  <span>第 {{ item.day }} 天</span>
+</div>
+
+<header class="journey-day-head">
+  <div>
+    <span class="journey-kicker">DAY {{ "%02d"|format(item.day) }} · {{ item.phase }}</span>
+    <h1>{{ item.title }}</h1>
+    <p>{{ item.goal }}</p>
+  </div>
+  <div class="journey-day-state is-{{ 'completed' if record.completed_at else ('locked' if locked else 'active') }}">
+    <span>{{ "已交付" if record.completed_at else ("未解锁" if locked else "正在构建") }}</span>
+    <b>{{ journey.complete_count }} / {{ journey.total }}</b>
+    <small>{{ item.minutes }} 分钟 · {{ item.kicker }}</small>
+  </div>
+</header>
+
+<div class="journey-build-map" aria-label="七天项目状态">
+  {% for step in journey["items"] %}
+    <a href="{{ url_for('journey_day_page', day=step.day) }}" class="is-{{ step.state }}{{ ' is-active' if step.day == item.day }}">
+      <i>{{ "✓" if step.completed else step.day }}</i>
+      <span>{{ step.phase }}</span>
+    </a>
+  {% endfor %}
+</div>
+
+{% if locked %}
+<section class="journey-locked">
+  <div class="journey-locked-mark">LOCKED</div>
+  <span class="journey-kicker">SEQUENTIAL BUILD</span>
+  <h2>先完成第 {{ item.day - 1 }} 天，再继续这一步</h2>
+  <p>这个项目刻意把新代码建在前一天的结果上。按顺序交付，才能清楚看到每一行代码为什么出现。</p>
+  {% if previous_day %}
+    <a class="btn btn-primary" href="{{ url_for('journey_day_page', day=previous_day.day) }}">
+      去完成第 {{ previous_day.day }} 天 · {{ previous_day.title }}
+    </a>
+  {% endif %}
+  <div class="journey-locked-preview">
+    <div>
+      <span>这一轮会新增</span>
+      <ul>
+        {% for focus in item.code_focus %}<li>{{ focus }}</li>{% endfor %}
+      </ul>
+    </div>
+    <div>
+      <span>完成后你会</span>
+      <p>{{ item.outcome }}</p>
+    </div>
+  </div>
+</section>
+{% else %}
+<div class="journey-workbench">
+  <aside class="journey-brief-pane">
+    <section class="journey-brief">
+      <span class="journey-panel-label">TODAY'S OUTPUT</span>
+      <h2>本轮产物</h2>
+      <p>{{ item.outcome }}</p>
+      <div class="journey-capability-list">
+        {% for focus in item.code_focus %}<span>{{ focus }}</span>{% endfor %}
+      </div>
+    </section>
+
+    <section class="journey-brief-section">
+      <div class="journey-brief-title">
+        <span>STEP-BY-STEP</span>
+        <h3>今天要完成的三件事</h3>
+      </div>
+      <ol class="journey-brief-steps">
+        {% for text in item.brief %}<li>{{ text }}</li>{% endfor %}
+      </ol>
+    </section>
+
+    <section class="journey-test-section">
+      <div class="journey-brief-title">
+        <span>VISIBLE CASES</span>
+        <h3>先跑通这些可见用例</h3>
+      </div>
+      <div class="journey-test-list">
+        {% for case in visible_cases %}
+          <article class="journey-test">
+            <div class="journey-test-head">
+              <span>{{ "%02d"|format(loop.index) }}</span>
+              <b>{{ case.name }}</b>
+            </div>
+            <div>
+              <label>输入</label>
+              <pre>{{ case.input if case.input else "（无输入）" }}</pre>
+            </div>
+            <div>
+              <label>期望输出</label>
+              <pre>{{ case.output }}</pre>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+      <p class="journey-hidden-note">正式提交时还会运行 {{ journey_boot.hiddenTotal }} 个隐藏边界用例。</p>
+    </section>
+
+    <section class="journey-hint-section">
+      <div class="journey-brief-title">
+        <span>STAGED HINTS</span>
+        <h3>卡住时按顺序看线索</h3>
+      </div>
+      <ol class="journey-hints" id="journey-hints">
+        {% for hint in item.hints %}
+          <li hidden>
+            <span>线索 {{ loop.index }}</span>
+            <p>{{ hint }}</p>
+          </li>
+        {% endfor %}
+      </ol>
+      <div class="journey-hint-actions">
+        <button class="btn btn-ghost btn-sm" type="button" id="journey-next-hint">解锁第 1 条线索</button>
+        <span id="journey-hint-counter">0 / {{ item.hints|length }}</span>
+      </div>
+    </section>
+
+    <section class="journey-checklist">
+      <div class="journey-brief-title">
+        <span>ACCEPTANCE</span>
+        <h3>交付前检查</h3>
+      </div>
+      {% for text in item.checklist %}
+        <label><input type="checkbox"> <span>{{ text }}</span></label>
+      {% endfor %}
+    </section>
+  </aside>
+
+  <main class="journey-editor-pane">
+    <div class="journey-editor-head">
+      <div>
+        <span class="journey-panel-label">PROJECT WORKBENCH</span>
+        <h2>gradebook / main.c</h2>
+      </div>
+      <div class="journey-editor-shortcuts">
+        <span>Ctrl + Enter 运行</span>
+        <span>Ctrl + S 提交</span>
+      </div>
+    </div>
+
+    <div class="journey-editor-wrap">
+      <textarea id="journey-code">{{ item.starter }}</textarea>
+    </div>
+
+    <div class="journey-toolbar">
+      <button class="btn btn-sm" id="journey-run">运行可见用例</button>
+      <button class="btn btn-ok btn-sm" id="journey-submit">提交并保存</button>
+      <button class="btn btn-ghost btn-sm" id="journey-reset">恢复本日起点</button>
+      <span class="spacer"></span>
+      <span class="journey-autosave" id="journey-draft-status">草稿自动保存在此浏览器</span>
+    </div>
+
+    {% if not current_user %}
+    <aside class="journey-guest-strip">
+      <span>访客模式</span>
+      <p>可以运行可见用例。提交隐藏用例前会引导登录，登录后自动带回当前代码。</p>
+    </aside>
+    {% endif %}
+
+    <section class="journey-current-project">
+      <div class="journey-current-project-head">
+        <div>
+          <span class="journey-panel-label">PROJECT STATUS</span>
+          <h2>项目当前状态</h2>
+        </div>
+        <span id="journey-record-status" class="journey-record-status">
+          {{ "已交付" if record.completed_at else ("上次 " + record.last_status if record.last_status else "尚未提交") }}
+        </span>
+      </div>
+      <div class="journey-current-project-grid">
+        <div><span>已完成</span><b>{{ journey.complete_count }} / {{ journey.total }}</b></div>
+        <div><span>本日尝试</span><b id="journey-attempts">{{ record.attempts }}</b></div>
+        <div><span>下一步</span><b>{{ "交付项目" if item.day == journey.total else "第 %d 天"|format(item.day + 1) }}</b></div>
+      </div>
+      <div class="journey-completion-actions" id="journey-completion-actions" {{ "hidden" if not record.completed_at }}>
+        <a class="btn btn-primary btn-sm" id="journey-next-link"
+           href="{{ url_for('journey_finish_page') if item.day == journey.total else url_for('journey_day_page', day=item.day + 1) }}">
+          {{ "打开最终交付页" if item.day == journey.total else "进入第 %d 天"|format(item.day + 1) }}
+        </a>
+      </div>
+    </section>
+
+    <div id="journey-result" aria-live="polite">
+      {% if record.last_status %}
+      <div class="journey-result-idle">
+        <span>上次提交</span>
+        <b>{{ record.last_status }}</b>
+        <p>{{ "这一天已经交付；你仍可以修改代码重新运行。" if record.completed_at else "代码已保留。先看失败用例，再继续推进。" }}</p>
+      </div>
+      {% else %}
+      <div class="journey-result-idle">
+        <span>等待第一次运行</span>
+        <b>READY?</b>
+        <p>先运行可见用例，确认程序的 I/O 契约，再提交完整边界测试。</p>
+      </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endif %}
+
+<nav class="journey-sequence" aria-label="项目关卡切换">
+  {% if previous_day %}
+    <a href="{{ url_for('journey_day_page', day=previous_day.day) }}"><span>前一天</span><b>← {{ previous_day.title }}</b></a>
+  {% else %}
+    <span></span>
+  {% endif %}
+  <a href="{{ url_for('journey_page') }}"><span>项目路线</span><b>查看全部 7 天</b></a>
+  {% if next_day %}
+    <a class="next" href="{{ url_for('journey_day_page', day=next_day.day) }}"><span>后一天</span><b>{{ next_day.title }} →</b></a>
+  {% endif %}
+</nav>
+{% endblock %}
+
+{% block scripts %}
+{% if not locked %}
+<script src="{{ url_for('static', filename='vendor/codemirror/lib/codemirror.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/mode/clike/clike.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/addon/edit/closebrackets.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/addon/selection/active-line.min.js') }}"></script>
+<script type="application/json" id="journey-data">{{ journey_boot|tojson }}</script>
+<script src="{{ url_for('static', filename='js/journey.js') }}"></script>
+{% endif %}
+{% endblock %}

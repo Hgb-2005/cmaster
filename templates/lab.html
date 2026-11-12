@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}{{ lab.title }} · Bug 修复实验室 · CMaster{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/lib/codemirror.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/codemirror/theme/material-darker.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/labs.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="crumb">
+  <a href="{{ url_for('labs_page') }}">Bug 修复实验室</a>
+  <span class="sep">/</span>
+  <span>{{ lab.concept }}</span>
+</div>
+
+<section class="lab-brief">
+  <div class="lab-brief-copy">
+    <span class="lab-eyebrow">第 {{ lab.chapter }} 章 · {{ lab.concept }}</span>
+    <h1>{{ lab.title }}</h1>
+    <p>{{ lab.summary }}</p>
+  </div>
+  <div class="lab-brief-stats">
+    <span class="tag diff-{{ lab.difficulty }}">{{ {'easy':'简单','medium':'中等','hard':'较难'}.get(lab.difficulty, lab.difficulty) }}</span>
+    <span>{{ lab.minutes }} 分钟</span>
+    <span>{{ visible_cases|length }} 个可见用例</span>
+    <span id="lab-record" class="lab-record-status{{ ' is-done' if record.get('status') == 'AC' }}">
+      {{ '已修复' if record.get('status') == 'AC' else ('上次：' + record.get('status', '') if record.get('status') else '尚未提交') }}
+    </span>
+  </div>
+</section>
+
+<div class="solve-layout lab-workbench">
+  <section class="pane lab-instructions">
+    <div class="pane-head">
+      <h2>任务简报</h2>
+      <span class="spacer"></span>
+      <a class="lab-chapter-link" href="{{ url_for('chapter_page', cid=lab.chapter) }}">回到第 {{ lab.chapter }} 章</a>
+    </div>
+    <div class="pane-body">
+      <div class="lab-mission">
+        <span>你的任务</span>
+        <p>{{ lab.mission }}</p>
+      </div>
+
+      <div class="lab-rule">
+        <span class="lab-rule-mark">1</span>
+        <div>
+          <strong>改动预算：{{ lab.max_changed_lines }} 行</strong>
+          <p>{{ lab.restriction }}</p>
+        </div>
+      </div>
+
+      <section class="lab-test-section" aria-labelledby="visible-tests-title">
+        <div class="lab-section-title">
+          <div>
+            <span>VISIBLE CASES</span>
+            <h2 id="visible-tests-title">先运行这些用例</h2>
+          </div>
+          <small>提交时另有隐藏边界用例</small>
+        </div>
+        <div class="lab-test-list">
+          {% for case in visible_cases %}
+            <article class="lab-test">
+              <div class="lab-test-head">
+                <span>{{ "%02d"|format(loop.index) }}</span>
+                <strong>{{ case.name }}</strong>
+              </div>
+              <div>
+                <label>输入</label>
+                <pre>{{ case.input if case.input else '（无输入）' }}</pre>
+              </div>
+              <div>
+                <label>期望输出</label>
+                <pre>{{ case.output }}</pre>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="lab-hint-section" aria-labelledby="hint-title">
+        <div class="lab-section-title">
+          <div>
+            <span>STAGED HINTS</span>
+            <h2 id="hint-title">卡住时再看线索</h2>
+          </div>
+          <small id="hint-counter">已解锁 0 / {{ lab.hints|length }}</small>
+        </div>
+        <ol class="lab-hints" id="lab-hints">
+          {% for hint in lab.hints %}
+            <li hidden>
+              <span>线索 {{ loop.index }}</span>
+              <p>{{ hint }}</p>
+            </li>
+          {% endfor %}
+        </ol>
+        <button type="button" class="btn btn-ghost btn-sm" id="lab-next-hint">解锁第一条提示</button>
+      </section>
+    </div>
+  </section>
+
+  <section class="pane lab-editor-pane">
+    <div class="pane-head">
+      <h2>main.c</h2>
+      <span class="spacer"></span>
+      <span class="meta lab-shortcuts">Ctrl+Enter 运行 · Ctrl+S 提交</span>
+    </div>
+    <div class="editor-wrap">
+      <textarea id="code">{{ lab.starter }}</textarea>
+    </div>
+    <div class="toolbar">
+      <button class="btn btn-sm" id="btn-run">运行可见用例</button>
+      <button class="btn btn-ok btn-sm" id="btn-submit">提交隐藏用例</button>
+      <button class="btn btn-ghost btn-sm" id="btn-reset">重置一行现场</button>
+      <span class="spacer"></span>
+      <span class="lab-budget"><b id="changed-count">0</b> / {{ lab.max_changed_lines }} 行改动</span>
+    </div>
+    <div class="code-vault">
+      <p class="code-save-status" id="draft-status" role="status">实验草稿会自动保存在此浏览器</p>
+    </div>
+  </section>
+</div>
+
+{% if not current_user %}
+<aside class="lab-guest-note compact">
+  <div>
+    <strong>当前是访客试运行</strong>
+    <p>登录后提交才会运行隐藏用例并记录完成进度。</p>
+  </div>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('login_page', next=request.path) }}">去登录</a>
+</aside>
+{% endif %}
+
+<div id="lab-result" aria-live="polite"></div>
+
+<nav class="lab-seq" aria-label="实验切换">
+  {% if previous_lab %}
+    <a href="{{ url_for('lab_page', lab_id=previous_lab.id) }}"><span>上一个实验</span><b>← {{ previous_lab.title }}</b></a>
+  {% else %}
+    <span></span>
+  {% endif %}
+  <a href="{{ url_for('labs_page') }}"><span>实验目录</span><b>全部 6 个修复现场</b></a>
+  {% if next_lab %}
+    <a class="next" href="{{ url_for('lab_page', lab_id=next_lab.id) }}"><span>下一个实验</span><b>{{ next_lab.title }} →</b></a>
+  {% endif %}
+</nav>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/codemirror/lib/codemirror.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/mode/clike/clike.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/addon/edit/closebrackets.min.js') }}"></script>
+<script src="{{ url_for('static', filename='vendor/codemirror/addon/selection/active-line.min.js') }}"></script>
+<script type="application/json" id="lab-data">{{ lab_boot|tojson }}</script>
+<script src="{{ url_for('static', filename='js/lab.js') }}"></script>
+{% endblock %}

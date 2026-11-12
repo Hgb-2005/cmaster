@@ -1,33 +1,45 @@
 # 接手指南（当前状态速查）
 
 > 本文只写「接手继续干活需要知道的事」。想改内容看第四节，想改判题看第五节。
-> 最后更新：2026-10-28
+> 最后更新：2026-11-11
 >
 > 学习流程升级：训练卡片随仓库发布并支持缺失重建；完整用户名计算独立进度文件标识，
 > 旧文件仅在归属唯一时复制迁移；系统错误保存代码但不扣学习记录；首页有继续学习路线；
 > 做题页的草稿与历史恢复逻辑位于 `static/js/problem.js`。
 > 第二轮：课程/题目收藏与私人笔记，`/notebook` 支持组合筛选；Markdown 笔记与 JSON 学习记录导出。
 > 笔记写入必须携带账号标识和版本号；冲突返回 409，页面保留草稿供作者选择。
-> 新回归命令：`python -m unittest discover -s tests -v`。
+> 第三轮：新增 `/chapter/<cid>/lecture` 章节导学播放器。字幕和场景直接复用 `courses.json`
+> 的知识点正文；播放状态只进浏览器 `localStorage`，不会写入服务端已读记录。
+> 第四轮：判题反馈升级成「观察 → 判断 → 线索」三阶段教练；新增 `/labs` 与
+> `/lab/<lab_id>` Bug 修复实验室，要求服务端验证只改一行。访客只可运行可见用例，
+> 登录后才能提交隐藏用例；实验室进度按账号隔离，系统错误不增加尝试次数。
+> 第五轮：新增 `/journey` 七天项目闯关，把同一个成绩管理器拆成 7 个连续交付。
+> 首页改成项目优先，登录后直接进入“今天写第 N 天”；正式提交严格按顺序解锁，访客只能
+> 运行可见用例。项目记录写入 `progress.journey`，隐藏用例在判题前不会进入页面或试跑响应。
+> 当前回归：62 项后端测试、92 项浏览器检查；命令见第八节与 `README.md`。
 
 ## 一、这是什么
 
-`CMaster`：一个**能真的把 C 代码跑起来**的 C 语言学习平台，对着 PyMaster 的形态做的 C 版。
+`CMaster`：一个**先连续七天交付一个 C 项目，再用课程和题库补卡点**的学习平台。
+每段代码都由本地 GCC 真实编译、真实运行。
 
 ```
+7 天 / 1 个成绩管理器 / 20–30 分钟每天
 12 章 / 48 个知识点 / 60 道在线判题（157 个测试用例）
 基础篇 · 语言地基    → 环境、变量、运算符、分支循环、数组
 进阶篇 · 内存与抽象  → 函数、指针、指针进阶与动态内存、字符串
 工程篇 · 写出能用的程序 → 结构体、文件操作、预处理与多文件编译
 ```
 
-四件事同时成立，是它区别于"看视频学 C"的地方：
+五件事同时成立，是它区别于"看视频学 C"的地方：
 
-1. **每节都能立刻动手**——知识点页底部直接挂本章练习，不用跳转找题。
-2. **判题是真的编译真的跑**——本机 GCC 编译、逐用例执行、输出比对，不是字符串匹配。
-3. **零外部依赖**——没有数据库、没有 CDN、没有构建步骤，断网能用，整个文件夹拷走也能用。
-4. **有一层像样的交互**——`/` 唤起站内搜索、阅读进度条、代码块一键复制、逐日学习热力图、
-   九枚成就。这部分集中在 `ux.js` + `motion.css`，**全部是渐进增强**：
+1. **先交付再学习**——七天始终迭代同一个程序，每天产出都能运行；课程和题库是遇到卡点时的解释层。
+2. **每节都能立刻动手**——知识点页底部直接挂本章练习，不用跳转找题。
+3. **判题是真的编译真的跑**——本机 GCC 编译、逐用例执行、输出比对，不是字符串匹配。
+4. **零外部依赖**——没有数据库、没有 CDN、没有构建步骤，断网能用，整个文件夹拷走也能用。
+5. **有一层像样的交互**——`/` 唤起站内搜索、阅读进度条、代码块一键复制、逐日学习热力图、
+   九枚成就、章节自动导学、三阶段错误教练、一行修复实验室和七天项目工作台。全站交互集中在
+   `ux.js` + `motion.css`，导学播放器与实验室按页加载各自的 JS/CSS；阅读层是渐进增强的：
    脚本挂了站点照样能读能写能判题。
 
 面向的使用场景：**简历项目**。所以设计上刻意保留了一些"可以聊"的点——门禁、并发闸门、
@@ -55,8 +67,8 @@ CMASTER_PORT=5002 runtime/venv/Scripts/python.exe app.py   # 换端口
 ```
 c-master/
 ├── start.cmd             唯一启动脚本（相对路径，可整体搬走）
-├── app.py                Flask 主程序：路由 / 会话 / 进度 / 判题 API / 内存演示 / 运维快照 /
-│                         管理台 / 健康检查（约 1670 行）
+├── app.py                Flask 主程序：路由 / 会话 / 进度 / 项目闯关 / 判题 API /
+│                         内存演示 / 运维快照 / 管理台 / 健康检查
 ├── judge.py              判题引擎：找编译器 / 编译 / 跑用例 / 比对 / 裁决 / 退出码翻译（约 500 行）
 ├── sandbox.py            ★ 沙箱封装：构建宿主 / 探针 / 解析报告 / 五组自检 / 状态计数（约 790 行）
 ├── sandbox/
@@ -85,12 +97,15 @@ c-master/
 ├── data/                 编译产物（courses.json / question_bank.json / answers.json）
 │   ├── memory_demos.json 内存演示的 8 个场景 / 36 步（build_demos.py 生成，随仓走）
 │   ├── training.json     训练卡片（build_training.py 生成，随仓走）
+│   ├── labs.json         6 个 Bug 修复现场（隐藏用例只在服务端读取）
+│   ├── journey.json      7 天项目定义：起始代码 / 目标 / 提示 / 可见与隐藏用例
 │   ├── metrics.json      判题耗时与裁决的滚动窗口（运行时写，可随时删）
 │   ├── .secret           自动生成的会话密钥（gitignore）
 │   ├── users.json        账号（gitignore）
 │   └── progress/         每人一个进度文件（gitignore）
 ├── templates/            base / index / chapter / problems / problem / playground / login /
-│                         profile / wrongbook / analytics / map / memory / ops / training / error
+│                         profile / wrongbook / analytics / map / memory / ops / training /
+│                         journey / journey_day / journey_finish / labs / lab / error
 ├── static/
 │   ├── css/style.css     全站样式（深色，约 35KB）
 │   ├── css/motion.css    动效层（约 21KB）：缓动变量 / 渐入 / 阅读进度条 / 判题反馈 / 徽章入场
@@ -101,6 +116,9 @@ c-master/
 │   ├── css/ops.css       运维状态页版式（约 14KB）：健康徽标 / 四图网格 / 耗时构成条 / 慢请求表
 │   ├── css/memory.css    内存演示页版式（约 26KB）：两栏骨架 / 格子 / 填充片段 / 箭头 / 图例
 │   ├── css/training.css  训练模式版式（约 30KB）：两栏 / 计时条 / 代码卡 / 词库 / 翻转卡 / 逐行 diff
+│   ├── css/lecture.css   章节导学播放器（字幕 / 场景 / 学习路线 / 响应式控制器）
+│   ├── css/labs.css      修复实验室（目录 / 现场简报 / 编辑器 / 分阶段提示）
+│   ├── css/journey.css   项目目录 / 工作台 / 最终交付页
 │   ├── js/editor.js      CMaster 前端模块：编辑器 / 结果渲染 / setJudging / api / toast
 │   ├── js/ux.js          交互增强（约 22KB）：搜索 / 快捷键 / 代码块包裹 / 复制 / 渐入 / 阅读条
 │   ├── js/app.js         只干一件事：启动时查编译器状态
@@ -113,14 +131,69 @@ c-master/
 │   ├── js/ops.js         运维状态页：轮询 /api/ops、四张图、耗时构成条、慢请求表
 │   ├── js/memory.js      内存演示页：场景切换 / 单步 / 自动播放 / 代码高亮 / 地址栏同步
 │   ├── js/training.js    训练模式：三种操练共用一套骨架（抽牌→计时→判→连击→回炉→结算）
+│   ├── js/lecture.js     章节导学：时间轴 / 字幕 / 倍速 / 键盘 / 本地续播
+│   ├── js/lab.js         修复实验室：草稿 / 行数预算 / 提示 / 试跑 / 提交
+│   ├── js/journey.js     项目工作台：草稿 / 提示 / 运行 / 提交 / 通关动作
 │   ├── favicon.svg       站点图标
 │   └── vendor/codemirror CodeMirror 5.65.16 + clike 模式（全部本地）
 └── runtime/              venv 与 w64devkit（gitignore，首启生成）
 ```
 
+## 三之二、七天项目闯关
+
+入口顺序：`/journey` → `/journey/day/1` … `/journey/day/7` → `/journey/finish`。
+七天分别覆盖输入输出与程序骨架、条件与输入校验、循环与累计器、数组与极值/平均值、
+函数与班级统计、结构体与字符串、A–F 等级及综合验收。每天用前一天的代码继续写，
+最后固定输出：
+
+```text
+COUNT 3
+AVG 80.67
+HIGH 95
+LOW 59
+PASS 2
+EXCELLENT 1
+REPORT
+Alice:88:B
+Bob:59:F
+Cara:95:A
+```
+
+内容源是 `data/journey.json`。它不像题库那样由构建器生成；改路线时同时检查每一天的
+`starter`、`tests`、`visible_test_count`、`hints` 和 `code_focus`，并让最后一关仍能接受
+完整固定契约的输入输出。
+
+状态只有四种：`completed`、`current`、`available`、`locked`。访客可看七天路线、进入任意
+工作台并运行可见用例，但不能正式提交；登录用户从第 1 天开始，只有前一天完成后才能提交下一天。
+项目页与工作台统一返回 `Cache-Control: no-store`。
+
+`progress.journey` 按天保存一条记录：
+
+```json
+{
+  "1": {
+    "attempts": 2,
+    "status": "AC",
+    "last_status": "AC",
+    "last_code": "...",
+    "ts": 1760000000,
+    "completed_at": 1760000000
+  }
+}
+```
+
+完成是单向状态：得到 AC 后，后续重做失败不会撤销 `completed_at` 或重新锁住后面的关卡。
+`SE` 只保存 `last_code` 和 `last_seen_ts`，不增加 `attempts`。提交请求必须带与服务端会话
+一致的 `accountId`，不一致返回 `409`；锁定关卡在判题前返回 `403`。
+
+`run` 只把当天前 `visible_test_count` 个用例交给判题器；`submit` 才在服务端加载全部用例。
+页面启动数据、试跑响应和提交响应都通过 `_safe_lab_result()` 脱敏，隐藏用例只返回编号和裁决，
+不会带出输入、期望输出或实际输出。
+
 ## 四、改内容：装配 + 门禁
 
-**不要手改 `data/*.json`**，会被下次构建覆盖。源在 `tools/content/`，改完重新生成：
+**课程、题库和训练数据不要手改 `data/*.json`**，会被下次构建覆盖。源在 `tools/content/`
+或对应生成脚本里，改完重新生成；`journey.json` / `labs.json` 是本轮直接随仓维护的内容源。
 
 ```bash
 python tools/build_content.py              # 装配 + 跑门禁，全 AC 才写文件
@@ -178,6 +251,13 @@ python tools/build_content.py --gate-only  # 只跑门禁（验证用）
   别在子模板里覆盖 `{% block layout %}`——里面再定义一次 `{% block content %}` 会撞
   `block 'content' defined twice`。
 - `createEditor()` 在 CodeMirror 没加载时会**降级成原生 textarea**。宁可丑，不能让人写不了字。
+- 章节导学的正文来自 `CHAPTERS[cid]["knowledge_points"]`，不复制课程内容。服务端只为每个
+  场景生成纯文本字幕、时长和“本节抓手”；播放器负责时间轴、自动切场与字幕同步。
+- 导学进度保存在 `localStorage`，key 为 `cmaster:lecture:v1:<账号标识>:<cid>`。它和
+  `/chapter/<cid>/<kid>` 的“已读”记录刻意分开：打开导学不会自动标记任何知识点，删除
+  localStorage 也只丢续播位置，不影响服务端学习进度。
+- 导学快捷键是 `Space` / `P` 播放暂停、左右键切场、`Home` / `End` 首尾跳转；输入框、
+  下拉框和链接获得焦点时不抢键。页面隐藏时自动暂停并保存，尊重 `prefers-reduced-motion`。
 - 代码草稿进 `localStorage`（key `cmaster:code:v2:<账号标识>:<qid>`），AC 后保留。
   通过代码与最近 10 次提交保存在进度文件的 `solutions` 中，支持新浏览器恢复。
 - 收藏与笔记保存在进度文件 `notebook["lesson:<cid>:<kid>" | "problem:<qid>"]`。
@@ -186,7 +266,8 @@ python tools/build_content.py --gate-only  # 只跑门禁（验证用）
   取消收藏且清空笔记后仍保留版本号，避免过期页面覆盖。笔记按纯文本渲染，最多 8000 字。
   `/api/notebook/export` 下载 Markdown，`/api/progress/export` 下载当前账号的学习数据 JSON；
   两者都要求登录且返回 `Cache-Control: no-store`。这些下载链接带 `download`，跳过页面离场动画。
-  浏览器回归：`node tests/notebook.cjs`（先启动 `python tests/browser_fixture.py`）。
+  浏览器回归：`node tests/learning-flow.cjs`、`node tests/notebook.cjs`
+  （先启动 `python tests/browser_fixture.py`）。
 - 判题页用 `{% block layout %}` 覆盖成宽布局（左题面右编辑器），其它页用默认窄栏。
 - 未标注语言的围栏代码块**不按 C 高亮**——内容里大量 ASCII 示意图混着中文，
   强行高亮会把箭头和中文标识符搞乱。
@@ -213,6 +294,33 @@ python tools/build_content.py --gate-only  # 只跑门禁（验证用）
 搜索排序：标题命中权重 100 起、正文 40 起、开头命中 +30，再按 `(_GROUP_ORDER, -score)`
 排序让同类结果成组。120 条数据直接线性扫，不做倒排索引——**在这个量级上索引是纯负担**。
 
+### 6.1.1 错误教练与 Bug 修复实验室
+
+判题反馈由 `static/js/feedback.js` 生成，`editor.js` 只负责把结果交进来。三个阶段必须
+按顺序出现：`观察` 先指出编译器位置、首个不一致输出或超时类型；`判断` 把证据解释成
+错误类型；`线索` 只给下一步排查方向。`CE / WA / TLE / RE / SE` 各有独立规则，全部通过
+DOM 文本节点渲染，原始输出不能变成可执行 HTML。兼容旧测试时，WA 的首条行动文案仍保留
+`先手算`。
+
+实验室路由与数据边界：
+
+- 数据源是 `data/labs.json`，当前 6 个实验；页面入口是 `/labs` 和 `/lab/<lab_id>`。
+- `POST /api/lab/<lab_id>/run` 不要求登录，只把 `visible_test_count` 范围内的用例交给判题器。
+- `POST /api/lab/<lab_id>/submit` 需要登录，运行全部用例，并在账号进度的 `labs` 字段记录状态、
+  尝试次数和最后代码。
+- 一行限制由服务器用首尾公共上下文算差异，超过 `max_changed_lines` 时返回 422；前端的
+  `maxChangedLines` 只负责实时提示，不参与放行判断。
+- `_safe_lab_result()` 只返回可见用例的输入、期望输出和实际输出；隐藏用例只返回编号与裁决。
+  页面和 API 都不得出现隐藏输入。
+- 访客草稿的存储标识是 `guest`；登录后改用 `user_storage_id()`。提交会检查 `accountId`，
+  账号切换后旧标签页返回 409，不能写进另一个账号。
+- 系统错误会保存代码和最近时间，但不增加 `attempts`、不改变完成状态。
+- `/labs` 和 `/lab/<lab_id>` 都返回 `Cache-Control: no-store`。
+
+浏览器夹具 `tests/browser_fixture.py` 会替换判题器，仅用于 UI 回归。`learning-flow.cjs`
+当前 60 项全过，覆盖提示解锁、422 多行拒绝、隐藏用例脱敏、AC 持久化、双账号隔离、
+移动端导航与 320 / 390 / 768 / 1440 四档无页面横向溢出。
+
 ### 6.2 `motion.css`：三条自定规则
 
 写任何动效前先看这三条，别破例：
@@ -231,12 +339,13 @@ python tools/build_content.py --gate-only  # 只跑门禁（验证用）
 
 ## 六之二、个人中心的数据模型
 
-`data/progress/u_<完整用户名SHA256>.json` 里与学习轨迹相关的四个键：
+`data/progress/u_<完整用户名SHA256>.json` 里与学习轨迹相关的五个键：
 
 | 键 | 结构 | 谁写 |
 | --- | --- | --- |
 | `read` | `[kp_id, ...]` | 打开知识点即记，带 dirty 标记批量落盘 |
 | `solved` | `[qid, ...]` | 判题 AC 时写入 |
+| `labs` | `{lab_id: {status, attempts, last_code, ts}}` | 登录提交实验室时写入；SE 只更新代码与时间 |
 | `days` | `["2026-10-27", ...]` | `_touch_day()`，只记「有没有学」 |
 | `acts` | `{"2026-10-27": 3, ...}` | 同上，记**次数**。热力图分深浅靠它；超过 400 天自动裁旧 |
 
@@ -966,22 +1075,20 @@ WA、CE（`Assertion failed: 1==2, file main.c, line 2` —— 临时目录前�
 
 ## 九、下一步（按性价比排序）
 
-1. **章节式讲解播放器** —— 对标 PyMaster 的 `narration_player.js`（538 行）+
-   `narration.css`（511 行）：把一章的知识点串成带旁白的自动播放，配时间轴与字幕。
-   它补的是「第一次学」这条路径，现在页面全是「查阅式」的。
-2. **AI 教练** —— 对标 PyMaster 的 `coach.js`（470 行）+ `coach.css`（503 行）：
-   答错后按错误类型给一句针对性提示（不是给他答案）。这块要接模型，
-   建议先把「错误分类 → 提示文案」的规则版做出来，模型只负责润色。
-3. **内容扩容** —— 每章从 4 个知识点往 6–8 个扩，题目 60 → 120。
+1. **实验室扩容** —— 从 6 个一行修复现场扩到覆盖全部 12 章，每章至少一个。
+2. **内容扩容** —— 每章从 4 个知识点往 6–8 个扩，题目 60 → 120。
    纯体力活，适合边做边讲"我是怎么用门禁保证不写错答案的"。
-4. **判题时间轴** —— 把「编译 / 逐个用例 / 比对」三段耗时画成一条横向时间条
+3. **判题时间轴** —— 把「编译 / 逐个用例 / 比对」三段耗时画成一条横向时间条
    （`tween.js` 已经能做片段生长的补间）。比一个总数更能说明"慢在哪"。
-5. **在真 Linux 上跑一次 `/admin` 自检** —— 见 7.5。这不是功能开发，是补证据：
+4. **在真 Linux 上跑一次 `/admin` 自检** —— 见 7.5。这不是功能开发，是补证据：
    `runner_linux.c` 目前只有「编译通过」这一条，五组实验一次都没真跑过。
    顺手把结果截图存进仓库，那比任何形容词都硬。
 
 已经做掉、别再往这里加回：
 
+- **章节导学播放器**：`/chapter/<cid>/lecture`，时间轴、字幕、倍速、键盘和账号隔离续播。
+- **规则版错误教练**：`feedback.js` 覆盖 CE / WA / TLE / RE / SE，三阶段提示有单元测试。
+- **Bug 修复实验室**：6 个实验、可见用例访客试跑、隐藏用例登录提交、服务端一行限制。
 - **可观测性**：`metrics.py` 打点 + `/api/ops` + `/ops` 面板（第 6.5 节）。
 - **训练模式**：`training.js` 约 1300 行 + `training.css` 约 1490 行，e2e 67 项全过。
 - **判题沙箱**：`sandbox.py` + `sandbox/runner_win.c` + `sandbox/runner_linux.c`，
@@ -995,7 +1102,8 @@ WA、CE（`Assertion failed: 1==2, file main.c, line 2` —— 临时目录前�
 - 单机、单进程、JSON 存储。多用户高并发不合适（但那本来也不是它的目标）。
 - 无邮箱验证、无找回密码、无管理后台。账号仅 pbkdf2 存盐哈希。
 - 判题只比 stdout，不检查文件副作用、不看 stderr（除非 RE）。
-- 移动端能看能读，编辑器体验一般——CodeMirror 5 在小屏上本来就局促。
+- 移动端已覆盖 320 / 390 / 768 / 1440 四档回归；CodeMirror 5 在窄屏上仍会为长代码行
+  保留内部横向滚动。
 - 端到端脚本（puppeteer，不在仓库内）需要测试账号登录。现在用两个：
   全站/`/map`/`/ops`/`/memory` 用 `uxtest`（需要一点历史进度才验得出成就与热力图，
   用 `python tools/loadtest.py --user uxtest --password test1234 -n 18 --no-tle` 现场喂），

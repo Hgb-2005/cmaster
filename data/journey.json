@@ -1,0 +1,239 @@
+{
+  "version": 1,
+  "title": "7 天 C 语言项目冲刺",
+  "subtitle": "每天 20–30 分钟，连续写同一个程序，最后交付一个可运行的成绩管理器。",
+  "promise": "不靠看完一整套课来证明自己会 C。七天后，你会有一个能读数据、做判断、算统计、用函数和结构体组织代码的命令行项目。",
+  "final_project": {
+    "name": "gradebook",
+    "title": "C 成绩管理器",
+    "summary": "读取学生姓名与成绩，校验输入，计算平均分、最高分、最低分、及格人数和优秀人数，并输出每位学生的等级报告。",
+    "run_example": "3\nAlice 88\nBob 59\nCara 95",
+    "output_example": "COUNT 3\nAVG 80.67\nHIGH 95\nLOW 59\nPASS 2\nEXCELLENT 1\nREPORT\nAlice:88:B\nBob:59:F\nCara:95:A"
+  },
+  "rules": [
+    "每天只推进一个明确能力，代码会沿用前一天的结果。",
+    "先运行可见用例；登录提交后才会执行隐藏边界用例。",
+    "当天全部用例通过才会解锁下一天，系统错误不会消耗尝试次数。",
+    "卡住时按顺序使用提示，每一条都对应一个可验证的编程动作。"
+  ],
+  "days": [
+    {
+      "day": 1,
+      "phase": "启动",
+      "title": "让程序先开口",
+      "kicker": "输入、输出与程序骨架",
+      "minutes": 20,
+      "goal": "读取学生数量，并用稳定的格式输出 READY，跑通第一个完整程序。",
+      "outcome": "你能写出 main 函数、声明变量、调用 scanf/printf，并理解程序为什么需要按固定格式输出。",
+      "brief": [
+        "程序先读取一个整数 n，代表本次有多少名学生。",
+        "成功读取后输出一行 READY 和一个空格，再接上 n。",
+        "这一轮只关心输入是否进入变量，以及输出格式是否与约定完全一致。"
+      ],
+      "code_focus": ["main", "scanf", "printf"],
+      "lesson": {"chapter": 2, "kid": 4, "title": "printf / scanf 的格式符与陷阱"},
+      "practice": {"qid": "c001", "title": "Hello, C"},
+      "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    if (scanf(\"%d\", &n) != 1) {\n        return 1;\n    }\n\n    /* TODO: 按约定输出 READY 和 n */\n\n    return 0;\n}\n",
+      "visible_test_count": 2,
+      "tests": [
+        {"name": "三名学生", "input": "3\n", "output": "READY 3\n"},
+        {"name": "一名学生", "input": "1\n", "output": "READY 1\n"},
+        {"name": "隐藏用例：八名学生", "input": "8\n", "output": "READY 8\n"},
+        {"name": "隐藏用例：三十名学生", "input": "30\n", "output": "READY 30\n"}
+      ],
+      "hints": [
+        "把 scanf 的结果放在 if 里，是为了确认真的读到了一个整数。",
+        "printf 的格式串需要同时包含文字、空格、%d 和换行符。"
+      ],
+      "checklist": ["程序可以编译", "能读到 n", "输出只有约定的一行"]
+    },
+    {
+      "day": 2,
+      "phase": "守住边界",
+      "title": "坏输入不该走进成绩单",
+      "kicker": "条件判断与输入校验",
+      "minutes": 22,
+      "goal": "只接受 1–30 名学生；人数越界时输出 INVALID，否则输出 READY n。",
+      "outcome": "你会把“能运行”推进到“正常输入能运行、异常输入也不会失控”。",
+      "brief": [
+        "本项目最多处理 30 名学生，因此合法人数是闭区间 [1, 30]。",
+        "人数合法时保留第一天的输出；0、负数或大于 30 时输出 INVALID。",
+        "输入读取失败也按非法输入处理，不要继续使用未初始化的 n。"
+      ],
+      "code_focus": ["if / else", "边界条件", "返回值"],
+      "lesson": {"chapter": 4, "kid": 1, "title": "if / else if / else 与悬空 else"},
+      "practice": {"qid": "c016", "title": "成绩等级"},
+      "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    if (scanf(\"%d\", &n) != 1) {\n        printf(\"INVALID\\n\");\n        return 0;\n    }\n\n    /* TODO: 检查 n 是否在 1 到 30 之间 */\n    printf(\"READY %d\\n\", n);\n\n    return 0;\n}\n",
+      "visible_test_count": 2,
+      "tests": [
+        {"name": "正常人数", "input": "3\n", "output": "READY 3\n"},
+        {"name": "上边界", "input": "30\n", "output": "READY 30\n"},
+        {"name": "隐藏用例：零人", "input": "0\n", "output": "INVALID\n"},
+        {"name": "隐藏用例：负数", "input": "-1\n", "output": "INVALID\n"},
+        {"name": "隐藏用例：超过上限", "input": "31\n", "output": "INVALID\n"},
+        {"name": "隐藏用例：非数字", "input": "abc\n", "output": "INVALID\n"}
+      ],
+      "hints": [
+        "合法条件可以写成一个连续区间，也可以拆成两条越界条件。",
+        "先处理 INVALID，再写正常路径，能避免越界值和正常值混在一起。"
+      ],
+      "checklist": ["1 和 30 都合法", "0、-1、31 非法", "读取失败也安全"]
+    },
+    {
+      "day": 3,
+      "phase": "开始计算",
+      "title": "把一批成绩扫一遍",
+      "kicker": "循环与累计器",
+      "minutes": 25,
+      "goal": "读取 n 个成绩，先校验人数，再用循环计算人数与总分。",
+      "outcome": "你会用“初始化累计变量 → 循环处理每一项 → 输出最终状态”完成一个数据处理流程。",
+      "brief": [
+        "先沿用第二天的人数校验，非法人数只输出 INVALID。",
+        "合法输入的第二行开始是 n 个整数成绩，范围应为 0–100。",
+        "输出格式固定为两行：COUNT n，下一行 SUM 总分。"
+      ],
+      "code_focus": ["for", "累计器", "输入校验"],
+      "lesson": {"chapter": 4, "kid": 3, "title": "for / while / do-while 怎么选"},
+      "practice": {"qid": "c017", "title": "1 到 n 求和"},
+      "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    if (scanf(\"%d\", &n) != 1 || n < 1 || n > 30) {\n        printf(\"INVALID\\n\");\n        return 0;\n    }\n\n    int sum = 0;\n    for (int i = 0; i < n; i++) {\n        int score;\n        if (scanf(\"%d\", &score) != 1) {\n            printf(\"INVALID\\n\");\n            return 0;\n        }\n        /* TODO: 校验 score，并把合法成绩加入 sum */\n    }\n\n    printf(\"COUNT %d\\nSUM %d\\n\", n, sum);\n    return 0;\n}\n",
+      "visible_test_count": 2,
+      "tests": [
+        {"name": "三名学生", "input": "3\n80 90 100\n", "output": "COUNT 3\nSUM 270\n"},
+        {"name": "一名学生", "input": "1\n59\n", "output": "COUNT 1\nSUM 59\n"},
+        {"name": "隐藏用例：四个成绩", "input": "4\n70 80 85 95\n", "output": "COUNT 4\nSUM 330\n"},
+        {"name": "隐藏用例：边界成绩", "input": "2\n0 100\n", "output": "COUNT 2\nSUM 100\n"},
+        {"name": "隐藏用例：成绩越界", "input": "2\n60 101\n", "output": "INVALID\n"}
+      ],
+      "hints": [
+        "sum 必须在循环开始前归零，否则会把其他运行留下的假数据算进去。",
+        "每个 score 读入后先判断是否在 0–100，再决定累加还是输出 INVALID。"
+      ],
+      "checklist": ["循环正好执行 n 次", "sum 初值为 0", "越界成绩返回 INVALID"]
+    },
+    {
+      "day": 4,
+      "phase": "保存整批数据",
+      "title": "从一条成绩到整张成绩表",
+      "kicker": "数组、最大值与平均值",
+      "minutes": 27,
+      "goal": "把成绩存进数组，计算最高分和平均分。",
+      "outcome": "你会区分“处理完就丢的临时变量”和“后面还会反复使用的数组数据”。",
+      "brief": [
+        "最多 30 名学生，因此数组容量可以写成 30 或 32。",
+        "成绩要逐项读入数组；输入中任何一项越界都输出 INVALID。",
+        "输出两行：MAX 最高分，下一行 AVG 平均分（保留两位小数）。"
+      ],
+      "code_focus": ["数组遍历", "最大值的初值", "浮点输出"],
+      "lesson": {"chapter": 5, "kid": 1, "title": "声明、初始化与遍历"},
+      "practice": {"qid": "c025", "title": "求和与平均值"},
+      "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    int scores[30];\n    if (scanf(\"%d\", &n) != 1 || n < 1 || n > 30) {\n        printf(\"INVALID\\n\");\n        return 0;\n    }\n\n    int sum = 0;\n    for (int i = 0; i < n; i++) {\n        if (scanf(\"%d\", &scores[i]) != 1 || scores[i] < 0 || scores[i] > 100) {\n            printf(\"INVALID\\n\");\n            return 0;\n        }\n        sum += scores[i];\n    }\n\n    int highest = scores[0];\n    /* TODO: 遍历数组找最高分 */\n\n    printf(\"MAX %d\\nAVG %.2f\\n\", highest, (double)sum / n);\n    return 0;\n}\n",
+      "visible_test_count": 2,
+      "tests": [
+        {"name": "普通成绩表", "input": "3\n72 88 91\n", "output": "MAX 91\nAVG 83.67\n"},
+        {"name": "只有一项", "input": "1\n60\n", "output": "MAX 60\nAVG 60.00\n"},
+        {"name": "隐藏用例：并列最高", "input": "5\n66 99 72 99 80\n", "output": "MAX 99\nAVG 83.20\n"},
+        {"name": "隐藏用例：全零", "input": "3\n0 0 0\n", "output": "MAX 0\nAVG 0.00\n"},
+        {"name": "隐藏用例：全满分", "input": "4\n100 100 100 100\n", "output": "MAX 100\nAVG 100.00\n"}
+      ],
+      "hints": [
+        "最大值不要从 0 开始猜；从第一个真实成绩开始最稳妥。",
+        "除法两边如果都是整数，会先做整数除法；把 sum 转成 double 再除。"
+      ],
+      "checklist": ["成绩确实进入数组", "最大值从首项开始", "平均分保留两位"]
+    },
+    {
+      "day": 5,
+      "phase": "拆出模块",
+      "title": "让每个函数只说一件事",
+      "kicker": "函数、返回值与统计",
+      "minutes": 28,
+      "goal": "用函数计算平均分、最高分、最低分和及格人数，输出阶段统计。",
+      "outcome": "你会把主流程拆成有名字的小步骤，main 负责输入输出，函数负责计算。",
+      "brief": [
+        "保留人数、成绩范围校验和数组读取。",
+        "及格线为 60 分；统计结果包含平均分、最高分、最低分和及格人数。",
+        "输出顺序固定为 AVG、HIGH、LOW、PASS，每个标签后接一个空格和结果。"
+      ],
+      "code_focus": ["函数声明", "返回值", "代码复用"],
+      "lesson": {"chapter": 6, "kid": 1, "title": "声明、定义与调用顺序"},
+      "practice": {"qid": "c034", "title": "数组排序（函数封装）"},
+      "starter": "#include <stdio.h>\n\nint find_max(const int scores[], int n) {\n    int result = scores[0];\n    for (int i = 1; i < n; i++) {\n        if (scores[i] > result) result = scores[i];\n    }\n    return result;\n}\n\nint count_pass(const int scores[], int n) {\n    /* TODO: 统计 >= 60 的成绩 */\n    return 0;\n}\n\nint main(void) {\n    int n;\n    int scores[30];\n    if (scanf(\"%d\", &n) != 1 || n < 1 || n > 30) {\n        printf(\"INVALID\\n\");\n        return 0;\n    }\n\n    int sum = 0;\n    for (int i = 0; i < n; i++) {\n        if (scanf(\"%d\", &scores[i]) != 1 || scores[i] < 0 || scores[i] > 100) {\n            printf(\"INVALID\\n\");\n            return 0;\n        }\n        sum += scores[i];\n    }\n\n    /* TODO: 复用 find_max，并补上最低分统计 */\n    int highest = find_max(scores, n);\n    int lowest = scores[0];\n    printf(\"AVG %.2f\\nHIGH %d\\nLOW %d\\nPASS %d\\n\",\n           (double)sum / n, highest, lowest, count_pass(scores, n));\n    return 0;\n}\n",
+      "visible_test_count": 2,
+      "tests": [
+        {"name": "混合成绩", "input": "3\n72 88 91\n", "output": "AVG 83.67\nHIGH 91\nLOW 72\nPASS 3\n"},
+        {"name": "一人不及格", "input": "1\n59\n", "output": "AVG 59.00\nHIGH 59\nLOW 59\nPASS 0\n"},
+        {"name": "隐藏用例：五十分边界", "input": "4\n0 60 75 100\n", "output": "AVG 58.75\nHIGH 100\nLOW 0\nPASS 3\n"},
+        {"name": "隐藏用例：全部不及格", "input": "3\n10 20 30\n", "output": "AVG 20.00\nHIGH 30\nLOW 10\nPASS 0\n"},
+        {"name": "隐藏用例：全部及格", "input": "2\n60 90\n", "output": "AVG 75.00\nHIGH 90\nLOW 60\nPASS 2\n"}
+      ],
+      "hints": [
+        "函数需要知道从哪里开始、一共有多少项，因此参数里要有数组和 n。",
+        "最低分和最高分是对称的：初值取首项，后续逐项比较。"
+      ],
+      "checklist": ["main 不再包办所有计算", "60 分算及格", "四个统计值都正确"]
+    },
+    {
+      "day": 6,
+      "phase": "变成真正的工具",
+      "title": "把姓名和成绩装进同一条记录",
+      "kicker": "字符串、结构体与等级规则",
+      "minutes": 30,
+      "goal": "读取学生姓名和成绩，输出逐人等级以及全班平均分。",
+      "outcome": "你会把分散的变量组织成学生记录，并用函数把分数映射成 A–F 等级。",
+      "brief": [
+        "从这一天开始，每一行输入是“姓名 成绩”，姓名不含空格且最多 19 个字符。",
+        "等级规则：90+ 为 A，80–89 为 B，70–79 为 C，60–69 为 D，60 分以下为 F。",
+        "先按输入顺序逐行输出“姓名:成绩:等级”，最后一行输出 AVG 平均分。"
+      ],
+      "code_focus": ["char 数组", "struct", "const char *"],
+      "lesson": {"chapter": 10, "kid": 1, "title": "定义、初始化与嵌套"},
+      "practice": {"qid": "c049", "title": "学生成绩排序"},
+      "lab": {"id": "string-terminator", "title": "反转后被吞掉的尾巴"},
+      "starter": "#include <stdio.h>\n\nstruct Student {\n    char name[20];\n    int score;\n};\n\nconst char *grade_for(int score) {\n    if (score >= 90) return \"A\";\n    if (score >= 80) return \"B\";\n    if (score >= 70) return \"C\";\n    if (score >= 60) return \"D\";\n    return \"F\";\n}\n\nint main(void) {\n    int n;\n    struct Student students[30];\n    if (scanf(\"%d\", &n) != 1 || n < 1 || n > 30) {\n        printf(\"INVALID\\n\");\n        return 0;\n    }\n\n    int sum = 0;\n    for (int i = 0; i < n; i++) {\n        if (scanf(\"%19s %d\", students[i].name, &students[i].score) != 2 ||\n            students[i].score < 0 || students[i].score > 100) {\n            printf(\"INVALID\\n\");\n            return 0;\n        }\n        sum += students[i].score;\n    }\n\n    /* TODO: 逐名学生输出姓名、成绩和 grade_for 返回的等级 */\n    printf(\"AVG %.2f\\n\", (double)sum / n);\n    return 0;\n}\n",
+      "visible_test_count": 2,
+      "tests": [
+        {"name": "两名学生", "input": "2\nAlice 88\nBob 59\n", "output": "Alice:88:B\nBob:59:F\nAVG 73.50\n"},
+        {"name": "高分与低分", "input": "2\nMing 96\nQiao 58\n", "output": "Ming:96:A\nQiao:58:F\nAVG 77.00\n"},
+        {"name": "隐藏用例：等级边界", "input": "5\nA 90\nB 80\nC 70\nD 60\nF 59\n", "output": "A:90:A\nB:80:B\nC:70:C\nD:60:D\nF:59:F\nAVG 71.80\n"},
+        {"name": "隐藏用例：长姓名", "input": "1\nChristopherRobin 100\n", "output": "ChristopherRobin:100:A\nAVG 100.00\n"},
+        {"name": "隐藏用例：成绩越界", "input": "1\nBad 101\n", "output": "INVALID\n"}
+      ],
+      "hints": [
+        "结构体让 students[i].name 和 students[i].score 始终保持同一条记录。",
+        "姓名用 %19s，为结尾的 '\\0' 留出第 20 个字符的位置。"
+      ],
+      "checklist": ["姓名和成绩成对保存", "等级边界正确", "输出顺序与输入一致"]
+    },
+    {
+      "day": 7,
+      "phase": "交付",
+      "title": "完成、运行，再交给别人",
+      "kicker": "综合验收与项目交付",
+      "minutes": 30,
+      "goal": "补齐全班统计与逐人报告，让成绩管理器通过全部边界用例。",
+      "outcome": "你得到了一份可复制的 main.c、一套固定输入输出契约，以及一份能说明自己学到了什么的项目记录。",
+      "brief": [
+        "保留第六天的学生记录和 A–F 等级规则。",
+        "在等级报告之前先输出六项全班统计：人数、平均分、最高分、最低分、及格人数、优秀人数。",
+        "优秀定义为 90 分及以上；最后用 REPORT 标记逐人报告的开始。"
+      ],
+      "code_focus": ["综合应用", "验收思维", "项目交付"],
+      "lesson": {"chapter": 10, "kid": 2, "title": "内存对齐：为什么 sizeof 比你算的大"},
+      "practice": {"qid": "c050", "title": "结构体指针求最高分"},
+      "starter": "#include <stdio.h>\n\nstruct Student {\n    char name[20];\n    int score;\n};\n\nconst char *grade_for(int score) {\n    if (score >= 90) return \"A\";\n    if (score >= 80) return \"B\";\n    if (score >= 70) return \"C\";\n    if (score >= 60) return \"D\";\n    return \"F\";\n}\n\nint main(void) {\n    int n;\n    struct Student students[30];\n    if (scanf(\"%d\", &n) != 1 || n < 1 || n > 30) {\n        printf(\"INVALID\\n\");\n        return 0;\n    }\n\n    int sum = 0;\n    int highest = -1;\n    int lowest = 101;\n    int pass_count = 0;\n    int excellent_count = 0;\n    for (int i = 0; i < n; i++) {\n        if (scanf(\"%19s %d\", students[i].name, &students[i].score) != 2 ||\n            students[i].score < 0 || students[i].score > 100) {\n            printf(\"INVALID\\n\");\n            return 0;\n        }\n        sum += students[i].score;\n        /* TODO: 更新最高、最低、及格和优秀统计 */\n    }\n\n    printf(\"COUNT %d\\nAVG %.2f\\nHIGH %d\\nLOW %d\\nPASS %d\\nEXCELLENT %d\\nREPORT\\n\",\n           n, (double)sum / n, highest, lowest, pass_count, excellent_count);\n    for (int i = 0; i < n; i++) {\n        printf(\"%s:%d:%s\\n\", students[i].name, students[i].score,\n               grade_for(students[i].score));\n    }\n    return 0;\n}\n",
+      "visible_test_count": 2,
+      "tests": [
+        {"name": "完整班级", "input": "4\nLin 88\nMing 96\nQiao 58\nJun 93\n", "output": "COUNT 4\nAVG 83.75\nHIGH 96\nLOW 58\nPASS 3\nEXCELLENT 2\nREPORT\nLin:88:B\nMing:96:A\nQiao:58:F\nJun:93:A\n"},
+        {"name": "只有一名学生", "input": "1\nZoe 60\n", "output": "COUNT 1\nAVG 60.00\nHIGH 60\nLOW 60\nPASS 1\nEXCELLENT 0\nREPORT\nZoe:60:D\n"},
+        {"name": "隐藏用例：全部不及格", "input": "3\nAnn 12\nBen 34\nCam 59\n", "output": "COUNT 3\nAVG 35.00\nHIGH 59\nLOW 12\nPASS 0\nEXCELLENT 0\nREPORT\nAnn:12:F\nBen:34:F\nCam:59:F\n"},
+        {"name": "隐藏用例：优秀边界", "input": "5\nA 100\nB 90\nC 89\nD 60\nE 0\n", "output": "COUNT 5\nAVG 67.80\nHIGH 100\nLOW 0\nPASS 3\nEXCELLENT 2\nREPORT\nA:100:A\nB:90:A\nC:89:B\nD:60:D\nE:0:F\n"},
+        {"name": "隐藏用例：非法成绩", "input": "2\nGood 80\nBad -1\n", "output": "INVALID\n"}
+      ],
+      "hints": [
+        "每个成绩读入后，同时更新最高、最低、及格数和优秀数。",
+        "先在纸上按输入顺序走一遍完整班级用例，核对六个统计值再提交。"
+      ],
+      "checklist": ["六项统计全部正确", "逐人报告顺序稳定", "非法输入安全退出"]
+    }
+  ]
+}

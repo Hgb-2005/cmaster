@@ -79,7 +79,8 @@ class OnlineWebTests(unittest.TestCase):
         self.app.add_url_rule("/api/run", "run", lambda: "run", methods=["POST"])
         self.app.add_url_rule("/healthz", "healthz", lambda: "ok")
         self.app.add_url_rule("/readyz", "readyz", lambda: "pending")
-        for endpoint in ("problems_page", "playground_page", "training_page", "wrongbook_page",
+        self.app.add_url_rule("/test-journey_page", "journey_page", lambda: "ok")
+        for endpoint in ("problems_page", "labs_page", "playground_page", "training_page", "wrongbook_page",
                          "notebook_page", "analytics_page", "map_page", "memory_page",
                          "ops_page", "admin_page", "profile_page", "logout_page"):
             self.app.add_url_rule("/test-" + endpoint, endpoint, lambda: "ok")

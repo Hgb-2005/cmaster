@@ -1,11 +1,25 @@
 {% extends "base.html" %}
 {% block title %}题库 · CMaster{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/labs.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="page-head">
   <h1>题库</h1>
   <p>{{ questions|length }} 道题，覆盖全部 12 章。提交后按测试用例逐条判分。</p>
 </div>
+
+<a class="lab-callout" href="{{ url_for('labs_page') }}">
+  <span class="lab-callout-mark" aria-hidden="true">01</span>
+  <span class="lab-callout-copy">
+    <span class="lab-eyebrow">BUG FIX LAB · 逐行排错</span>
+    <strong>不想从空白页开始？先修一个只错一行的程序</strong>
+    <small>{{ labcount }} 个短实验，从边界、初始值到空指针，每个只允许改动关键一行。</small>
+  </span>
+  <b>进入修复实验室 →</b>
+</a>
 
 <div class="filters" id="chapter-filters">
   <button class="filter on" data-ch="all">全部章节</button>

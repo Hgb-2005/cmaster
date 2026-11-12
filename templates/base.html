@@ -18,8 +18,11 @@
   </a>
 
   <nav class="nav">
+    <a href="{{ url_for('journey_page') }}"
+       class="{{ 'on' if request.endpoint in ('journey_page','journey_day_page','journey_finish_page') }}">项目闯关</a>
     <a href="{{ url_for('index') }}" class="{{ 'on' if request.endpoint == 'index' }}">课程</a>
     <a href="{{ url_for('problems_page') }}" class="{{ 'on' if request.endpoint in ('problems_page','problem_page') }}">题库</a>
+    <a href="{{ url_for('labs_page') }}" class="{{ 'on' if request.endpoint in ('labs_page','lab_page') }}">实验室</a>
     {# 「训练」紧跟题库：它是题库的轻量版——同样考这批内容，但只考一个点，
        两分钟一轮。放在游乐场前面，因为「练熟的」才会去自由创作。 #}
     {% if current_user %}

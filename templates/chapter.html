@@ -43,6 +43,28 @@
       <span>{{ key }}</span>
     </div>
 
+    <a class="lecture-entry" href="{{ url_for('chapter_lecture', cid=chapter.id) }}">
+      <span class="lecture-entry-icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>
+          <path d="m10 9 5 3-5 3V9Z"/>
+        </svg>
+      </span>
+      <span class="lecture-entry-copy">
+        <strong>{{ "继续章节导学" if chapter_read_count else "先看导学，再进入正文" }}</strong>
+        <small>{{ chapter_read_count }}/{{ chapter.knowledge_points|length }} 节已精读 · {{ chapter.knowledge_points|length }} 段自动导览与字幕</small>
+      </span>
+      <span class="lecture-entry-action">
+        {{ "继续" if chapter_read_count else "开始" }}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>
+        </svg>
+      </span>
+    </a>
+
     <header class="kp-head">
       {% set kind_class = 'kind-practice' if kp.kind == 'practice' else ('kind-pitfall' if kp.kind == 'pitfall' else '') %}
       {% set kind_label = {'concept': '概念', 'practice': '动手', 'pitfall': '坑'}.get(kp.kind, '概念') %}

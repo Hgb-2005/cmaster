@@ -128,6 +128,62 @@
   }
 
   function appendFeedback(body, result) {
+    var guide = global.CMasterFeedback && global.CMasterFeedback.coach
+      ? global.CMasterFeedback.coach(result)
+      : null;
+    if (guide) {
+      var panel = el("aside", "learning-feedback mistake-coach");
+      panel.setAttribute("aria-label", "智能错因教练");
+      var panelHead = el("div", "coach-head");
+      var heading = el("div", "coach-heading");
+      heading.appendChild(el("span", "coach-kicker", "智能错因教练"));
+      heading.appendChild(el("strong", "", guide.title));
+      panelHead.appendChild(heading);
+      panelHead.appendChild(el("span", "coach-counter", "1 / " + guide.steps.length));
+      panel.appendChild(panelHead);
+
+      var steps = el("div", "coach-steps");
+      guide.steps.forEach(function (step, index) {
+        var section = el("section", "coach-step" + (index === 0 ? " is-open" : ""));
+        section.hidden = index !== 0;
+        var top = el("div", "coach-step-top");
+        top.appendChild(el("span", "coach-level", "0" + (index + 1) + " · " + step.label));
+        top.appendChild(el("strong", "", step.title));
+        section.appendChild(top);
+        section.appendChild(el("p", "", step.body));
+        steps.appendChild(section);
+      });
+      panel.appendChild(steps);
+
+      var actions = el("div", "coach-actions");
+      var note = el("span", "coach-note", "提示按层次展开，不显示参考代码");
+      var next = el("button", "btn btn-ghost btn-sm", "看下一步");
+      next.type = "button";
+      next.setAttribute("aria-expanded", "false");
+      var opened = 1;
+      next.addEventListener("click", function () {
+        opened += 1;
+        var section = steps.querySelectorAll(".coach-step")[opened - 1];
+        if (!section) return;
+        section.hidden = false;
+        section.classList.add("is-open");
+        panel.querySelector(".coach-counter").textContent = opened + " / " + guide.steps.length;
+        if (opened >= guide.steps.length) {
+          next.hidden = true;
+          note.textContent = "三层次已展开。回到代码验证你的判断。";
+          panel.dataset.completed = "1";
+        } else {
+          next.textContent = "看下一步 · " + guide.steps[opened].label;
+        }
+        next.setAttribute("aria-expanded", opened > 1 ? "true" : "false");
+      });
+      actions.appendChild(note);
+      actions.appendChild(next);
+      panel.appendChild(actions);
+      body.appendChild(panel);
+      return;
+    }
+
     var hint = global.CMasterFeedback && global.CMasterFeedback.explain(result);
     if (!hint) return;
     var card = el("aside", "learning-feedback");

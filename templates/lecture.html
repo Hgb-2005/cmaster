@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}第 {{ chapter.id }} 章导学 · {{ chapter.title }} · CMaster{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/lecture.css') }}">
+{% endblock %}
+{% block wrap_class %}wrap-wide{% endblock %}
+
+{% block content %}
+<section class="lecture-intro" aria-labelledby="lecture-title">
+  <nav class="crumb" aria-label="面包屑">
+    <a href="{{ url_for('index') }}">课程</a>
+    <span class="sep">/</span>
+    <span>第 {{ chapter.id }} 章</span>
+    <span class="sep">/</span>
+    <span>导学模式</span>
+  </nav>
+
+  <div class="lecture-intro-grid">
+    <div class="lecture-intro-copy">
+      <div class="lecture-kicker">
+        <span>CHAPTER {{ "%02d"|format(chapter.id) }}</span>
+        <span class="lecture-kicker-line" aria-hidden="true"></span>
+        <span>{{ scenes|length }} 个知识场景</span>
+      </div>
+      <h1 id="lecture-title">{{ chapter.title }}</h1>
+      <p>{{ lecture_intro }}</p>
+      <div class="lecture-intro-actions">
+        <a class="btn btn-primary" href="#lecture-player">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m7 4 13 8-13 8V4Z"/>
+          </svg>
+          {{ "继续导学" if chapter_read_count else "开始导学" }}
+        </a>
+        <a class="btn" href="{{ url_for('chapter_kp', cid=chapter.id, kid=1) }}">逐页精读</a>
+      </div>
+    </div>
+
+    <aside class="lecture-syllabus" aria-labelledby="lecture-outcomes-title">
+      <div class="lecture-syllabus-head">
+        <span id="lecture-outcomes-title">本章完成标准</span>
+        <strong>{{ chapter_read_count }}/{{ scenes|length }}</strong>
+      </div>
+      <ul>
+        {% for outcome in outcomes %}
+          <li>
+            <span class="lecture-check" aria-hidden="true"></span>
+            <span>{{ outcome }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+      <div class="lecture-syllabus-note">导学播放不会替你标记知识点，关闭播放器后仍可逐页精读。</div>
+    </aside>
+  </div>
+</section>
+
+<section class="lecture-player" id="lecture-player" data-playing="false"
+         aria-labelledby="lecture-player-title">
+  <h2 class="sr-only" id="lecture-player-title">第 {{ chapter.id }} 章自动导览播放器</h2>
+
+  <div class="lecture-player-grid">
+    <div class="lecture-screen">
+      <div class="lecture-screen-head">
+        <div class="lecture-scene-status">
+          <span class="lecture-status-dot" aria-hidden="true"></span>
+          <span id="lecture-scene-counter">场景 01 / {{ "%02d"|format(scenes|length) }}</span>
+        </div>
+        <div class="lecture-playing-state" id="lecture-playing-state" role="status">已暂停</div>
+      </div>
+
+      <div class="lecture-caption" aria-live="polite" aria-atomic="true">
+        <span class="lecture-caption-label">导览字幕</span>
+        <p id="lecture-caption-text">{{ scenes[0].narration }}</p>
+      </div>
+
+      <div class="lecture-scenes">
+        {% for scene in scenes %}
+          <article class="lecture-scene" data-scene-index="{{ loop.index0 }}"
+                   data-narration="{{ scene.narration }}"
+                   id="lecture-scene-{{ scene.kid }}" aria-labelledby="lecture-scene-title-{{ scene.kid }}"
+                   {% if not loop.first %}hidden{% endif %}>
+            <header class="lecture-scene-head">
+              <span class="lecture-scene-no">{{ "%02d"|format(scene.kid) }}</span>
+              <div>
+                {% set kind_class = 'kind-practice' if scene.kind == 'practice' else ('kind-pitfall' if scene.kind == 'pitfall' else '') %}
+                {% set kind_label = {'concept': '概念', 'practice': '动手', 'pitfall': '易错点', 'syntax': '语法'}.get(scene.kind, '概念') %}
+                <span class="kind {{ kind_class }}">{{ kind_label }}</span>
+                <h3 id="lecture-scene-title-{{ scene.kid }}">{{ scene.title }}</h3>
+              </div>
+            </header>
+
+            <div class="lecture-scene-grid">
+              <div class="md lecture-read" tabindex="0" aria-label="{{ scene.title }}完整内容">
+                {{ scene.html|safe }}
+              </div>
+              <aside class="lecture-guide" aria-label="本节导学提示">
+                <div class="lecture-guide-label">本节抓手</div>
+                <p>{{ scene.takeaway }}</p>
+                <a href="{{ url_for('chapter_kp', cid=chapter.id, kid=scene.kid) }}">
+                  逐页精读
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>
+                  </svg>
+                </a>
+              </aside>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+
+    <aside class="lecture-rail" aria-labelledby="lecture-rail-title">
+      <div class="lecture-rail-head">
+        <div>
+          <span>学习路线</span>
+          <h2 id="lecture-rail-title">本章知识点</h2>
+        </div>
+        <span class="lecture-rail-count">{{ scenes|length }}</span>
+      </div>
+      <ol class="lecture-outline">
+        {% for scene in scenes %}
+          <li>
+            <button class="lecture-outline-item {{ 'on' if loop.first }}" type="button"
+                    data-scene-index="{{ loop.index0 }}"
+                    aria-label="跳到场景 {{ scene.kid }}：{{ scene.title }}"
+                    {% if loop.first %}aria-current="step"{% endif %}>
+              <span class="lecture-outline-no">{{ "%02d"|format(scene.kid) }}</span>
+              <span class="lecture-outline-copy">
+                <strong>{{ scene.title.split(" ", 1)[1] }}</strong>
+                <small><span class="lecture-mini-bar"><i></i></span>{{ scene.duration }} 秒</small>
+              </span>
+              <span class="lecture-outline-complete" aria-label="本场景已播放"></span>
+            </button>
+          </li>
+        {% endfor %}
+      </ol>
+      <div class="lecture-rail-tip">
+        <kbd>Space</kbd> 播放 / 暂停
+        <span>方向键切换场景</span>
+      </div>
+    </aside>
+  </div>
+
+  <div class="lecture-transport">
+    <div class="lecture-buttons">
+      <button class="lecture-control" type="button" id="lecture-prev" aria-label="上一个场景">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M19 20 9 12l10-8v16Z"/><path d="M5 19V5"/>
+        </svg>
+      </button>
+      <button class="lecture-control lecture-play" type="button" id="lecture-play"
+              aria-label="播放导览" aria-pressed="false">
+        <svg class="lecture-icon-play" width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M8 5v14l11-7L8 5Z"/>
+        </svg>
+        <svg class="lecture-icon-pause" width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>
+        </svg>
+      </button>
+      <button class="lecture-control" type="button" id="lecture-next" aria-label="下一个场景">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m5 4 10 8-10 8V4Z"/><path d="M19 5v14"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="lecture-timeline-wrap">
+      <label class="sr-only" for="lecture-timeline">章节目录播放时间</label>
+      <input class="lecture-timeline" id="lecture-timeline" type="range"
+             min="0" max="1000" value="0" step="1" aria-valuetext="00:00 / 00:00">
+      <div class="lecture-time-row">
+        <span id="lecture-current-time">00:00</span>
+        <span id="lecture-duration">00:00</span>
+      </div>
+    </div>
+
+    <label class="lecture-speed">
+      <span class="sr-only">播放速度</span>
+      <select id="lecture-speed" aria-label="播放速度">
+        <option value="0.75">0.75×</option>
+        <option value="1" selected>1×</option>
+        <option value="1.25">1.25×</option>
+        <option value="1.5">1.5×</option>
+      </select>
+    </label>
+  </div>
+</section>
+
+<nav class="lecture-chapter-nav" aria-label="章节导航">
+  {% if previous_ch %}
+    <a href="{{ url_for('chapter_lecture', cid=previous_ch.id) }}">
+      <span>上一章导学</span>
+      <b>{{ previous_ch.title }}</b>
+    </a>
+  {% else %}
+    <a href="{{ url_for('index') }}">
+      <span>返回</span>
+      <b>全部课程</b>
+    </a>
+  {% endif %}
+  {% if next_ch %}
+    <a class="next" href="{{ url_for('chapter_lecture', cid=next_ch.id) }}">
+      <span>下一章导学</span>
+      <b>{{ next_ch.title }}</b>
+    </a>
+  {% else %}
+    <a class="next" href="{{ url_for('problems_page') }}">
+      <span>课程导览完成</span>
+      <b>去做一轮练习</b>
+    </a>
+  {% endif %}
+</nav>
+
+<script type="application/json" id="lecture-boot">{{ lecture_data|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/lecture.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}项目已交付 · {{ journey_meta.final_project.title }} · CMaster{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/journey.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="journey-delivery-hero">
+  <div class="journey-delivery-stamp">
+    <span>PROJECT DELIVERED</span>
+    <b>7 / 7</b>
+  </div>
+  <span class="journey-kicker">FROM FIRST PRINTF TO A REAL TOOL</span>
+  <h1>你做出了一个能用的 C 程序。</h1>
+  <p>这七天留下了 7 次可验证的交付记录。程序会校验输入、处理一组学生记录、完成统计，并按固定格式输出成绩报告。</p>
+  <div class="journey-delivery-actions">
+    <a class="btn btn-primary" href="{{ url_for('journey_day_page', day=7) }}">回到最后一次提交</a>
+    <a class="btn" href="{{ url_for('journey_page') }}">查看完整项目路线</a>
+  </div>
+</section>
+
+<section class="journey-handoff-grid">
+  <article class="journey-handoff-card">
+    <span class="journey-panel-label">WHAT YOU BUILT</span>
+    <h2>{{ journey_meta.final_project.title }}</h2>
+    <p>{{ journey_meta.final_project.summary }}</p>
+    <div class="journey-delivery-stats">
+      <div><b>7</b><span>天持续迭代</span></div>
+      <div><b>6</b><span>项班级统计</span></div>
+      <div><b>A–F</b><span>逐人等级报告</span></div>
+    </div>
+  </article>
+  <article class="journey-handoff-card">
+    <span class="journey-panel-label">INPUT CONTRACT</span>
+    <h2>它接受什么输入</h2>
+    <pre class="journey-code-sample">{{ journey_meta.final_project.run_example }}</pre>
+    <p>第一行是人数，之后每行是一名学生的姓名与成绩。合法人数为 1–30，成绩为 0–100。</p>
+  </article>
+  <article class="journey-handoff-card is-wide">
+    <span class="journey-panel-label">ACCEPTANCE OUTPUT</span>
+    <h2>它交付什么结果</h2>
+    <pre class="journey-code-sample is-output">{{ journey_meta.final_project.output_example }}</pre>
+  </article>
+</section>
+
+<section class="journey-final-code">
+  <div class="journey-section-head compact">
+    <span>FINAL SOURCE</span>
+    <h2>最后一次通过验收的 main.c</h2>
+    <p>这份代码已经属于你的账号存档。你可以继续修改，也可以复制到本机继续扩展。</p>
+  </div>
+  <pre>{{ final_code }}</pre>
+</section>
+
+<section class="journey-capability-receipt">
+  <div class="journey-section-head compact">
+    <span>CAPABILITY RECEIPT</span>
+    <h2>你真正练到的，不是七个徽章</h2>
+  </div>
+  <div class="journey-capability-timeline">
+    {% for item in journey["items"] %}
+      <article>
+        <span>DAY {{ "%02d"|format(item.day) }}</span>
+        <div>
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.outcome }}</p>
+        </div>
+        <b>✓</b>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

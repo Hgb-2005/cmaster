@@ -1,0 +1,146 @@
+[
+  {
+    "id": "loop-boundary",
+    "title": "少算的最后一次",
+    "concept": "循环边界",
+    "chapter": 4,
+    "difficulty": "easy",
+    "minutes": 4,
+    "summary": "求和结果总差最后一个数。只改一行，让循环把边界也覆盖进去。",
+    "mission": "修复 1 到 n 的整数求和。运行给的可见用例，再提交隐藏用例。",
+    "restriction": "只修改 1 行；保留输入、输出和程序结构。",
+    "max_changed_lines": 1,
+    "visible_test_count": 2,
+    "starter": "#include <stdio.h>\n\nint main(void) {\n    int n, sum = 0;\n    if (scanf(\"%d\", &n) != 1) return 1;\n\n    for (int i = 1; i < n; i++) {\n        sum += i;\n    }\n\n    printf(\"%d\\n\", sum);\n    return 0;\n}\n",
+    "tests": [
+      {"name": "n = 1", "input": "1\n", "output": "1\n"},
+      {"name": "n = 5", "input": "5\n", "output": "15\n"},
+      {"name": "隐藏用例", "input": "10\n", "output": "55\n"},
+      {"name": "隐藏用例", "input": "100\n", "output": "5050\n"}
+    ],
+    "hints": [
+      "先用 n=1 判断循环到底执行了几次。",
+      "找出哪个 i 的值被循环条件挡在门外。"
+    ]
+  },
+  {
+    "id": "array-boundary",
+    "title": "越界的最大值",
+    "concept": "数组下标",
+    "chapter": 5,
+    "difficulty": "easy",
+    "minutes": 5,
+    "summary": "程序在找最大值时多读了一格数组。把下标限制在有效范围内。",
+    "mission": "读取 n 个整数并输出最大值。检查从第二项开始的比较边界。",
+    "restriction": "只修改 1 行；不要改数组容量或测试数据。",
+    "max_changed_lines": 1,
+    "visible_test_count": 2,
+    "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    int a[32];\n    if (scanf(\"%d\", &n) != 1 || n < 1 || n > 32) return 1;\n    for (int i = 0; i < n; i++) {\n        if (scanf(\"%d\", &a[i]) != 1) return 1;\n    }\n\n    int largest = a[0];\n    for (int i = 1; i <= n; i++) {\n        if (a[i] > largest) largest = a[i];\n    }\n\n    printf(\"%d\\n\", largest);\n    return 0;\n}\n",
+    "tests": [
+      {"name": "三个数", "input": "3\n4 9 2\n", "output": "9\n"},
+      {"name": "只有一个数", "input": "1\n7\n", "output": "7\n"},
+      {"name": "隐藏用例", "input": "5\n-8 -2 -11 -4 -6\n", "output": "-2\n"},
+      {"name": "隐藏用例", "input": "6\n3 18 6 18 1 2\n", "output": "18\n"}
+    ],
+    "hints": [
+      "合法下标从 0 开始，最后一个元素的下标是多少？",
+      "检查循环变量 i 是否可能等于 n。"
+    ]
+  },
+  {
+    "id": "comparison-zero",
+    "title": "被漏掉的零",
+    "concept": "关系运算符",
+    "chapter": 4,
+    "difficulty": "easy",
+    "minutes": 4,
+    "summary": "程序统计非负整数时，总是把 0 排除在外。修正比较条件。",
+    "mission": "统计输入中大于或等于 0 的整数个数。",
+    "restriction": "只修改 1 行；不得改写输入输出。",
+    "max_changed_lines": 1,
+    "visible_test_count": 2,
+    "starter": "#include <stdio.h>\n\nint main(void) {\n    int n, count = 0;\n    if (scanf(\"%d\", &n) != 1) return 1;\n\n    for (int i = 0; i < n; i++) {\n        int x;\n        if (scanf(\"%d\", &x) != 1) return 1;\n        if (x > 0) count++;\n    }\n\n    printf(\"%d\\n\", count);\n    return 0;\n}\n",
+    "tests": [
+      {"name": "包含一个零", "input": "5\n-2 0 3 -5 4\n", "output": "3\n"},
+      {"name": "只有正数", "input": "3\n1 2 3\n", "output": "3\n"},
+      {"name": "隐藏用例", "input": "4\n0 0 0 0\n", "output": "4\n"},
+      {"name": "隐藏用例", "input": "6\n-1 0 -2 7 0 -9\n", "output": "3\n"}
+    ],
+    "hints": [
+      "题目说的是“非负”，它包含哪些数？",
+      "把当前比较条件与 >= 的含义对照一次。"
+    ]
+  },
+  {
+    "id": "initial-value",
+    "title": "负数的假冠军",
+    "concept": "变量初值",
+    "chapter": 2,
+    "difficulty": "medium",
+    "minutes": 5,
+    "summary": "最大值初值取了 0，导致所有数都是负数时答案错成 0。",
+    "mission": "输出输入序列中的最大整数，包括全部元素为负数的情况。",
+    "restriction": "只修改 1 行；保留当前最大值比较逻辑。",
+    "max_changed_lines": 1,
+    "visible_test_count": 2,
+    "starter": "#include <stdio.h>\n#include <limits.h>\n\nint main(void) {\n    int n;\n    if (scanf(\"%d\", &n) != 1 || n < 1) return 1;\n\n    int largest = 0;\n    for (int i = 0; i < n; i++) {\n        int x;\n        if (scanf(\"%d\", &x) != 1) return 1;\n        if (x > largest) largest = x;\n    }\n\n    printf(\"%d\\n\", largest);\n    return 0;\n}\n",
+    "tests": [
+      {"name": "全为正数", "input": "4\n2 8 3 5\n", "output": "8\n"},
+      {"name": "包含零", "input": "3\n-4 0 -1\n", "output": "0\n"},
+      {"name": "隐藏用例", "input": "4\n-8 -2 -11 -4\n", "output": "-2\n"},
+      {"name": "隐藏用例", "input": "1\n-7\n", "output": "-7\n"}
+    ],
+    "hints": [
+      "当前初值比所有负数都大，会发生什么？",
+      "limits.h 已经包含，可以用 int 能表示的最小值作为搜索起点。"
+    ]
+  },
+  {
+    "id": "missing-branch",
+    "title": "空指针的漏网分支",
+    "concept": "条件分支与空指针",
+    "chapter": 8,
+    "difficulty": "medium",
+    "minutes": 6,
+    "summary": "负数会走进一个仍让指针为空的漏网分支，程序随即崩溃。",
+    "mission": "根据整数正负输出 positive、zero 或 negative。修复遗漏的赋值。",
+    "restriction": "只修改 1 行；保留指针结构和三分类输出。",
+    "max_changed_lines": 1,
+    "visible_test_count": 2,
+    "starter": "#include <stdio.h>\n\nint main(void) {\n    int n;\n    const char *label = NULL;\n    if (scanf(\"%d\", &n) != 1) return 1;\n\n    if (n > 0) label = \"positive\";\n    else if (n == 0) label = \"zero\";\n    else label = NULL;\n\n    printf(\"%s\\n\", label);\n    return 0;\n}\n",
+    "tests": [
+      {"name": "正数分支", "input": "8\n", "output": "positive\n"},
+      {"name": "零分支", "input": "0\n", "output": "zero\n"},
+      {"name": "隐藏用例", "input": "-3\n", "output": "negative\n"},
+      {"name": "隐藏用例", "input": "-100\n", "output": "negative\n"}
+    ],
+    "hints": [
+      "先看哪些输入不会经过前两个分支。",
+      "崩溃发生前，指针在 else 分支里是否仍为 NULL？"
+    ]
+  },
+  {
+    "id": "string-terminator",
+    "title": "反转后被吞掉的尾巴",
+    "concept": "字符串终止符",
+    "chapter": 10,
+    "difficulty": "medium",
+    "minutes": 6,
+    "summary": "反转字符串时终止符写早了一格，最后一个字符因此不再输出。",
+    "mission": "读入一个不含空白的单词，原地反转后输出完整单词。",
+    "restriction": "只修改 1 行；保留字符交换与长度计算方式。",
+    "max_changed_lines": 1,
+    "visible_test_count": 2,
+    "starter": "#include <stdio.h>\n\nint main(void) {\n    char text[64];\n    if (scanf(\"%63s\", text) != 1) return 1;\n\n    int len = 0;\n    while (text[len] != '\\0') len++;\n\n    for (int i = 0; i < len / 2; i++) {\n        char tmp = text[i];\n        text[i] = text[len - 1 - i];\n        text[len - 1 - i] = tmp;\n    }\n    text[len - 1] = '\\0';\n\n    printf(\"%s\\n\", text);\n    return 0;\n}\n",
+    "tests": [
+      {"name": "三个字母", "input": "abc\n", "output": "cba\n"},
+      {"name": "单个字母", "input": "C\n", "output": "C\n"},
+      {"name": "隐藏用例", "input": "pointer\n", "output": "retniop\n"},
+      {"name": "隐藏用例", "input": "campus\n", "output": "supmac\n"}
+    ],
+    "hints": [
+      "长度为 len 的字符串，终止符应该占哪个下标？",
+      "当前写入终止符的位置是否覆盖了一个有效字符？"
+    ]
+  }
+]

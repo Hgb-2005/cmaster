@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Bug 修复实验室 · CMaster{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/labs.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="lab-hub-head">
+  <div>
+    <span class="lab-eyebrow">逐行排错训练</span>
+    <h1>Bug 修复实验室</h1>
+    <p>每次只动关键的一行。先让程序跑起来，再观察错误、缩小边界、提交隐藏用例。</p>
+  </div>
+  <div class="lab-hub-progress" aria-label="实验室完成进度">
+    <strong>{{ accepted }}<span>/{{ total }}</span></strong>
+    <small>已完成实验</small>
+    <div class="lab-progress-track"><i style="width:{{ (accepted * 100 / total) if total else 0 }}%"></i></div>
+  </div>
+</section>
+
+<div class="lab-method" aria-label="实验室训练方法">
+  <span><b>1</b> 运行可见用例</span>
+  <i></i>
+  <span><b>2</b> 定位一行错误</span>
+  <i></i>
+  <span><b>3</b> 提交隐藏用例</span>
+</div>
+
+<div class="lab-grid">
+  {% for lab in labs %}
+    {% set record = records.get(lab.id, {}) %}
+    <a class="lab-card{{ ' is-done' if record.get('status') == 'AC' }}" href="{{ url_for('lab_page', lab_id=lab.id) }}">
+      <div class="lab-card-top">
+        <span class="lab-index">LAB {{ "%02d"|format(loop.index) }}</span>
+        {% if record.get('status') == 'AC' %}
+          <span class="lab-state done">已修复</span>
+        {% elif record.get('status') %}
+          <span class="lab-state tried">再试一次</span>
+        {% else %}
+          <span class="lab-state">待修复</span>
+        {% endif %}
+      </div>
+      <div class="lab-card-copy">
+        <span class="lab-kicker">第 {{ lab.chapter }} 章 · {{ lab.concept }}</span>
+        <h2>{{ lab.title }}</h2>
+        <p>{{ lab.summary }}</p>
+      </div>
+      <div class="lab-card-meta">
+        <span>{{ {'easy':'简单','medium':'中等','hard':'较难'}.get(lab.difficulty, lab.difficulty) }}</span>
+        <span>{{ lab.minutes }} 分钟</span>
+        <span>只改 {{ lab.max_changed_lines }} 行</span>
+      </div>
+      <div class="lab-card-foot">
+        <span>{{ lab.mission }}</span>
+        <b>{{ '再走一遍' if record.get('status') == 'AC' else '进入实验' }} →</b>
+      </div>
+    </a>
+  {% endfor %}
+</div>
+
+{% if not current_user %}
+<aside class="lab-guest-note">
+  <div>
+    <strong>先试运行，再登录提交</strong>
+    <p>访客可以编译并运行可见用例。登录后才会执行隐藏用例，保存完成状态和尝试次数。</p>
+  </div>
+  <a class="btn btn-primary btn-sm" href="{{ url_for('login_page', next=request.path) }}">登录 / 注册</a>
+</aside>
+{% endif %}
+{% endblock %}
